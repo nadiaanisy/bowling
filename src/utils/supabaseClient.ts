@@ -3,8 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 // import { useEffect } from 'react';
 // import { toast } from 'sonner';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL! || 'https://dkxydjzmmpqdahmspnje.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRreHlkanptbXBxZGFobXNwbmplIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAyMDAzNjksImV4cCI6MjA3NTc3NjM2OX0.zG6KgJatrJVLIBtXL_zdLyaWpmUT33-jm5wbB0ya1FE'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL! || 'https://cgqiwpinupydxzyxtetj.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNncWl3cGludXB5ZHh6eXh0ZXRqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEzMzgyNjgsImV4cCI6MjA3NjkxNDI2OH0.yBtd-nv75GveT8Mp_HdMeZBnAf-QmozyK2PIPdA20UU'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   db: {
