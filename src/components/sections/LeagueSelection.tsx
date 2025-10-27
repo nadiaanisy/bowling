@@ -1,21 +1,19 @@
 import {
+  useBowlingHook,
+  useCustomHook
+} from '../misc';
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
 } from '../ui/card';
-import {
-  useBowlingHook,
-  useCustomHook
-} from '../others/misc';
-import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { Trophy } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
-import { leagues_table } from '../others/data';
-import { supabase } from '../../utils/supabaseClient';
+import { fetchLeagueList } from '../functions';
 
 export default function LeagueSelection() {
   const {
@@ -26,25 +24,15 @@ export default function LeagueSelection() {
   } = useCustomHook();
   const { selectLeague } = useBowlingHook();
 
-  /* Fetch League List */
-  const fetchLeagues = async () => {
-    try {
-      setIsLoadingSkeleton(true);
-      const { data, error } = await supabase.from(leagues_table).select('*');
-      if (error) {
-        toast.error('Error fetching leagues: ' + error.message);
-        return;
-      }
-      setLeagues(data || [])
-    } catch (error) {
-      toast.error('Error fetching leagues: ' + (error instanceof Error ? error.message : String(error)));
-    } finally {
-      setIsLoadingSkeleton(false);
-    }
-  };
-
   useEffect(() => {
-    fetchLeagues();
+    const loadLeagues = async () => {
+      setIsLoadingSkeleton(true);
+      const data = await fetchLeagueList();
+      setLeagues(data);
+      setIsLoadingSkeleton(false);
+    };
+
+    loadLeagues();
   }, []);
 
   return (
@@ -65,10 +53,10 @@ export default function LeagueSelection() {
             style={{borderStyle: 'var(--tw-border-style)', borderWidth: '1px', borderRadius: '8px', borderColor: '#0000001a'}}
           >
             {isLoadingSkeleton ? (
-              Array.from({ length: leagues.length }).map((_, idx) => (
-                <Skeleton key={idx} className="h-12 w-full" />
+              Array.from({ length: leagues.length }).map((_, index) => (
+                <Skeleton key={index} className="h-auto w-full" />
               ))
-            ): leagues.length === 0 ? (
+            ) : leagues.length === 0 ? (
               <div className="text-center text-muted-foreground">No leagues available</div>
             ) : (
               leagues.map((league) => (
