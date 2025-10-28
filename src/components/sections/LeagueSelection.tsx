@@ -13,7 +13,7 @@ import { useEffect } from 'react';
 import { Trophy } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Skeleton } from '../ui/skeleton';
-import { fetchLeagueList } from '../functions';
+import { fetchLeagueList } from '../api';
 
 export default function LeagueSelection() {
   const {

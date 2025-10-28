@@ -41,12 +41,11 @@ import {
 } from 'lucide-react';
 import {
   fetchTeamsAndPlayers,
-  handleAddTeam,
-  handleAddPlayer,
-  askConfirm,
+  AddTeam,
+  AddPlayer,
   deleteTeam,
   deletePlayer
-} from '../functions';
+} from '../api';
 import {
   Collapsible,
   CollapsibleContent,
@@ -58,6 +57,7 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Skeleton } from '../ui/skeleton';
+import { askConfirm } from '../functions';
 
 function ConfirmDialog({
   open,
@@ -148,7 +148,7 @@ export default function Teams() {
           <CardContent>
             <form
               onSubmit={(e) =>
-                handleAddTeam(
+                AddTeam(
                   e,
                   newTeamName,
                   selectedLeague,
@@ -172,26 +172,26 @@ export default function Teams() {
               </Button>
             </form>
           </CardContent>
-          </Card>
+        </Card>
       </div>
 
       {isLoadingSkeleton ? (
         <div className="grid gap-4 mt-5">
           {Array.from({ length: 31 }).map((_, index) => (
             <Card key={index} className="p-4 space-y-3">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>
-                        <Skeleton className="h-5 w-32" />
-                      </CardTitle>
-                      <CardDescription>
-                        <Skeleton className="h-4 w-24 mt-2" />
-                      </CardDescription>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>
+                      <Skeleton className="h-5 w-32" />
+                    </CardTitle>
+                    <div className='mt-5'>
+                      <Skeleton className="h-5 w-32" />
                     </div>
                   </div>
-                </CardHeader>
-              </Card>
+                </div>
+              </CardHeader>
+            </Card>
           ))}
         </div>
       ) : (
@@ -252,7 +252,7 @@ export default function Teams() {
                             <TabsContent value="single">
                               <form
                                 onSubmit={(e) =>
-                                  handleAddPlayer(
+                                  AddPlayer(
                                     e,
                                     'single',
                                     selectedTeam,
@@ -285,7 +285,7 @@ export default function Teams() {
 
                             <TabsContent value="multiple">
                               <form onSubmit={(e) =>
-                                  handleAddPlayer(
+                                  AddPlayer(
                                     e,
                                     'multiple',
                                     selectedTeam,

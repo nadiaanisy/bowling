@@ -30,14 +30,15 @@ import {
   fetchAllMatches,
   fetchAllTeams,
   fetchBlocksData,
-  handleAddMatch
-} from '../functions';
-import { useEffect } from 'react';
+  AddMatch
+} from '../api';
+import { useEffect, useState } from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { useCustomHook} from '../misc';
 import { Skeleton } from '../ui/skeleton';
+import { MatchData } from '../interface';
 
 export default function Timetable() {
   const {
@@ -51,110 +52,89 @@ export default function Timetable() {
     setWeek,
     isLoadingSkeleton,
     setIsLoadingSkeleton,
-    block1Data,
-    setBlock1Data,
-    block2Data,
-    setBlock2Data,
     team1,
     setTeam1,
     team2,
     setTeam2,
     selectedLane,
     setSelectedLane,
-    usedTeamBlock1,
-    setUsedTeamBlock1,
-    usedTeamBlock2,
-    setUsedTeamBlock2,
-    usedLanesBlock1,
-    setUsedLanesBlock1,
-    usedLanesBlock2,
-    setUsedLanesBlock2
   } = useCustomHook();
-
+  
   // Current block and week as numbers
-  const currentWeek = parseInt(week);
+  const currentWeek = week ? parseInt(week) : 0;
+
+  const [matches, setMatches] = useState<{ block1: MatchData[]; block2: MatchData[] }>({
+    block1: [],
+    block2: [],
+  });
+
+  const [usedTeams, setUsedTeams] = useState<string[]>([]);
+  const [usedLanes, setUsedLanes] = useState<string[]>([]);
 
   useEffect(() => {
-    const loadBlocks = async () => {
-      setIsLoadingSkeleton(true);
-      const data = await fetchBlocksData();
-      setBlocksData(data);
-      setIsLoadingSkeleton(false);
-    }
-    
-    const loadAllTeams = async () => {
-      setIsLoadingSkeleton(true);
-      const data = await fetchAllTeams();
-      setTeams(data);
-      setIsLoadingSkeleton(false);
-    }
+    const loadData = async () => {
+      try {
+        setIsLoadingSkeleton(true);
 
-    const loadAllMatches = async () => {
-      setIsLoadingSkeleton(true);
-      const { block1, block2 } = await fetchAllMatches();
-      setBlock1Data(block1);
-      setBlock2Data(block2);
+        // 1️⃣ Fetch blocks
+        const blocks = await fetchBlocksData();
+        setBlocksData(blocks);
 
-      const groupByWeek = (matches: any) =>
-        matches.reduce((acc: any, match: any) => {
-          const week = match.week_number;
-          if (!acc[week]) acc[week] = { teams: [], lanes: [] };
-          acc[week].teams.push(String(match.team1_id), String(match.team2_id));
-          acc[week].lanes.push(match.lane);
-          return acc;
-        }, {});
+        // 2️⃣ Fetch teams
+        const allTeams = await fetchAllTeams();
+        setTeams(allTeams);
 
-      // Block 1
-      const grouped1 = groupByWeek(block1);
-      setUsedTeamBlock1(grouped1);
-      setUsedLanesBlock1(grouped1);
-
-      // Block 2
-      const grouped2 = groupByWeek(block2);
-      setUsedTeamBlock2(grouped2);
-      setUsedLanesBlock2(grouped2);
+        // 3️⃣ Fetch matches
+        const data = await fetchAllMatches();
+        setMatches(data);
+      } catch (err) {
+        console.error("Error loading data:", err);
+      } finally {
+        setIsLoadingSkeleton(false);
+      }
     }
 
-    loadBlocks();
-    loadAllTeams();
-    loadAllMatches();
+    loadData();
   }, []);
 
+  type BlockKey = 'block1' | 'block2';
+  useEffect(() => {
+    if (!matches || !blockNumber || !week) return;
+
+    const blockKey: BlockKey = `block${blockNumber}` as BlockKey;
+    const blockMatches = matches[blockKey] || [];
+
+    // Filter matches for the selected week
+    const filtered = blockMatches.filter(
+      (m) => m.week_number === parseInt(week)
+    );
+
+    // Extract used lanes and team IDs
+    const lanes = filtered.map((m) => m.lane);
+    const teams = filtered.flatMap((m) => [m.team1.id.toString(), m.team2?.id?.toString()].filter(Boolean));
+
+    setUsedLanes(lanes);
+    setUsedTeams(teams);
+  }, [matches, blockNumber, week]);
+
+  // 🧹 Auto-clear invalid selections
+  useEffect(() => {
+    if (usedTeams.includes(team1)) setTeam1("");
+    if (usedTeams.includes(team2)) setTeam2("");
+    if (usedLanes.includes(selectedLane)) setSelectedLane("");
+  }, [usedTeams, usedLanes]);
+
   const refreshMatches = async () => {
-    const { block1, block2 } = await fetchAllMatches();
-    setBlock1Data(block1);
-    setBlock2Data(block2);
-
-    // Group by week
-    const groupByWeek = (matches: any) =>
-      matches.reduce((acc: any, match: any) => {
-        const week = match.week_number;
-        if (!acc[week]) acc[week] = { teams: [], lanes: [] };
-        acc[week].teams.push(String(match.team1_id), String(match.team2_id));
-        acc[week].lanes.push(match.lane);
-        return acc;
-      }, {});
-
-    // Block 1
-    const grouped1 = groupByWeek(block1);
-    setUsedTeamBlock1(grouped1);
-    setUsedLanesBlock1(grouped1);
-
-    // Block 2
-    const grouped2 = groupByWeek(block2);
-    setUsedTeamBlock2(grouped2);
-    setUsedLanesBlock2(grouped2);
+    try {
+      setIsLoadingSkeleton(true);
+      const data = await fetchAllMatches();
+      setMatches(data);
+    } catch (err) {
+      console.error("Error refreshing matches:", err);
+    } finally {
+      setIsLoadingSkeleton(false);
+    }
   };
-
-  const usedTeams =
-  blockNumber === 1
-    ? usedTeamBlock1[currentWeek]?.teams || []
-    : usedTeamBlock2[currentWeek]?.teams || [];
-
-const usedLanes =
-  blockNumber === 1
-    ? usedLanesBlock1[currentWeek]?.lanes || []
-    : usedLanesBlock2[currentWeek]?.lanes || [];
 
   return (
     <div className="p-4">
@@ -174,7 +154,7 @@ const usedLanes =
           <CardContent>
             <form
               onSubmit={(e) =>
-                handleAddMatch(
+                AddMatch(
                   e,
                   blockNumber,
                   week,
@@ -316,9 +296,6 @@ const usedLanes =
                   <CardTitle>
                     <Skeleton className="h-4 w-24" />
                   </CardTitle>
-                  <CardDescription>
-                    <Skeleton className="h-4 w-32" />
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Skeleton className="h-4 w-24" />
@@ -345,7 +322,7 @@ const usedLanes =
                   <CardDescription>Weeks 1-31</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {block1Data && block1Data.length > 0 ? (
+                  {matches?.block1 && matches?.block1.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -358,24 +335,32 @@ const usedLanes =
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {block1Data
-                          .sort((a, b) => a.week - b.week)
-                          .map((match, idx) => (
-                            <TableRow key={idx}>
-                              <TableCell>Week {match.week_number}</TableCell>
-                              <TableCell>{match.team1_name}</TableCell>
-                              <TableCell>vs</TableCell>
-                              <TableCell>{match.team2_name}</TableCell>
-                              <TableCell>
-                                {match.team1_scores && match.team2_scores ? (
-                                  <span className="text-green-600">Completed</span>
-                                ) : (
-                                  <span className="text-muted-foreground">Pending</span>
-                                )}
-                              </TableCell>
-                              <TableCell>{match.team1_scores} - {match.team2_scores}</TableCell>
-                            </TableRow>
-                          ))}
+                        {matches.block1
+                          .slice()
+                          .sort((a, b) => a.match_id - b.match_id)
+                          .map((match: MatchData, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>Week {match.week_number}</TableCell>
+                            <TableCell>{match.lane}</TableCell>
+                            <TableCell>{match.team1.name}</TableCell>
+                            <TableCell>{match.team2.name}</TableCell>
+                            <TableCell>{match.hasScore ? (
+                                <span className="text-green-600">Completed</span>
+                              ) : (
+                                <span className="text-muted-foreground">Pending</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {match.hasScore ? (
+                                <span className="text-green-600">
+                                  {match.team1.totalHdc} - {match.team2.totalHdc}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground">Pending</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   ) : (
@@ -391,7 +376,7 @@ const usedLanes =
                   <CardDescription>Weeks 32-62</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {block2Data && block2Data.length > 0 ? (
+                  {matches?.block2 && matches?.block2.length > 0 ? (
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -404,24 +389,32 @@ const usedLanes =
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {block2Data
-                          .sort((a, b) => a.week - b.week)
-                          .map((match, idx) => (
+                        {matches.block2
+                          .slice()
+                          .sort((a, b) => a.match_id - b.match_id)
+                          .map((match: MatchData, idx) => (
                             <TableRow key={idx}>
                               <TableCell>Week {match.week_number}</TableCell>
-                              <TableCell>{match.team1_name}</TableCell>
-                              <TableCell>vs</TableCell>
-                              <TableCell>{match.team2_name}</TableCell>
-                              <TableCell>
-                                {match.team1_scores && match.team2_scores ? (
+                              <TableCell>{match.lane}</TableCell>
+                              <TableCell>{match.team1.name}</TableCell>
+                              <TableCell>{match.team2.name}</TableCell>
+                              <TableCell>{match.hasScore ? (
                                   <span className="text-green-600">Completed</span>
                                 ) : (
                                   <span className="text-muted-foreground">Pending</span>
                                 )}
                               </TableCell>
-                              <TableCell>{match.team1_scores} - {match.team2_scores}</TableCell>
+                              <TableCell>
+                                {match.hasScore ? (
+                                  <span className="text-green-600">
+                                    {match.team1.totalHdc} - {match.team2.totalHdc}
+                                  </span>
+                                ) : (
+                                  <span className="text-muted-foreground">Pending</span>
+                                )}
+                              </TableCell>
                             </TableRow>
-                          ))}
+                        ))}
                       </TableBody>
                     </Table>
                   ) : (
