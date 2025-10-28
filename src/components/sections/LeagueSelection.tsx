@@ -53,8 +53,20 @@ export default function LeagueSelection() {
             style={{borderStyle: 'var(--tw-border-style)', borderWidth: '1px', borderRadius: '8px', borderColor: '#0000001a'}}
           >
             {isLoadingSkeleton ? (
-              Array.from({ length: leagues.length }).map((_, index) => (
-                <Skeleton key={index} className="h-auto w-full" />
+              Array.from({ length: 1 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="w-full h-auto py-4 justify-start"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                    <div className="text-left">
+                      <Skeleton className="h-5 w-32" />
+                    </div>
+                  </div>
+                </div>
               ))
             ) : leagues.length === 0 ? (
               <div className="text-center text-muted-foreground">No leagues available</div>
