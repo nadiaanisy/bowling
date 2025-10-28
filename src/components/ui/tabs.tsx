@@ -1,9 +1,8 @@
 "use client";
 
-import * as React from "react";
-import * as TabsPrimitive from "@radix-ui/react-tabs";
-
-import { cn } from "../utils";
+import { cn } from '../misc';
+import * as React from 'react';
+import * as TabsPrimitive from '@radix-ui/react-tabs';
 
 function Tabs({
   className,
