@@ -1,4 +1,12 @@
 import {
+  fetchTeamsAndPlayers,
+  addTeam,
+  addPlayer,
+  deleteTeam,
+  deletePlayer,
+  updatePlayer
+} from '../api';
+import {
   useBowlingHook,
   useCustomHook
 } from '../misc';
@@ -33,19 +41,23 @@ import {
   DialogTrigger
 } from '../ui/dialog';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import {
   Trash2,
   UserPlus,
   Users,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Edit,
+  Edit2,
+  Edit2Icon,
+  Edit3
 } from 'lucide-react';
-import {
-  fetchTeamsAndPlayers,
-  AddTeam,
-  AddPlayer,
-  deleteTeam,
-  deletePlayer
-} from '../api';
 import {
   Collapsible,
   CollapsibleContent,
@@ -57,6 +69,7 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Skeleton } from '../ui/skeleton';
+import { Badge } from '../ui/badge';
 import { askConfirm } from '../functions';
 
 function ConfirmDialog({
@@ -90,47 +103,61 @@ function ConfirmDialog({
 
 export default function Teams() {
   const {
-    teams,
-    setTeams,
-    isLoadingSkeleton,
-    setIsLoadingSkeleton,
+    selectedLeague,
     newTeamName,
-    setNewTeamName,
     isAddingTeam,
-    setIsAddingTeam,
+    teams,
+    isLoadingSkeleton,
     dialogOpen,
-    setDialogOpen,
-    selectedTeam,
-    setSelectedTeam,
-    addMode,
-    setAddMode,
-     newPlayerName,
-    setNewPlayerName,
-    multiplePlayerNames,
-    setMultiplePlayerNames,
+    confirmOpen,
     confirmMessage,
+    selectedTeam,
+    selectedTeamName,
+    addMode,
+    newPlayerName,
+    multiplePlayerNames,
+    expandedTeams,
+    editingPlayer,
+    editedName,
+    editedStatus,
+    setNewTeamName,
+    setIsAddingTeam,
+    setTeams,
+    setIsLoadingSkeleton,
+    setDialogOpen,
+    setConfirmOpen,
     setConfirmMessage,
     confirmAction,
     setConfirmAction,
-    confirmOpen,
-    setConfirmOpen,
-    expandedTeams,
+    setSelectedTeam,
+    setSelectedTeamName,
+    setAddMode,
+    setNewPlayerName,
+    setMultiplePlayerNames,
     setExpandedTeams,
-    selectedTeamName,
-    setSelectedTeamName
+    setEditingPlayer,
+    setEditedName,
+    setEditedStatus
   } = useCustomHook();
-  const { selectedLeague } = useBowlingHook();
 
   useEffect(() => {
     const loadTeams = async () => {
       setIsLoadingSkeleton(true);
-      const data = await fetchTeamsAndPlayers();
+      const data = await fetchTeamsAndPlayers(selectedLeague);
       setTeams(data);
       setIsLoadingSkeleton(false);
     };
 
     loadTeams();
   }, []);
+
+  useEffect(() => {
+    if (addMode === 'single') {
+      setMultiplePlayerNames('');
+    } else if (addMode === 'multiple') {
+      setNewPlayerName('');
+    }
+  }, [addMode]);
 
   return (
     <div className="p-4">
@@ -148,7 +175,7 @@ export default function Teams() {
           <CardContent>
             <form
               onSubmit={(e) =>
-                AddTeam(
+                addTeam(
                   e,
                   newTeamName,
                   selectedLeague,
@@ -252,7 +279,7 @@ export default function Teams() {
                             <TabsContent value="single">
                               <form
                                 onSubmit={(e) =>
-                                  AddPlayer(
+                                  addPlayer(
                                     e,
                                     'single',
                                     selectedTeam,
@@ -262,7 +289,8 @@ export default function Teams() {
                                     setNewPlayerName,
                                     setMultiplePlayerNames,
                                     setDialogOpen,
-                                    setTeams
+                                    setTeams,
+                                    selectedLeague
                                   )
                                 }
                               >
@@ -285,7 +313,7 @@ export default function Teams() {
 
                             <TabsContent value="multiple">
                               <form onSubmit={(e) =>
-                                  AddPlayer(
+                                  addPlayer(
                                     e,
                                     'multiple',
                                     selectedTeam,
@@ -295,7 +323,8 @@ export default function Teams() {
                                     setNewPlayerName,
                                     setMultiplePlayerNames,
                                     setDialogOpen,
-                                    setTeams
+                                    setTeams,
+                                    selectedLeague
                                   )
                                 }>
                                 <div className="space-y-4">
@@ -328,7 +357,7 @@ export default function Teams() {
                         onClick={() => {
                           askConfirm(
                             `Delete team ${team.name}?`,
-                            () => deleteTeam(team.id, setTeams),
+                            () => deleteTeam(team.id, setTeams, selectedLeague),
                             setConfirmMessage,
                             setConfirmAction,
                             setConfirmOpen
@@ -362,8 +391,9 @@ export default function Teams() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead>Player Name</TableHead>
-                              <TableHead className="w-[100px]">Action</TableHead>
+                              <TableHead className='w-[25%]'>Player Name</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="w-[100px]">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -371,13 +401,36 @@ export default function Teams() {
                               <TableRow key={player.id}>
                                 <TableCell>{player.name}</TableCell>
                                 <TableCell>
+                                  <Badge
+                                    variant={player.status === "active" ? "success" : "secondary"}
+                                    className={
+                                      player.status === "active"
+                                        ? "bg-green-500/20 text-green-600 border-green-500/30"
+                                        : "bg-red-500/20 text-red-600 border-red-500/30"
+                                    }
+                                  >
+                                    {(player.status).toUpperCase()}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setEditingPlayer(player);
+                                      setEditedName(player.name);
+                                      setEditedStatus(player.status || 'Active');
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                       askConfirm(
                                         `Delete player ${player.name}?`,
-                                        () => deletePlayer(player.id, setTeams),
+                                        () => deletePlayer(player.id, setTeams, selectedLeague),
                                         setConfirmMessage,
                                         setConfirmAction,
                                         setConfirmOpen
@@ -407,6 +460,71 @@ export default function Teams() {
               }}
               onCancel={() => setConfirmOpen(false)}
             />
+            <div className="flex gap-2">
+              <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
+                <DialogContent
+                  onInteractOutside={(e) => e.preventDefault()} 
+                  onEscapeKeyDown={(e) => e.preventDefault()}
+                >
+                  <DialogHeader>
+                    <DialogTitle>Edit Player</DialogTitle>
+                    <DialogDescription>
+                      Update the details for player <b>{editingPlayer?.name}</b>
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4 py-4">
+                    <Label htmlFor="playerName">Player Name</Label>
+                    <Input
+                      id="playerName"
+                      type="text"
+                      value={editedName}
+                      onChange={(e) => setEditedName(e.target.value)}
+                      placeholder="Enter new player name"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="playerStatus">Status</Label>
+                    <Select
+                      value={editedStatus}
+                      onValueChange={(e) => setEditedStatus(e)}
+                    >
+                      <SelectTrigger id="status">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="inactive">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingPlayer(null)}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      onClick={async () => {
+                        // 🔹 Call your update function
+                        const result = await updatePlayer(editingPlayer.id, editedName, editedStatus, selectedLeague, setTeams);
+
+                        if (result) {
+                          setEditingPlayer(null);
+                        }
+                      }}
+                      disabled={!editedName.trim()}
+                    >
+                      Save
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+                    </div>
           </div>
 
           {teams.length === 0 && (

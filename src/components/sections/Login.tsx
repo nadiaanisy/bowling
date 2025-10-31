@@ -16,14 +16,14 @@ import { handleLoginButton } from '../functions';
 
 export default function Login() {
   const {
+    login,
     username,
-    setUsername,
     password,
-    setPassword,
     loading,
+    setUsername,
+    setPassword,
     setLoading
   } = useCustomHook();
-  const { login } = useBowlingHook();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary/30">

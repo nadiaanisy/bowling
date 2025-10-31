@@ -1,7 +1,7 @@
 import {
-  useBowlingHook,
-  useCustomHook
-} from '../misc';
+  useEffect,
+  useState
+} from 'react';
 import {
   Card,
   CardContent,
@@ -9,31 +9,53 @@ import {
   CardHeader,
   CardTitle
 } from '../ui/card';
-import { useEffect } from 'react';
-import { Trophy } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader, 
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 import { Button } from '../ui/button';
+import { Trophy } from 'lucide-react';
+import { useCustomHook } from '../misc';
+import { getLeaguesByUser, insertBlockForLeague } from '../api';
 import { Skeleton } from '../ui/skeleton';
-import { fetchLeagueList } from '../api';
+import { toast } from 'sonner';
+import { successToastStyle } from '../functions';
 
 export default function LeagueSelection() {
   const {
-    leagues,
+    setIsLoadingSkeleton,
     setLeagues,
+    setShowInsertBlockDialog,
+    setBlockCount,
     isLoadingSkeleton,
-    setIsLoadingSkeleton
+    leagues,
+    userId,
+    selectLeague,
+    showInsertBlockDialog,
+    blockCount,
+    selectedLeagueName,
+    selectedLeague,
+    setSelectedLeague
   } = useCustomHook();
-  const { selectLeague } = useBowlingHook();
+
+  const [initialSelectedLeague, setInitialSelectedLeague] = useState<string | null>(null);
 
   useEffect(() => {
     const loadLeagues = async () => {
       setIsLoadingSkeleton(true);
-      const data = await fetchLeagueList();
+      const data = await getLeaguesByUser(userId);
       setLeagues(data);
       setIsLoadingSkeleton(false);
     };
 
     loadLeagues();
-  }, []);
+  }, [userId, setIsLoadingSkeleton, setLeagues]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary/30">
@@ -48,15 +70,12 @@ export default function LeagueSelection() {
           <CardDescription>Choose which bowling league you want to manage</CardDescription>
         </CardHeader>
         <CardContent>
-          <div
-            className="space-y-3"
-            style={{borderStyle: 'var(--tw-border-style)', borderWidth: '1px', borderRadius: '8px', borderColor: '#0000001a'}}
-          >
+          <div className="space-y-3">
             {isLoadingSkeleton ? (
               Array.from({ length: 1 }).map((_, index) => (
                 <div
                   key={index}
-                  className="w-full h-auto py-4 justify-start"
+                  className="w-full h-auto py-4 flex items-center gap-3 border border-black/10 rounded-md"
                 >
                   <div className="flex items-center gap-3">
                     <div className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
@@ -72,26 +91,96 @@ export default function LeagueSelection() {
               <div className="text-center text-muted-foreground">No leagues available</div>
             ) : (
               leagues.map((league) => (
-                <Button
+                <div
                   key={league.id}
-                  variant="outline"
-                  className="w-full h-auto py-4 justify-start"
-                  onClick={() => selectLeague(league)}
+                  className="border border-black/10 rounded-md"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
-                      <Trophy className="h-5 w-5" />
+                  <Button
+                    variant="outline"
+                    className="w-full h-auto py-4 justify-start mt-2"
+                    onClick={async () => {
+                      const hasBlockResult: any = await selectLeague(league);
+                      if (hasBlockResult === false) {
+                        setShowInsertBlockDialog(true);
+                        setInitialSelectedLeague(league.id);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
+                        <Trophy className="h-5 w-5" />
+                      </div>
+                      <div className="text-left">
+                        <div>{league.name}</div>
+                      </div>
                     </div>
-                    <div className="text-left">
-                      <div>{league.name}</div>
-                    </div>
-                  </div>
-                </Button>
+                  </Button>
+                </div>
               ))
             )}
           </div>
         </CardContent>
       </Card>
+
+      {/* Block Setup Dialog */}
+      <Dialog open={showInsertBlockDialog} onOpenChange={setShowInsertBlockDialog}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()} 
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Set Up Blocks</DialogTitle>
+            <DialogDescription>
+              This league has no block data yet. How many blocks would you like to create for <b>{selectedLeagueName}</b>?
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <Label htmlFor="blockCount">Number of Blocks</Label>
+            <Input
+              id="blockCount"
+              type="number"
+              min="1"
+              max="10"
+              value={blockCount}
+              onChange={(e) => setBlockCount(e.target.value)}
+              placeholder="Enter number of blocks (1-10)"
+            />
+            <p className="text-sm text-muted-foreground">
+              Typical leagues use 2 blocks (weeks each depends on no. of teams)
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowInsertBlockDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={async () => {
+                // ✅ Call insert
+                const result = await insertBlockForLeague(initialSelectedLeague, parseInt(blockCount));
+                if (result && initialSelectedLeague) {
+                  setSelectedLeague(initialSelectedLeague);
+                  sessionStorage.setItem("bowling-selected-league", initialSelectedLeague);
+                  localStorage.setItem("bowling-selected-league", initialSelectedLeague);
+
+                  // ✅ Close dialog
+                  setShowInsertBlockDialog(false);
+
+                  // ✅ Optional: show success toast
+                  toast.success(`Successfully created ${blockCount} block(s) for ${selectedLeagueName}`, successToastStyle);
+                }
+              }}
+              disabled={!blockCount || parseInt(blockCount) < 1 || parseInt(blockCount) > 10}
+            >
+              Create Blocks
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
