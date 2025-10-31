@@ -1,4 +1,15 @@
 import {
+  useEffect,
+  useState
+} from 'react';
+import {
+  fetchAllTeams,
+  fetchBlocksData,
+  addMatch,
+  fetchAllMatchesGroupedByMatchAndBlock,
+  deleteMatch
+} from '../api';
+import {
   Card,
   CardContent,
   CardDescription,
@@ -27,39 +38,47 @@ import {
   SelectValue,
 } from '../ui/select';
 import {
-  fetchAllMatches,
-  fetchAllTeams,
-  fetchBlocksData,
-  AddMatch
-} from '../api';
-import { useEffect, useState } from 'react';
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from '../ui/alert-dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
+import { Trash2 } from 'lucide-react';
 import { useCustomHook} from '../misc';
+import { MatchData } from '../interfaces';
 import { Skeleton } from '../ui/skeleton';
-import { MatchData } from '../interface';
+import { errorToastStyle } from '../functions';
 
 export default function Timetable() {
   const {
-    blocksData,
-    setBlocksData,
-    teams,
-    setTeams,
-    blockNumber,
-    setBlockNumber,
-    week,
-    setWeek,
     isLoadingSkeleton,
-    setIsLoadingSkeleton,
+    blocksData,
+    blockNumber,
+    teams,
     team1,
-    setTeam1,
     team2,
-    setTeam2,
+    week,
     selectedLane,
+    selectedLeague,
+    setIsLoadingSkeleton,
+    setBlocksData,
+    setBlockNumber,
+    setTeams,
+    setTeam1,
+    setTeam2,
+    setWeek,
     setSelectedLane,
-  } = useCustomHook();
-  
+    setSelectedLeague
+  }  = useCustomHook();
+
   // Current block and week as numbers
   const currentWeek = week ? parseInt(week) : 0;
 
@@ -73,25 +92,21 @@ export default function Timetable() {
 
   useEffect(() => {
     const loadData = async () => {
-      try {
-        setIsLoadingSkeleton(true);
+      setIsLoadingSkeleton(true);
 
-        // 1️⃣ Fetch blocks
-        const blocks = await fetchBlocksData();
-        setBlocksData(blocks);
+      // 1️⃣ Fetch blocks
+      const blocks = await fetchBlocksData(selectedLeague);
+      setBlocksData(blocks);
 
-        // 2️⃣ Fetch teams
-        const allTeams = await fetchAllTeams();
-        setTeams(allTeams);
+      // 2️⃣ Fetch teams
+      const allTeams = await fetchAllTeams(selectedLeague);
+      setTeams(allTeams);
 
-        // 3️⃣ Fetch matches
-        const data = await fetchAllMatches();
-        setMatches(data);
-      } catch (err) {
-        console.error("Error loading data:", err);
-      } finally {
-        setIsLoadingSkeleton(false);
-      }
+      // 3️⃣ Fetch matches
+      const data = await fetchAllMatchesGroupedByMatchAndBlock();
+      setMatches(data);
+
+      setIsLoadingSkeleton(false);
     }
 
     loadData();
@@ -125,15 +140,10 @@ export default function Timetable() {
   }, [usedTeams, usedLanes]);
 
   const refreshMatches = async () => {
-    try {
-      setIsLoadingSkeleton(true);
-      const data = await fetchAllMatches();
-      setMatches(data);
-    } catch (err) {
-      console.error("Error refreshing matches:", err);
-    } finally {
-      setIsLoadingSkeleton(false);
-    }
+    setIsLoadingSkeleton(true);
+    const data = await fetchAllMatchesGroupedByMatchAndBlock();
+    setMatches(data);
+    setIsLoadingSkeleton(false);
   };
 
   return (
@@ -154,7 +164,7 @@ export default function Timetable() {
           <CardContent>
             <form
               onSubmit={(e) =>
-                AddMatch(
+                addMatch(
                   e,
                   blockNumber,
                   week,
@@ -166,7 +176,8 @@ export default function Timetable() {
                   setWeek,
                   setTeam1,
                   setTeam2,
-                  setSelectedLane
+                  setSelectedLane,
+                  selectedLeague
                 )
               }
               className="space-y-4"
@@ -309,7 +320,6 @@ export default function Timetable() {
           <Tabs
             value={`block${blockNumber}`}
             onValueChange={(val) => setBlockNumber(val === 'block1' ? 1 : 2)}
-            // defaultValue="block2"
           >
             <TabsList>
               <TabsTrigger value="block1">Block 1</TabsTrigger>
@@ -327,44 +337,63 @@ export default function Timetable() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Week</TableHead>
+                          <TableHead>Lane</TableHead>
                           <TableHead>Team 1</TableHead>
-                          <TableHead>vs</TableHead>
                           <TableHead>Team 2</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Score</TableHead>
+                          <TableHead>Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {matches.block1
                           .slice()
-                          .sort((a, b) => a.match_id - b.match_id)
+                          .sort((a, b) => a.week_number - b.week_number)
                           .map((match: MatchData, idx) => (
                           <TableRow key={idx}>
                             <TableCell>Week {match.week_number}</TableCell>
                             <TableCell>{match.lane}</TableCell>
                             <TableCell>{match.team1.name}</TableCell>
                             <TableCell>{match.team2.name}</TableCell>
-                            <TableCell>{match.hasScore ? (
+                            <TableCell>{(
+                                match.hasScore || 
+                                (match.team1.name === "BLIND" && !match.hasScore) || 
+                                (match.team2.name === "BLIND" && !match.hasScore)
+                              ) ? (
                                 <span className="text-green-600">Completed</span>
                               ) : (
                                 <span className="text-muted-foreground">Pending</span>
                               )}
                             </TableCell>
                             <TableCell>
-                              {match.hasScore ? (
-                                <span className="text-green-600">
-                                  {match.team1.totalHdc} - {match.team2.totalHdc}
-                                </span>
-                              ) : (
-                                <span className="text-muted-foreground">Pending</span>
-                              )}
+                              <AlertDialog>
+                                <AlertDialogTrigger>
+                                  <Trash2 className="h-4 w-4" />
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      This action cannot be undone. This will permanently delete the match from the schedule.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      variant='destructive'
+                                      onClick={() => deleteMatch(match.match_id, refreshMatches)}
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
                   ) : (
-                    <p className="text-center text-muted-foreground py-8">No matches scheduled for Block 2</p>
+                    <p className="text-center text-muted-foreground py-8">No matches scheduled for Block 1</p>
                   )}
                 </CardContent>
               </Card>
@@ -381,37 +410,56 @@ export default function Timetable() {
                       <TableHeader>
                         <TableRow>
                           <TableHead>Week</TableHead>
+                          <TableHead>Lane</TableHead>
                           <TableHead>Team 1</TableHead>
-                          <TableHead>vs</TableHead>
                           <TableHead>Team 2</TableHead>
                           <TableHead>Status</TableHead>
-                          <TableHead>Score</TableHead>
+                          <TableHead>Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {matches.block2
                           .slice()
-                          .sort((a, b) => a.match_id - b.match_id)
+                          .sort((a, b) => a.week_number - b.week_number)
                           .map((match: MatchData, idx) => (
                             <TableRow key={idx}>
                               <TableCell>Week {match.week_number}</TableCell>
                               <TableCell>{match.lane}</TableCell>
                               <TableCell>{match.team1.name}</TableCell>
                               <TableCell>{match.team2.name}</TableCell>
-                              <TableCell>{match.hasScore ? (
+                              <TableCell>{(
+                                  match.hasScore || 
+                                  (match.team1.name === "BLIND" && !match.hasScore) || 
+                                  (match.team2.name === "BLIND" && !match.hasScore)
+                                ) ? (
                                   <span className="text-green-600">Completed</span>
                                 ) : (
                                   <span className="text-muted-foreground">Pending</span>
                                 )}
                               </TableCell>
                               <TableCell>
-                                {match.hasScore ? (
-                                  <span className="text-green-600">
-                                    {match.team1.totalHdc} - {match.team2.totalHdc}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground">Pending</span>
-                                )}
+                                <AlertDialog>
+                                  <AlertDialogTrigger>
+                                    <Trash2 className="h-4 w-4" />
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently delete the match from the schedule.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        variant='destructive'
+                                        onClick={() => deleteMatch(match.match_id, refreshMatches)}
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
                               </TableCell>
                             </TableRow>
                         ))}
