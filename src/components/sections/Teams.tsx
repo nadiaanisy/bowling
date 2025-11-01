@@ -233,124 +233,126 @@ export default function Teams() {
                       <CardDescription>{team?.players?.length} players</CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      <Dialog open={dialogOpen && selectedTeam === team.id} onOpenChange={(open) => {
-                        setDialogOpen(open);
-                        if (open) {
-                          setSelectedTeam(team.id);
-                          setSelectedTeamName(team.name);
-                          setAddMode('single');
-                        }
-                        if (!open) {
-                          setNewPlayerName('');
-                          setMultiplePlayerNames('');
-                          setSelectedTeam(null);
-                          setSelectedTeamName('');
-                        }
-                      }}>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" style={{borderStyle: 'var(--tw-border-style)', borderWidth: '1px', borderRadius: '8px', borderColor: '#0000001a'}}>
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Add Player
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent
-                          className="sm:max-w-[500px]"
-                          aria-describedby={undefined}
-                          onPointerDownOutside={(e) => e.preventDefault()}
-                          onInteractOutside={(e) => e.preventDefault()}
-                        >
-                          <DialogHeader>
-                            <DialogTitle>Add Player(s) to {team.name}</DialogTitle>
-                            <DialogDescription>Choose to add a single player or multiple players at once</DialogDescription>
-                          </DialogHeader>
-                          
-                          <Tabs value={addMode} onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}>
-                            <TabsList className="grid w-full grid-cols-2">
-                              <TabsTrigger value="single">
-                                <UserPlus className="h-4 w-4 mr-2" />
-                                Single Player
-                              </TabsTrigger>
-                              <TabsTrigger value="multiple">
-                                <Users className="h-4 w-4 mr-2" />
-                                Multiple Players
-                              </TabsTrigger>
-                            </TabsList>
+                      {team.name !== "BLIND" && (
+                        <Dialog open={dialogOpen && selectedTeam === team.id} onOpenChange={(open) => {
+                          setDialogOpen(open);
+                          if (open) {
+                            setSelectedTeam(team.id);
+                            setSelectedTeamName(team.name);
+                            setAddMode('single');
+                          }
+                          if (!open) {
+                            setNewPlayerName('');
+                            setMultiplePlayerNames('');
+                            setSelectedTeam(null);
+                            setSelectedTeamName('');
+                          }
+                        }}>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" style={{borderStyle: 'var(--tw-border-style)', borderWidth: '1px', borderRadius: '8px', borderColor: '#0000001a'}}>
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Add Player
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent
+                            className="sm:max-w-[500px]"
+                            aria-describedby={undefined}
+                            onPointerDownOutside={(e) => e.preventDefault()}
+                            onInteractOutside={(e) => e.preventDefault()}
+                          >
+                            <DialogHeader>
+                              <DialogTitle>Add Player(s) to {team.name}</DialogTitle>
+                              <DialogDescription>Choose to add a single player or multiple players at once</DialogDescription>
+                            </DialogHeader>
+                            
+                            <Tabs value={addMode} onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}>
+                              <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="single">
+                                  <UserPlus className="h-4 w-4 mr-2" />
+                                  Single Player
+                                </TabsTrigger>
+                                <TabsTrigger value="multiple">
+                                  <Users className="h-4 w-4 mr-2" />
+                                  Multiple Players
+                                </TabsTrigger>
+                              </TabsList>
 
-                            <TabsContent value="single">
-                              <form
-                                onSubmit={(e) =>
-                                  addPlayer(
-                                    e,
-                                    'single',
-                                    selectedTeam,
-                                    selectedTeamName,
-                                    newPlayerName,
-                                    multiplePlayerNames,
-                                    setNewPlayerName,
-                                    setMultiplePlayerNames,
-                                    setDialogOpen,
-                                    setTeams,
-                                    selectedLeague
-                                  )
-                                }
-                              >
-                                <div className="space-y-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="playerName">Player Name</Label>
-                                    <Input
-                                      id="playerName"
-                                      placeholder="Enter player name"
-                                      value={newPlayerName}
-                                      onChange={(e) => setNewPlayerName(e.target.value)}
-                                    />
+                              <TabsContent value="single">
+                                <form
+                                  onSubmit={(e) =>
+                                    addPlayer(
+                                      e,
+                                      'single',
+                                      selectedTeam,
+                                      selectedTeamName,
+                                      newPlayerName,
+                                      multiplePlayerNames,
+                                      setNewPlayerName,
+                                      setMultiplePlayerNames,
+                                      setDialogOpen,
+                                      setTeams,
+                                      selectedLeague
+                                    )
+                                  }
+                                >
+                                  <div className="space-y-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="playerName">Player Name</Label>
+                                      <Input
+                                        id="playerName"
+                                        placeholder="Enter player name"
+                                        value={newPlayerName}
+                                        onChange={(e) => setNewPlayerName(e.target.value)}
+                                      />
+                                    </div>
                                   </div>
-                                </div>
-                                <DialogFooter className="mt-4">
-                                  <Button type="submit">Add Player</Button>
-                                </DialogFooter>
-                              </form>
-                            </TabsContent>
+                                  <DialogFooter className="mt-4">
+                                    <Button type="submit">Add Player</Button>
+                                  </DialogFooter>
+                                </form>
+                              </TabsContent>
 
-                            <TabsContent value="multiple">
-                              <form onSubmit={(e) =>
-                                  addPlayer(
-                                    e,
-                                    'multiple',
-                                    selectedTeam,
-                                    selectedTeamName,
-                                    newPlayerName,
-                                    multiplePlayerNames,
-                                    setNewPlayerName,
-                                    setMultiplePlayerNames,
-                                    setDialogOpen,
-                                    setTeams,
-                                    selectedLeague
-                                  )
-                                }>
-                                <div className="space-y-4">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="multiplePlayerNames">Player Names (one per line)</Label>
-                                    <Textarea
-                                      id="multiplePlayerNames"
-                                      placeholder="John Doe&#10;Jane Smith&#10;Mike Johnson"
-                                      value={multiplePlayerNames}
-                                      onChange={(e) => setMultiplePlayerNames(e.target.value)}
-                                      rows={8}
-                                      className="resize-none"
-                                    />
-                                    <p className="text-sm text-muted-foreground">
-                                      Enter each player name on a new line
-                                    </p>
+                              <TabsContent value="multiple">
+                                <form onSubmit={(e) =>
+                                    addPlayer(
+                                      e,
+                                      'multiple',
+                                      selectedTeam,
+                                      selectedTeamName,
+                                      newPlayerName,
+                                      multiplePlayerNames,
+                                      setNewPlayerName,
+                                      setMultiplePlayerNames,
+                                      setDialogOpen,
+                                      setTeams,
+                                      selectedLeague
+                                    )
+                                  }>
+                                  <div className="space-y-4">
+                                    <div className="space-y-2">
+                                      <Label htmlFor="multiplePlayerNames">Player Names (one per line)</Label>
+                                      <Textarea
+                                        id="multiplePlayerNames"
+                                        placeholder="John Doe&#10;Jane Smith&#10;Mike Johnson"
+                                        value={multiplePlayerNames}
+                                        onChange={(e) => setMultiplePlayerNames(e.target.value)}
+                                        rows={8}
+                                        className="resize-none"
+                                      />
+                                      <p className="text-sm text-muted-foreground">
+                                        Enter each player name on a new line
+                                      </p>
+                                    </div>
                                   </div>
-                                </div>
-                                <DialogFooter className="mt-4">
-                                  <Button type="submit">Add Players</Button>
-                                </DialogFooter>
-                              </form>
-                            </TabsContent>
-                          </Tabs>
-                        </DialogContent>
-                      </Dialog>
+                                  <DialogFooter className="mt-4">
+                                    <Button type="submit">Add Players</Button>
+                                  </DialogFooter>
+                                </form>
+                              </TabsContent>
+                            </Tabs>
+                          </DialogContent>
+                        </Dialog>
+                      )}
                       <Button
                         variant="destructive"
                         size="sm"
