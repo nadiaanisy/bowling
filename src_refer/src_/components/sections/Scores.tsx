@@ -2,7 +2,7 @@ import {
   fetchAllMatchesDataByWeekAndBlock,
   fetchBlocksData,
   fetchWeeksByBlocks,
-  insertMatchResults,
+  handleSaveMatch
 } from '../api';
 import {
   Card,
@@ -28,75 +28,71 @@ import {
   TableRow
 } from '../ui/table';
 import {
-  calculatePlayerTotal,
-  calculatePlayerTotalHdc,
-  calculateTeamColumnTotals,
-  calculateTeamTotalsFromData,
-  handleGetActivePlayersForTeam,
-  handleGetAvailablePlayers,
-  handleBlockChanged,
-  handleHdcChange,
-  handleScoreChange,
-  handleWeekChanged,
-  handleAddPlayerToMatch,
-  handleRemovePlayerFromMatch
-} from '../functions';
-import {
   Accordion, 
   AccordionContent,
   AccordionItem,
   AccordionTrigger
 } from '../ui/accordion';
-import { useEffect } from 'react';
+import {
+  addPlayerToMatch,
+  calculatePlayerTotal,
+  calculatePlayerTotalHdc,
+  calculateTeamColumnTotals,
+  calculateTeamTotalsFromData,
+  getActivePlayersForTeam,
+  getAvailablePlayers,
+  handleBlockChange,
+  handleHdcChange,
+  handleScoreChange,
+  handleWeekChange,
+  removePlayerFromMatch
+} from '../functions';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Trash2 } from 'lucide-react';
 import { useCustomHook } from '../misc';
+import { useEffect, useState } from 'react';
 
 export default function Scores() {
   const {
     blockNumber,
-    weekInScores,
+    setBlockNumber,
+    setScores,
     scores,
+    setActivePlayers,
     activePlayers,
+    setBlocksData,
     blocksData,
     weeksAvailable,
-    isLoadingSkeleton,
-    selectedPlayerDropdown,
-    playerScores,
-    savedMatches,
-    selectedLeague,
-    setBlockNumber,
-    setWeekInScores,
-    setScores,
-    setActivePlayers,
-    setBlocksData,
     setWeeksAvailable,
     setIsLoadingSkeleton,
-    setSelectedPlayerDropdown,
-    setPlayerScores,
-    setSavedMatches
+    isLoadingSkeleton
   } = useCustomHook();
+
+  const [week, setWeek] = useState('');
+  const [selectedPlayerDropdown, setSelectedPlayerDropdown] = useState<{ [matchIndex: number]: { [teamNum: number]: string } }>({});
+  const [playerScores, setPlayerScores] = useState<any>({});
+  const [savedMatches, setSavedMatches] = useState<number[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoadingSkeleton(true);
-      const blockslist = await fetchBlocksData(selectedLeague);
+      const blockslist = await fetchBlocksData();
       setBlocksData(blockslist);
 
-      const weekslist = await fetchWeeksByBlocks(blockNumber, selectedLeague);
+      const weekslist = await fetchWeeksByBlocks(blockNumber);
       setWeeksAvailable(weekslist);
 
-      const matchesList = await fetchAllMatchesDataByWeekAndBlock(weekInScores, blockNumber, selectedLeague);
+      const matchesList = await fetchAllMatchesDataByWeekAndBlock(week, blockNumber);
       setScores(matchesList);
 
       setIsLoadingSkeleton(false);
     };
 
     loadData();
-  }, [blockNumber, weekInScores]);
+  }, [blockNumber, week]);
 
   return (
     <div className="p-4">
@@ -120,10 +116,10 @@ export default function Scores() {
                 <Label htmlFor="block">Block</Label>
                 <Select
                   value={blockNumber?.toString() || ''}
-                  onValueChange={(v) => handleBlockChanged(
+                  onValueChange={(v) => handleBlockChange(
                     parseInt(v) as 1 | 2,
                     (val: number) => setBlockNumber(val as 1 | 2),
-                    setWeekInScores,
+                    setWeek,
                     setScores,
                     setActivePlayers
                   )}
@@ -145,10 +141,10 @@ export default function Scores() {
               <div className="space-y-2">
                 <Label htmlFor="week">Week</Label>
                 <Select
-                  value={weekInScores || ''} // show placeholder when week is empty
-                  onValueChange={(val) => handleWeekChanged(
+                  value={week || ''} // show placeholder when week is empty
+                  onValueChange={(val) => handleWeekChange(
                     val,
-                    setWeekInScores,
+                    setWeek,
                     setScores,
                     setActivePlayers,
                   )}
@@ -179,24 +175,22 @@ export default function Scores() {
         {scores && scores.length > 0 ? (
           <div className="space-y-4 mt-10">
             <div className="flex items-center justify-between">
-              <h2>Week {weekInScores} Matches</h2>
+              <h2>Week {week} Matches</h2>
               <Badge variant="secondary">{scores.length} {scores.length === 1 ? 'Match' : 'Matches'}</Badge>
             </div>
 
             <Accordion type="single" collapsible className="space-y-4">
               {scores.map((match: any, index: any) => {
-                console.log(match)
                 const team1 = match.team1;
                 const team2 = match.team2;
-                const bothScoreEntered = match.hasScore;
                 const team1Totals = calculateTeamColumnTotals(
-                  handleGetActivePlayersForTeam(index, 1, team1, activePlayers),
+                  getActivePlayersForTeam(index, 1, team1, activePlayers),
                   playerScores,
                   index,
                   1
                 );
                 const team2Totals = calculateTeamColumnTotals(
-                  handleGetActivePlayersForTeam(index, 2, team2, activePlayers),
+                  getActivePlayersForTeam(index, 2, team2, activePlayers),
                   playerScores,
                   index,
                   2
@@ -215,11 +209,7 @@ export default function Scores() {
                 const team2TotalsFromData = calculateTeamTotalsFromData(team2);
 
                 return (
-                  <AccordionItem
-                    key={index}
-                    value={`match-${index}`}
-                    className="border rounded-lg"
-                  >
+                  <AccordionItem key={index} value={`match-${index}`} className="border rounded-lg">
                     <Card>
                       <AccordionTrigger className="px-6 py-4 hover:no-underline">
                         <div className="flex items-center justify-between w-full pr-4">
@@ -228,11 +218,14 @@ export default function Scores() {
                             <span className="text-muted-foreground">vs</span>
                             <span>{team2.name}</span>
                           </div>
-                          {bothScoreEntered && (
-                          <Badge variant="outline" className="ml-4">
-                              Scores Entered
-                            </Badge>
-                          )}
+                            {(
+                              (team1?.hasScore && team2?.hasScore) || 
+                              (team1?.name?.toUpperCase() === "BLIND" || team2?.name?.toUpperCase() === "BLIND")
+                            ) && (
+                              <Badge variant="outline" className="ml-4">
+                                Scores Entered
+                              </Badge>
+                            )}
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
@@ -288,49 +281,49 @@ export default function Scores() {
                                     })}
                                   </TableBody>
                                   <TableFooter>
-                                    <TableRow>
-                                      <TableCell>Total Scratch Pins</TableCell>
-                                      <TableCell>480</TableCell>
-                                      <TableCell>480</TableCell>
-                                      <TableCell>480</TableCell>
-                                      <TableCell></TableCell>
-                                      <TableCell></TableCell>
-                                      <TableCell></TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                      <TableCell>Total Hdc</TableCell>
-                                      <TableCell>0</TableCell>
-                                      <TableCell>0</TableCell>
-                                      <TableCell>0</TableCell>
-                                      <TableCell></TableCell>
-                                      <TableCell>0</TableCell>
-                                      <TableCell></TableCell>
-                                    </TableRow>
-                                    <TableRow>
-                                      <TableCell>Total Result</TableCell>
-                                      <TableCell>480</TableCell>
-                                      <TableCell>480</TableCell>
-                                      <TableCell>480</TableCell>
-                                      <TableCell></TableCell>
-                                      <TableCell></TableCell>
-                                      <TableCell>1440</TableCell>
-                                    </TableRow>
-                                  </TableFooter>
+                                      <TableRow>
+                                        <TableCell>Total Scratch Pins</TableCell>
+                                        <TableCell>480</TableCell>
+                                        <TableCell>480</TableCell>
+                                        <TableCell>480</TableCell>
+                                        <TableCell></TableCell>
+                                        <TableCell></TableCell>
+                                        <TableCell></TableCell>
+                                      </TableRow>
+                                      <TableRow>
+                                        <TableCell>Total Hdc</TableCell>
+                                        <TableCell>0</TableCell>
+                                        <TableCell>0</TableCell>
+                                        <TableCell>0</TableCell>
+                                        <TableCell></TableCell>
+                                        <TableCell>0</TableCell>
+                                        <TableCell></TableCell>
+                                      </TableRow>
+                                      <TableRow>
+                                        <TableCell>Total Result</TableCell>
+                                        <TableCell>480</TableCell>
+                                        <TableCell>480</TableCell>
+                                        <TableCell>480</TableCell>
+                                        <TableCell></TableCell>
+                                        <TableCell></TableCell>
+                                        <TableCell>1440</TableCell>
+                                      </TableRow>
+                                    </TableFooter>
                                 </Table>
                               ) : (
                                 <>
                                 {/* Add Player Section */}
-                                {team1 && !team1.hasScore && handleGetAvailablePlayers(index, 1, team1, activePlayers).length > 0 && (
+                                {team1 && !team1.hasScore && getAvailablePlayers(index, 1, team1, activePlayers).length > 0 && (
                                   <div className="flex gap-2">
                                     <Select
                                       value={selectedPlayerDropdown[index]?.[1] || ''}
-                                      onValueChange={(playerId) => handleAddPlayerToMatch(index, 1, playerId, setActivePlayers, setSelectedPlayerDropdown)}
+                                      onValueChange={(playerId) => addPlayerToMatch(index, 1, playerId, setActivePlayers, setSelectedPlayerDropdown)}
                                     >
                                       <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Select player to add" />
                                       </SelectTrigger>
                                       <SelectContent>
-                                        {handleGetAvailablePlayers(index, 1, team1, activePlayers).map((player: any) => (
+                                        {getAvailablePlayers(index, 1, team1, activePlayers).map((player: any) => (
                                           <SelectItem key={player.id} value={player.id}>
                                             {player.name}
                                           </SelectItem>
@@ -361,9 +354,9 @@ export default function Scores() {
                                         .map((player: any) => (
                                         <TableRow key={player.id}>
                                           <TableCell>{player.name}</TableCell>
-                                          <TableCell className={player.g1 >= 200 ? "text-red-500 font-semibold" : ""}>{player.g1}</TableCell>
-                                          <TableCell className={player.g2 >= 200 ? "text-red-500 font-semibold" : ""}>{player.g2}</TableCell>
-                                          <TableCell className={player.g3 >= 200 ? "text-red-500 font-semibold" : ""}>{player.g3}</TableCell>
+                                          <TableCell>{player.g1}</TableCell>
+                                          <TableCell>{player.g2}</TableCell>
+                                          <TableCell>{player.g3}</TableCell>
                                           <TableCell>{player.scratch}</TableCell>
                                           <TableCell>{player.hdc}</TableCell>
                                           <TableCell>{player.totalHdc}</TableCell>
@@ -372,7 +365,7 @@ export default function Scores() {
                                               variant="ghost"
                                               size="sm"
                                               onClick={() =>
-                                                handleRemovePlayerFromMatch(
+                                                removePlayerFromMatch(
                                                   index,
                                                   1,
                                                   player.id,
@@ -420,7 +413,7 @@ export default function Scores() {
                                       </TableRow>
                                     </TableFooter>
                                   </Table>
-                                ) : team1 && !team1.hasScore && handleGetActivePlayersForTeam(index, 1, team1, activePlayers).length > 0 ? (
+                                ) : team1 && !team1.hasScore && getActivePlayersForTeam(index, 1, team1, activePlayers).length > 0 ? (
                                   <Table>
                                     <TableHeader>
                                       <TableRow>
@@ -435,7 +428,7 @@ export default function Scores() {
                                       </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                      {handleGetActivePlayersForTeam(index, 1, team1, activePlayers).map((player: any) => (
+                                      {getActivePlayersForTeam(index, 1, team1, activePlayers).map((player: any) => (
                                         <TableRow key={player.id}>
                                           <TableCell>{player.name}</TableCell>
                                           <TableCell>
@@ -484,7 +477,7 @@ export default function Scores() {
                                             <Button
                                               variant="ghost"
                                               size="sm"
-                                              onClick={() => handleRemovePlayerFromMatch(index, 1, player.id, activePlayers, setActivePlayers, playerScores, setPlayerScores, setSelectedPlayerDropdown)}
+                                              onClick={() => removePlayerFromMatch(index, 1, player.id, activePlayers, setActivePlayers, playerScores, setPlayerScores, setSelectedPlayerDropdown)}
                                             >
                                               <Trash2 className="h-4 w-4" />
                                             </Button>
@@ -495,9 +488,9 @@ export default function Scores() {
                                     <TableFooter>
                                       <TableRow>
                                         <TableCell>Total Scratch Pins</TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).g1}</TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).g2}</TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).g3}</TableCell>
+                                        <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).g1}</TableCell>
+                                        <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).g2}</TableCell>
+                                        <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).g3}</TableCell>
                                         <TableCell></TableCell>
                                         <TableCell></TableCell>
                                         <TableCell></TableCell>
@@ -508,7 +501,7 @@ export default function Scores() {
                                         <TableCell>{perGameHdct1}</TableCell>
                                         <TableCell>{perGameHdct1}</TableCell>
                                         <TableCell></TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).hdc}</TableCell>
+                                        <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).hdc}</TableCell>
                                         <TableCell></TableCell>
                                       </TableRow>
                                       <TableRow>
@@ -518,7 +511,7 @@ export default function Scores() {
                                         <TableCell>{totalg3t1}</TableCell>
                                         <TableCell></TableCell>
                                         <TableCell></TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).total}</TableCell>
+                                        <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 1, team1, activePlayers), playerScores, index, 1).total}</TableCell>
                                       </TableRow>
                                     </TableFooter>
                                   </Table>
@@ -530,7 +523,7 @@ export default function Scores() {
                                     </>
                                   </p>
                                 )}
-                                </>
+                              </>
                               )}
                             </div>
 
@@ -615,229 +608,229 @@ export default function Scores() {
                                 </Table>
                               ) : (
                                 <>
-                                {/* Add Player Section */}
-                                {team2 && !team2.hasScore && handleGetAvailablePlayers(index, 2, team2, activePlayers).length > 0 && (
-                                  <div className="flex gap-2">
-                                    <Select
-                                      value={selectedPlayerDropdown[index]?.[2] || ''}
-                                      onValueChange={(playerId) =>
-                                        handleAddPlayerToMatch(index, 2, playerId, setActivePlayers, setSelectedPlayerDropdown)
-                                      }
-                                    >
-                                      <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select player to add" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {handleGetAvailablePlayers(index, 2, team2, activePlayers).map((player: any) => (
-                                          <SelectItem key={player.id} value={player.id}>
-                                            {player.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                )}
+                                  {/* Add Player Section */}
+                                  {team2 && !team2.hasScore && getAvailablePlayers(index, 2, team2, activePlayers).length > 0 && (
+                                    <div className="flex gap-2">
+                                      <Select
+                                        value={selectedPlayerDropdown[index]?.[2] || ''}
+                                        onValueChange={(playerId) =>
+                                          addPlayerToMatch(index, 2, playerId, setActivePlayers, setSelectedPlayerDropdown)
+                                        }
+                                      >
+                                        <SelectTrigger className="w-full">
+                                          <SelectValue placeholder="Select player to add" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          {getAvailablePlayers(index, 2, team2, activePlayers).map((player: any) => (
+                                            <SelectItem key={player.id} value={player.id}>
+                                              {player.name}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                  )}
 
-                                {/* Players Table */}
-                                {team2 && team2.hasScore ? (
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Player</TableHead>
-                                        <TableHead>G1</TableHead>
-                                        <TableHead>G2</TableHead>
-                                        <TableHead>G3</TableHead>
-                                        <TableHead>Scratch</TableHead>
-                                        <TableHead>HDC</TableHead>
-                                        <TableHead>Total</TableHead>
-                                        <TableHead className="w-[50px]"></TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {team2.players
-                                        .filter((player: any) => player.g1 || player.g2 || player.g3 || player.hdc)
-                                        .map((player: any) => (
-                                        <TableRow key={player.id}>
-                                          <TableCell>{player.name}</TableCell>
-                                          <TableCell className={player.g1 >= 200 ? "text-red-500 font-semibold" : ""}>{player.g1}</TableCell>
-                                          <TableCell className={player.g2 >= 200 ? "text-red-500 font-semibold" : ""}>{player.g2}</TableCell>
-                                          <TableCell className={player.g3 >= 200 ? "text-red-500 font-semibold" : ""}>{player.g3}</TableCell>
-                                          <TableCell>{player.scratch}</TableCell>
-                                          <TableCell>{player.hdc}</TableCell>
-                                          <TableCell>{player.totalHdc}</TableCell>
-                                          <TableCell>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() =>
-                                                handleRemovePlayerFromMatch(
-                                                  index,
-                                                  2,
-                                                  player.id,
-                                                  activePlayers,
-                                                  setActivePlayers,
-                                                  playerScores,
-                                                  setPlayerScores,
-                                                  setSelectedPlayerDropdown
-                                                )
-                                              }
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                          </TableCell>
+                                  {/* Players Table */}
+                                  {team2 && team2.hasScore ? (
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Player</TableHead>
+                                          <TableHead>G1</TableHead>
+                                          <TableHead>G2</TableHead>
+                                          <TableHead>G3</TableHead>
+                                          <TableHead>Scratch</TableHead>
+                                          <TableHead>HDC</TableHead>
+                                          <TableHead>Total</TableHead>
+                                          <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
-                                      ))}
-                                    </TableBody>
-                                    <TableFooter>
-                                      <TableRow>
-                                        <TableCell>Total Scratch Pins</TableCell>
-                                        <TableCell>{team2TotalsFromData.g1}</TableCell>
-                                        <TableCell>{team2TotalsFromData.g2}</TableCell>
-                                        <TableCell>{team2TotalsFromData.g3}</TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
-                                      </TableRow>
-                                      <TableRow>
-                                        <TableCell>Total Hdc</TableCell>
-                                        <TableCell>{team2TotalsFromData.hdc / 3}</TableCell>
-                                        <TableCell>{team2TotalsFromData.hdc / 3}</TableCell>
-                                        <TableCell>{team2TotalsFromData.hdc / 3}</TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell>{team2TotalsFromData.hdc}</TableCell>
-                                        <TableCell></TableCell>
-                                      </TableRow>
-                                      <TableRow>
-                                        <TableCell>Total Result</TableCell>
-                                        <TableCell>{team2TotalsFromData.g1 + (team2TotalsFromData.hdc / 3)}</TableCell>
-                                        <TableCell>{team2TotalsFromData.g2 + (team2TotalsFromData.hdc / 3)}</TableCell>
-                                        <TableCell>{team2TotalsFromData.g3 + (team2TotalsFromData.hdc / 3)}</TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell>{team2TotalsFromData.total}</TableCell>
-                                      </TableRow>
-                                    </TableFooter>
-                                  </Table>
-                                ) : team2 && !team2.hasScore && handleGetActivePlayersForTeam(index, 2, team2, activePlayers).length > 0 ? (
-                                  <Table>
-                                    <TableHeader>
-                                      <TableRow>
-                                        <TableHead>Player</TableHead>
-                                        <TableHead>G1</TableHead>
-                                        <TableHead>G2</TableHead>
-                                        <TableHead>G3</TableHead>
-                                        <TableHead>Scratch</TableHead>
-                                        <TableHead>HDC</TableHead>
-                                        <TableHead>Total</TableHead>
-                                        <TableHead className="w-[50px]"></TableHead>
-                                      </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                      {handleGetActivePlayersForTeam(index, 2, team2, activePlayers).map((player: any) => (
-                                        <TableRow key={player.id}>
-                                          <TableCell>{player.name}</TableCell>
-                                          <TableCell>
-                                            <Input
-                                              type="number"
-                                              min="0"
-                                              max="300"
-                                              className="w-20"
-                                              value={playerScores[index]?.team2?.[player.id]?.game1 || ''}
-                                              onChange={(e) => handleScoreChange(index, 2, player.id, 1, e.target.value, setPlayerScores)}
-                                            />
-                                          </TableCell>
-                                          <TableCell>
-                                            <Input
-                                              type="number"
-                                              min="0"
-                                              max="300"
-                                              className="w-20"
-                                              value={playerScores[index]?.team2?.[player.id]?.game2 || ''}
-                                              onChange={(e) => handleScoreChange(index, 2, player.id, 2, e.target.value, setPlayerScores)}
-                                            />
-                                          </TableCell>
-                                          <TableCell>
-                                            <Input
-                                              type="number"
-                                              min="0"
-                                              max="300"
-                                              className="w-20"
-                                              value={playerScores[index]?.team2?.[player.id]?.game3 || ''}
-                                              onChange={(e) => handleScoreChange(index, 2, player.id, 3, e.target.value, setPlayerScores)}
-                                            />
-                                          </TableCell>
-                                          <TableCell>{calculatePlayerTotal(playerScores[index]?.team2?.[player.id] || {})}</TableCell>
-                                          <TableCell>
-                                            <Input
-                                              type="number"
-                                              min="0"
-                                              max="40"
-                                              className="w-20"
-                                              value={playerScores[index]?.team2?.[player.id]?.hdc || ''}
-                                              onChange={(e) => handleHdcChange(index, 2, player.id, e.target.value, setPlayerScores)}
-                                            />
-                                          </TableCell>
-                                          <TableCell>{calculatePlayerTotalHdc(playerScores[index]?.team2?.[player.id] || {})}</TableCell>
-                                          <TableCell>
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() =>
-                                                handleRemovePlayerFromMatch(
-                                                  index,
-                                                  2,
-                                                  player.id,
-                                                  activePlayers,
-                                                  setActivePlayers,
-                                                  playerScores,
-                                                  setPlayerScores,
-                                                  setSelectedPlayerDropdown
-                                                )
-                                              }
-                                            >
-                                              <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                          </TableCell>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {team2.players
+                                          .filter((player: any) => player.g1 || player.g2 || player.g3 || player.hdc)
+                                          .map((player: any) => (
+                                          <TableRow key={player.id}>
+                                            <TableCell>{player.name}</TableCell>
+                                            <TableCell>{player.g1}</TableCell>
+                                            <TableCell>{player.g2}</TableCell>
+                                            <TableCell>{player.g3}</TableCell>
+                                            <TableCell>{player.scratch}</TableCell>
+                                            <TableCell>{player.hdc}</TableCell>
+                                            <TableCell>{player.totalHdc}</TableCell>
+                                            <TableCell>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                  removePlayerFromMatch(
+                                                    index,
+                                                    2,
+                                                    player.id,
+                                                    activePlayers,
+                                                    setActivePlayers,
+                                                    playerScores,
+                                                    setPlayerScores,
+                                                    setSelectedPlayerDropdown
+                                                  )
+                                                }
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                              </Button>
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                      <TableFooter>
+                                        <TableRow>
+                                          <TableCell>Total Scratch Pins</TableCell>
+                                          <TableCell>{team2TotalsFromData.g1}</TableCell>
+                                          <TableCell>{team2TotalsFromData.g2}</TableCell>
+                                          <TableCell>{team2TotalsFromData.g3}</TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell></TableCell>
                                         </TableRow>
-                                      ))}
-                                    </TableBody>
-                                    <TableFooter>
-                                      <TableRow>
-                                        <TableCell>Total Scratch Pins</TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).g1}</TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).g2}</TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).g3}</TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
-                                      </TableRow>
-                                      <TableRow>
-                                        <TableCell>Total Hdc</TableCell>
-                                        <TableCell>{perGameHdct2}</TableCell>
-                                        <TableCell>{perGameHdct2}</TableCell>
-                                        <TableCell>{perGameHdct2}</TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).hdc}</TableCell>
-                                        <TableCell></TableCell>
-                                      </TableRow>
-                                      <TableRow>
-                                        <TableCell>Total Result</TableCell>
-                                        <TableCell>{totalg1t2}</TableCell>
-                                        <TableCell>{totalg2t2}</TableCell>
-                                        <TableCell>{totalg3t2}</TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell></TableCell>
-                                        <TableCell>{calculateTeamColumnTotals(handleGetActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).total}</TableCell>
-                                      </TableRow>
-                                    </TableFooter>
-                                  </Table>
-                                ) : (
-                                  <p className="text-sm text-muted-foreground">
-                                    {team2 && team2.players.length > 0
-                                      ? 'No players added yet. Select players from the dropdown above.'
-                                      : 'No players in this team'}
-                                  </p>
-                                )}
+                                        <TableRow>
+                                          <TableCell>Total Hdc</TableCell>
+                                          <TableCell>{team2TotalsFromData.hdc / 3}</TableCell>
+                                          <TableCell>{team2TotalsFromData.hdc / 3}</TableCell>
+                                          <TableCell>{team2TotalsFromData.hdc / 3}</TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell>{team2TotalsFromData.hdc}</TableCell>
+                                          <TableCell></TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                          <TableCell>Total Result</TableCell>
+                                          <TableCell>{team2TotalsFromData.g1 + (team2TotalsFromData.hdc / 3)}</TableCell>
+                                          <TableCell>{team2TotalsFromData.g2 + (team2TotalsFromData.hdc / 3)}</TableCell>
+                                          <TableCell>{team2TotalsFromData.g3 + (team2TotalsFromData.hdc / 3)}</TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell>{team2TotalsFromData.total}</TableCell>
+                                        </TableRow>
+                                      </TableFooter>
+                                    </Table>
+                                  ) : team2 && !team2.hasScore && getActivePlayersForTeam(index, 2, team2, activePlayers).length > 0 ? (
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Player</TableHead>
+                                          <TableHead>G1</TableHead>
+                                          <TableHead>G2</TableHead>
+                                          <TableHead>G3</TableHead>
+                                          <TableHead>Scratch</TableHead>
+                                          <TableHead>HDC</TableHead>
+                                          <TableHead>Total</TableHead>
+                                          <TableHead className="w-[50px]"></TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {getActivePlayersForTeam(index, 2, team2, activePlayers).map((player: any) => (
+                                          <TableRow key={player.id}>
+                                            <TableCell>{player.name}</TableCell>
+                                            <TableCell>
+                                              <Input
+                                                type="number"
+                                                min="0"
+                                                max="300"
+                                                className="w-20"
+                                                value={playerScores[index]?.team2?.[player.id]?.game1 || ''}
+                                                onChange={(e) => handleScoreChange(index, 2, player.id, 1, e.target.value, setPlayerScores)}
+                                              />
+                                            </TableCell>
+                                            <TableCell>
+                                              <Input
+                                                type="number"
+                                                min="0"
+                                                max="300"
+                                                className="w-20"
+                                                value={playerScores[index]?.team2?.[player.id]?.game2 || ''}
+                                                onChange={(e) => handleScoreChange(index, 2, player.id, 2, e.target.value, setPlayerScores)}
+                                              />
+                                            </TableCell>
+                                            <TableCell>
+                                              <Input
+                                                type="number"
+                                                min="0"
+                                                max="300"
+                                                className="w-20"
+                                                value={playerScores[index]?.team2?.[player.id]?.game3 || ''}
+                                                onChange={(e) => handleScoreChange(index, 2, player.id, 3, e.target.value, setPlayerScores)}
+                                              />
+                                            </TableCell>
+                                            <TableCell>{calculatePlayerTotal(playerScores[index]?.team2?.[player.id] || {})}</TableCell>
+                                            <TableCell>
+                                              <Input
+                                                type="number"
+                                                min="0"
+                                                max="40"
+                                                className="w-20"
+                                                value={playerScores[index]?.team2?.[player.id]?.hdc || ''}
+                                                onChange={(e) => handleHdcChange(index, 2, player.id, e.target.value, setPlayerScores)}
+                                              />
+                                            </TableCell>
+                                            <TableCell>{calculatePlayerTotalHdc(playerScores[index]?.team2?.[player.id] || {})}</TableCell>
+                                            <TableCell>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() =>
+                                                  removePlayerFromMatch(
+                                                    index,
+                                                    2,
+                                                    player.id,
+                                                    activePlayers,
+                                                    setActivePlayers,
+                                                    playerScores,
+                                                    setPlayerScores,
+                                                    setSelectedPlayerDropdown
+                                                  )
+                                                }
+                                              >
+                                                <Trash2 className="h-4 w-4" />
+                                              </Button>
+                                            </TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                      <TableFooter>
+                                        <TableRow>
+                                          <TableCell>Total Scratch Pins</TableCell>
+                                          <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).g1}</TableCell>
+                                          <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).g2}</TableCell>
+                                          <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).g3}</TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell></TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                          <TableCell>Total Hdc</TableCell>
+                                          <TableCell>{perGameHdct2}</TableCell>
+                                          <TableCell>{perGameHdct2}</TableCell>
+                                          <TableCell>{perGameHdct2}</TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).hdc}</TableCell>
+                                          <TableCell></TableCell>
+                                        </TableRow>
+                                        <TableRow>
+                                          <TableCell>Total Result</TableCell>
+                                          <TableCell>{totalg1t2}</TableCell>
+                                          <TableCell>{totalg2t2}</TableCell>
+                                          <TableCell>{totalg3t2}</TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell></TableCell>
+                                          <TableCell>{calculateTeamColumnTotals(getActivePlayersForTeam(index, 2, team2, activePlayers), playerScores, index, 2).total}</TableCell>
+                                        </TableRow>
+                                      </TableFooter>
+                                    </Table>
+                                  ) : (
+                                    <p className="text-sm text-muted-foreground">
+                                      {team2 && team2.players.length > 0
+                                        ? 'No players added yet. Select players from the dropdown above.'
+                                        : 'No players in this team'}
+                                    </p>
+                                  )}
                                 </>
                               )}
                             </div>
@@ -845,27 +838,29 @@ export default function Scores() {
                           <div className="flex justify-end pt-4 border-t">
                             <Button
                               onClick={async () => {
-                                await insertMatchResults(
+                                await handleSaveMatch(
                                   index,
                                   match,
                                   playerScores,
                                   setPlayerScores,
                                   async (week: any, block: any) => {
-                                    const data = await fetchAllMatchesDataByWeekAndBlock(week, block, selectedLeague);
-                                    console.log(data)
+                                    const data = await fetchAllMatchesDataByWeekAndBlock(week, block);
                                     if (data) setScores(data);
                                   },
-                                  weekInScores,
+                                  week,
                                   blockNumber,
                                   setIsLoadingSkeleton,
-                                  activePlayers,
-                                  selectedLeague
+                                  activePlayers
                                 );
+
 
                                 setSavedMatches((prev) => [...prev, index]);
                               }}
                               hidden={
-                                savedMatches.includes(index) || bothScoreEntered 
+                                savedMatches.includes(index) ||
+                                team1.hasScore && team2.hasScore ||
+                                team1?.name?.toUpperCase() === "BLIND" ||
+                                team2?.name?.toUpperCase() === "BLIND"
                               }
                             >
                               Save Match Scores
@@ -884,9 +879,9 @@ export default function Scores() {
             style={{ marginTop: 48 }}
           >
             <CardContent className="pt-6">
-              {weekInScores ? (
+              {week ? (
                 <p className="text-center text-muted-foreground">
-                  No matches scheduled for Week {weekInScores}
+                  No matches scheduled for Week {week}
                 </p>
               ) : (
                 <p className="text-center text-muted-foreground">

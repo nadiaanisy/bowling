@@ -7,18 +7,17 @@ import {
 } from 'lucide-react';
 import {
   BowlingProvider,
-  useBowlingHook,
   useCustomHook
 } from './components/misc';
 
-// /* --- Sections --- */
+/* --- Sections --- */
 import Login from './components/sections/Login';
 import Teams from './components/sections/Teams';
 import Scores from './components/sections/Scores';
-import Forecast from './components/sections/Forecast';
+// import Forecast from './components/sections/Forecast';
 import Dashboard from './components/sections/Dashboard';
 import Timetable from './components/sections/Timetable';
-import Statistics from './components/sections/Statistics';
+// import Statistics from './components/sections/Statistics';
 import LeagueSelection from './components/sections/LeagueSelection';
 
 /* --- UI --- */
@@ -26,23 +25,23 @@ import { Button } from './components/ui/button';
 import { Toaster } from './components/ui/sooner';
 
 /* --- Data --- */
-import { menuItems } from './components/data';
+import { menuItems } from './components/constant';
 
 function AppContent() {
   const {
     isAuthenticated,
     logout,
+    selectedLeagueName,
     currentPage,
-    setCurrentPage,
+    mobileMenuOpen,
     selectLeague,
     selectedLeague,
-    mobileMenuOpen,
+    setCurrentPage,
     setMobileMenuOpen,
+    changeLeague
   } = useCustomHook();
 
-  const { selectedLeagueName } = useBowlingHook();
-
-//   /* --- Auth Check --- */
+  /* --- Auth Check --- */
   if (!isAuthenticated) {
     return <Login />;
   }
@@ -61,10 +60,10 @@ function AppContent() {
         return <Timetable />;
       case 'scores':
         return <Scores />;
-      case 'statistics':
-        return <Statistics />;
-      case 'forecast':
-        return <Forecast />;
+//       // case 'statistics':
+//       //   return <Statistics />;
+//       // case 'forecast':
+//       //   return <Forecast />;
       default:
         return <Dashboard />;
     }
@@ -107,7 +106,7 @@ function AppContent() {
                   </Button>
                 );
               })}
-              <Button variant="outline" onClick={() => selectLeague(null as any)}>
+              <Button variant="outline" onClick={() => changeLeague(null as any)}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Change League
               </Button>
@@ -139,7 +138,7 @@ function AppContent() {
                 );
               })}
               <Button variant="outline" onClick={() => {
-                selectLeague(null as any);
+                changeLeague(null as any);
                 setMobileMenuOpen(false);
               }}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
