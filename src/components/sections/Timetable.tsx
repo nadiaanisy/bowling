@@ -354,11 +354,7 @@ export default function Timetable() {
                             <TableCell>{match.lane}</TableCell>
                             <TableCell>{match.team1.name}</TableCell>
                             <TableCell>{match.team2.name}</TableCell>
-                            <TableCell>{(
-                                match.hasScore || 
-                                (match.team1.name === "BLIND" && !match.hasScore) || 
-                                (match.team2.name === "BLIND" && !match.hasScore)
-                              ) ? (
+                            <TableCell>{( match.hasScore ) ? (
                                 <span className="text-green-600">Completed</span>
                               ) : (
                                 <span className="text-muted-foreground">Pending</span>
