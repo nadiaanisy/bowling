@@ -56,14 +56,15 @@ import {
   Edit,
   Edit2,
   Edit2Icon,
-  Edit3
+  Edit3,
+  Search
 } from 'lucide-react';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger
 } from '../ui/collapsible';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
@@ -120,6 +121,7 @@ export default function Teams() {
     editingPlayer,
     editedName,
     editedStatus,
+    searchQuery,
     setNewTeamName,
     setIsAddingTeam,
     setTeams,
@@ -137,7 +139,8 @@ export default function Teams() {
     setExpandedTeams,
     setEditingPlayer,
     setEditedName,
-    setEditedStatus
+    setEditedStatus,
+    setSearchQuery
   } = useCustomHook();
 
   useEffect(() => {
@@ -158,6 +161,26 @@ export default function Teams() {
       setNewPlayerName('');
     }
   }, [addMode]);
+
+  // Filter teams based on search query
+  const filteredTeams = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return teams;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return teams.filter((team) => {
+      // Search by team name
+      if (team.name.toLowerCase().includes(query)) {
+        return true;
+      }
+
+      // Search by player names
+      return team.players.some((player: any) =>
+        player.name.toLowerCase().includes(query)
+      );
+    });
+  }, [teams, searchQuery]);
 
   return (
     <div className="p-4">
@@ -202,6 +225,28 @@ export default function Teams() {
         </Card>
       </div>
 
+      <div className="mt-5">
+        <Card>
+        <CardHeader>
+          <CardTitle>Search Teams</CardTitle>
+          <CardDescription>Search by team name or player name</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-2 bg-input-background border border-input rounded-md px-3 py-2 w-full">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <input
+                placeholder="Search teams or players..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      </div>
+
       {isLoadingSkeleton ? (
         <div className="grid gap-4 mt-5">
           {Array.from({ length: 31 }).map((_, index) => (
@@ -224,7 +269,7 @@ export default function Teams() {
       ) : (
         <div className="space-y-6 mt-5">
           <div className="grid gap-4">
-            {teams.map((team) => (
+            {filteredTeams.map((team) => (
               <Card key={team.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -533,6 +578,14 @@ export default function Teams() {
             <Card>
               <CardContent className="pt-6">
                 <p className="text-center text-muted-foreground">No teams yet. Add your first team above.</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {teams.length > 0 && filteredTeams.length === 0 && (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-center text-muted-foreground">No teams match your search query.</p>
               </CardContent>
             </Card>
           )}

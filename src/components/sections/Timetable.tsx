@@ -1,6 +1,7 @@
 import {
   useEffect,
-  useState
+  useState,
+  useMemo
 } from 'react';
 import {
   fetchAllTeams,
@@ -38,6 +39,10 @@ import {
   SelectValue,
 } from '../ui/select';
 import {
+  Trash2,
+  Filter
+} from 'lucide-react';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -48,10 +53,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '../ui/alert-dialog';
+import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
-import { Trash2 } from 'lucide-react';
 import { useCustomHook} from '../misc';
 import { MatchData } from '../interfaces';
 import { Skeleton } from '../ui/skeleton';
@@ -68,6 +73,9 @@ export default function Timetable() {
     week,
     selectedLane,
     selectedLeague,
+    filterWeek,
+    filterTeam,
+    filterStatus,
     setIsLoadingSkeleton,
     setBlocksData,
     setBlockNumber,
@@ -76,7 +84,9 @@ export default function Timetable() {
     setTeam2,
     setWeek,
     setSelectedLane,
-    setSelectedLeague
+    setFilterWeek,
+    setFilterTeam,
+    setFilterStatus
   }  = useCustomHook();
 
   // Current block and week as numbers
@@ -138,6 +148,64 @@ export default function Timetable() {
     if (usedTeams.includes(team2)) setTeam2("");
     if (usedLanes.includes(selectedLane)) setSelectedLane("");
   }, [usedTeams, usedLanes]);
+
+  // Get unique weeks across all blocks
+  const allWeeks = useMemo(() => {
+    const weeks = new Set<number>();
+    Object.values(matches).forEach((blockMatches) => {
+      blockMatches?.forEach((match: any) => {
+        if (match.week_number) weeks.add(match.week_number);
+      });
+    });
+    return Array.from(weeks).sort((a, b) => a - b);
+  }, [matches]);
+
+  // 🔍 Filter matches based on week, team, or status
+  const getFilteredMatches = (blockNumber: number) => {
+    const blockKey: BlockKey = `block${blockNumber}` as BlockKey;
+    const blockMatches = matches?.[blockKey] || [];
+
+    return blockMatches
+      .filter((match) => {
+        // Week filter
+        if (filterWeek !== 'all' && match.week_number !== parseInt(filterWeek)) {
+          return false;
+        }
+
+        // Team filter (check either side)
+        if (
+          filterTeam !== 'all' &&
+          match.team1.id.toString() !== filterTeam &&
+          match.team2.id.toString() !== filterTeam
+        ) {
+          return false;
+        }
+
+        // Status filter
+        const isCompleted = !!match.hasScore;
+        if (filterStatus === 'completed' && !isCompleted) return false;
+        if (filterStatus === 'pending' && isCompleted) return false;
+
+        return true;
+      })
+      .sort((a, b) => a.week_number - b.week_number);
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    setFilterWeek('all');
+    setFilterTeam('all');
+    setFilterStatus('all');
+  };
+
+  // Count active filters
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (filterWeek !== 'all') count++;
+    if (filterTeam !== 'all') count++;
+    if (filterStatus !== 'all') count++;
+    return count;
+  }, [filterWeek, filterTeam, filterStatus]);
 
   const refreshMatches = async () => {
     setIsLoadingSkeleton(true);
@@ -298,6 +366,81 @@ export default function Timetable() {
         </Card>
       </div>
 
+      <div className="mt-5">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filter Matches
+                </CardTitle>
+                <CardDescription>Filter matches by week, team, or status</CardDescription>
+              </div>
+              {activeFiltersCount > 0 && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">{activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active</Badge>
+                  <Button variant="outline" size="sm" onClick={resetFilters}>
+                    Clear Filters
+                  </Button>
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="filterWeek">Week</Label>
+                <Select value={filterWeek} onValueChange={setFilterWeek}>
+                  <SelectTrigger id="filterWeek">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Weeks</SelectItem>
+                    {allWeeks.map((weekNum) => (
+                      <SelectItem key={weekNum} value={weekNum.toString()}>
+                        Week {weekNum}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="filterTeam">Team</Label>
+                <Select value={filterTeam} onValueChange={setFilterTeam}>
+                  <SelectTrigger id="filterTeam">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Teams</SelectItem>
+                    {teams.map((team) => (
+                      <SelectItem key={team.id} value={team.id.toString()}>
+                        {team.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="filterStatus">Status</Label>
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger id="filterStatus">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {isLoadingSkeleton ? (
         <div className="space-y-6 mt-20">
           <div className="grid gap-4">
@@ -325,109 +468,49 @@ export default function Timetable() {
               <TabsTrigger value="block1">Block 1</TabsTrigger>
               <TabsTrigger value="block2">Block 2</TabsTrigger>
             </TabsList>
+
+            {/* 🟦 Block 1 */}
             <TabsContent value="block1" className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>Block 1 Schedule</CardTitle>
-                  <CardDescription>Weeks 1-31</CardDescription>
+                  <CardDescription>Weeks 1–31</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {matches?.block1 && matches?.block1.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Week</TableHead>
-                          <TableHead>Lane</TableHead>
-                          <TableHead>Team 1</TableHead>
-                          <TableHead>Team 2</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {matches.block1
-                          .slice()
-                          .sort((a, b) => a.week_number - b.week_number)
-                          .map((match: MatchData, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>Week {match.week_number}</TableCell>
-                            <TableCell>{match.lane}</TableCell>
-                            <TableCell>{match.team1.name}</TableCell>
-                            <TableCell>{match.team2.name}</TableCell>
-                            <TableCell>{( match.hasScore ) ? (
-                                <span className="text-green-600">Completed</span>
-                              ) : (
-                                <span className="text-muted-foreground">Pending</span>
-                              )}
-                            </TableCell>
-                            <TableCell>
-                              <AlertDialog>
-                                <AlertDialogTrigger>
-                                  <Trash2 className="h-4 w-4" />
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      This action cannot be undone. This will permanently delete the match from the schedule.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      variant='destructive'
-                                      onClick={() => deleteMatch(match.match_id, refreshMatches)}
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </TableCell>
+                  {(() => {
+                    const filtered = getFilteredMatches(1);
+
+                    if (filtered.length === 0) {
+                      return (
+                        <p className="text-center text-muted-foreground py-8">
+                          {matches?.block1?.length > 0
+                            ? "No matches found for current filters"
+                            : "No matches scheduled for Block 1"}
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Week</TableHead>
+                            <TableHead>Lane</TableHead>
+                            <TableHead>Team 1</TableHead>
+                            <TableHead>Team 2</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Action</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">No matches scheduled for Block 1</p>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="block2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Block 2 Schedule</CardTitle>
-                  <CardDescription>Weeks 32-62</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {matches?.block2 && matches?.block2.length > 0 ? (
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Week</TableHead>
-                          <TableHead>Lane</TableHead>
-                          <TableHead>Team 1</TableHead>
-                          <TableHead>Team 2</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {matches.block2
-                          .slice()
-                          .sort((a, b) => a.week_number - b.week_number)
-                          .map((match: MatchData, idx) => (
+                        </TableHeader>
+                        <TableBody>
+                          {filtered.map((match: MatchData, idx) => (
                             <TableRow key={idx}>
                               <TableCell>Week {match.week_number}</TableCell>
                               <TableCell>{match.lane}</TableCell>
                               <TableCell>{match.team1.name}</TableCell>
                               <TableCell>{match.team2.name}</TableCell>
-                              <TableCell>{(
-                                  match.hasScore || 
-                                  (match.team1.name === "BLIND" && !match.hasScore) || 
-                                  (match.team2.name === "BLIND" && !match.hasScore)
-                                ) ? (
+                              <TableCell>
+                                {match.hasScore ? (
                                   <span className="text-green-600">Completed</span>
                                 ) : (
                                   <span className="text-muted-foreground">Pending</span>
@@ -440,16 +523,21 @@ export default function Timetable() {
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                      <AlertDialogTitle>
+                                        Are you absolutely sure?
+                                      </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently delete the match from the schedule.
+                                        This action cannot be undone. This will permanently
+                                        delete the match from the schedule.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                                       <AlertDialogAction
-                                        variant='destructive'
-                                        onClick={() => deleteMatch(match.match_id, refreshMatches)}
+                                        variant="destructive"
+                                        onClick={() =>
+                                          deleteMatch(match.match_id, refreshMatches)
+                                        }
                                       >
                                         Delete
                                       </AlertDialogAction>
@@ -458,12 +546,99 @@ export default function Timetable() {
                                 </AlertDialog>
                               </TableCell>
                             </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8">No matches scheduled for Block 2</p>
-                  )}
+                          ))}
+                        </TableBody>
+                      </Table>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* 🟩 Block 2 */}
+            <TabsContent value="block2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Block 2 Schedule</CardTitle>
+                  <CardDescription>Weeks 32–62</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {(() => {
+                    const filtered = getFilteredMatches(2);
+
+                    if (filtered.length === 0) {
+                      return (
+                        <p className="text-center text-muted-foreground py-8">
+                          {matches?.block2?.length > 0
+                            ? "No matches found for current filters"
+                            : "No matches scheduled for Block 2"}
+                        </p>
+                      );
+                    }
+
+                    return (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Week</TableHead>
+                            <TableHead>Lane</TableHead>
+                            <TableHead>Team 1</TableHead>
+                            <TableHead>Team 2</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Action</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filtered.map((match: MatchData, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>Week {match.week_number}</TableCell>
+                              <TableCell>{match.lane}</TableCell>
+                              <TableCell>{match.team1.name}</TableCell>
+                              <TableCell>{match.team2.name}</TableCell>
+                              <TableCell>
+                                {(match.hasScore ||
+                                  (match.team1.name === "BLIND" && !match.hasScore) ||
+                                  (match.team2.name === "BLIND" && !match.hasScore)) ? (
+                                  <span className="text-green-600">Completed</span>
+                                ) : (
+                                  <span className="text-muted-foreground">Pending</span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <AlertDialog>
+                                  <AlertDialogTrigger>
+                                    <Trash2 className="h-4 w-4" />
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Are you absolutely sure?
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action cannot be undone. This will permanently
+                                        delete the match from the schedule.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction
+                                        variant="destructive"
+                                        onClick={() =>
+                                          deleteMatch(match.match_id, refreshMatches)
+                                        }
+                                      >
+                                        Delete
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    );
+                  })()}
                 </CardContent>
               </Card>
             </TabsContent>
