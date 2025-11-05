@@ -1,15 +1,11 @@
 import {
-  fetchTeamsAndPlayers,
+  getTeamsAndPlayers,
   addTeam,
   addPlayer,
   deleteTeam,
   deletePlayer,
   updatePlayer
 } from '../api';
-import {
-  useBowlingHook,
-  useCustomHook
-} from '../misc';
 import {
   Card,
   CardContent,
@@ -54,9 +50,6 @@ import {
   ChevronDown,
   ChevronUp,
   Edit,
-  Edit2,
-  Edit2Icon,
-  Edit3,
   Search
 } from 'lucide-react';
 import {
@@ -64,14 +57,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from '../ui/collapsible';
-import { useEffect, useMemo } from 'react';
+import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Skeleton } from '../ui/skeleton';
-import { Badge } from '../ui/badge';
+import { useCustomHook } from '../misc';
 import { askConfirm } from '../functions';
+import { useEffect, useMemo, useState } from 'react';
 
 function ConfirmDialog({
   open,
@@ -142,11 +136,12 @@ export default function Teams() {
     setEditedStatus,
     setSearchQuery
   } = useCustomHook();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadTeams = async () => {
       setIsLoadingSkeleton(true);
-      const data = await fetchTeamsAndPlayers(selectedLeague);
+      const data = await getTeamsAndPlayers(selectedLeague);
       setTeams(data);
       setIsLoadingSkeleton(false);
     };
@@ -205,7 +200,8 @@ export default function Teams() {
                   setIsAddingTeam,
                   setNewTeamName,
                   setTeams
-                )}
+                )
+              }
               className="flex gap-2">
               <div className="flex-1">
                 <Input
@@ -358,7 +354,8 @@ export default function Teams() {
                               </TabsContent>
 
                               <TabsContent value="multiple">
-                                <form onSubmit={(e) =>
+                                <form
+                                  onSubmit={(e) =>
                                     addPlayer(
                                       e,
                                       'multiple',
@@ -372,7 +369,8 @@ export default function Teams() {
                                       setTeams,
                                       selectedLeague
                                     )
-                                  }>
+                                  }
+                                >
                                   <div className="space-y-4">
                                     <div className="space-y-2">
                                       <Label htmlFor="multiplePlayerNames">Player Names (one per line)</Label>
@@ -557,21 +555,31 @@ export default function Teams() {
 
                     <Button
                       onClick={async () => {
-                        // 🔹 Call your update function
-                        const result = await updatePlayer(editingPlayer.id, editedName, editedStatus, selectedLeague, setTeams);
+                        setIsSaving(true);
+                        try {
+                          const result = await updatePlayer(
+                            editingPlayer.id,
+                            editedName,
+                            editedStatus,
+                            selectedLeague,
+                            setTeams
+                          );
 
-                        if (result) {
-                          setEditingPlayer(null);
+                          if (result) {
+                            setEditingPlayer(null);
+                          }
+                        } finally {
+                          setIsSaving(false);
                         }
                       }}
-                      disabled={!editedName.trim()}
+                      disabled={!editedName.trim() || isSaving}
                     >
                       Save
                     </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-                    </div>
+            </div>
           </div>
 
           {teams.length === 0 && (
