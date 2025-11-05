@@ -1,18 +1,22 @@
-import {
-  checkIfLeagueHasBlocks,
-  getLeaguesByUser,
-  loginUser
-} from './api';
 import
   React, {
   createContext,
   ReactNode,
   useContext,
+  useEffect,
   useState
 } from 'react';
+import {
+  checkIfLeagueHasBlocks,
+  getLeaguesByUser,
+  loginUser
+} from './api/get';
+import {
+  BowlingContextType,
+  PlayerStat
+} from './interfaces';
 import { twMerge } from 'tailwind-merge';
 import { clsx, type ClassValue } from 'clsx';
-import { BowlingContextType } from './interfaces';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -53,24 +57,24 @@ export const BowlingProvider: React.FC<{ children: ReactNode }> = ({ children })
     return true;
   }
 
-  //   /* --- Persist session --- */
-  // useEffect(() => {
-  //   const authStored = sessionStorage.getItem("bowling-auth");
-  //   const leagueStored = sessionStorage.getItem('bowling-selected-league');
-  //   const userIdStored = sessionStorage.getItem("user_id");
+    /* --- Persist session --- */
+  useEffect(() => {
+    const authStored = sessionStorage.getItem("bowling-auth");
+    const leagueStored = sessionStorage.getItem('bowling-selected-league');
+    const userIdStored = sessionStorage.getItem("user_id");
 
-  //   if (authStored === "true" && userIdStored) {
-  //     setIsAuthenticated(true);
-  //     setUserId(Number(userIdStored));
+    if (authStored === "true" && userIdStored) {
+      setIsAuthenticated(true);
+      setUserId(Number(userIdStored));
 
-  //     // refetch leagues for persisted user
-  //     getLeaguesByUser(Number(userIdStored)).then(setLeagues);
-  //   }
+      // refetch leagues for persisted user
+      getLeaguesByUser(Number(userIdStored)).then(setLeagues);
+    }
 
-  //   if (leagueStored) {
-  //     setSelectedLeague(leagueStored);
-  //   }
-  // }, []);
+    if (leagueStored) {
+      setSelectedLeague(leagueStored);
+    }
+  }, []);
 
   const logout = () => {
     setIsAuthenticated(false);
@@ -181,6 +185,7 @@ export const useCustomHook = () => {
   const [editingPlayer, setEditingPlayer] = useState<any | null>(null);
   const [editedName, setEditedName] = useState('');
   const [editedStatus, setEditedStatus] = useState('active');
+  const [searchQuery, setSearchQuery] = useState('');
 
   /* Timetable Related */
   const [blocksData, setBlocksData] = useState<any[]>([]);
@@ -190,6 +195,9 @@ export const useCustomHook = () => {
   const [team2, setTeam2] = useState('');
   const [selectedLane, setSelectedLane] = useState<string>("");
   const [weeksAvailable, setWeeksAvailable] = useState<number[]>([]);
+  const [filterWeek, setFilterWeek] = useState<string>('all');
+  const [filterTeam, setFilterTeam] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
 
   /* Scores Related */
   const [scores, setScores] = useState<any>({});
@@ -198,6 +206,29 @@ export const useCustomHook = () => {
   const [selectedPlayerDropdown, setSelectedPlayerDropdown] = useState<{ [matchIndex: number]: { [teamNum: number]: string } }>({});
   const [playerScores, setPlayerScores] = useState<any>({});
   const [savedMatches, setSavedMatches] = useState<number[]>([]);
+
+  /* Statistics Related */
+  const [selectedBlock, setSelectedBlock] = useState<'1' | '2' | 'all'>('all');
+  const [selectedTeamS, setSelectedTeamS] = useState<string>('all');
+  const [selectedWeek, setSelectedWeek] = useState<string>('all');
+  const [players, setPlayers] = useState<any[]>([]);
+  const [allScoresData, setAllScoresData] = useState<any>([]);
+
+  /* Forecast Related */
+  const [data, setData] = useState<{
+    teams: any[];
+    blocks: any[];
+  }>({ teams: [], blocks: [] })
+  const [teamA, setTeamA] = useState<string>('');
+  const [teamB, setTeamB] = useState<string>('');
+  const [selectedPlayersA, setSelectedPlayersA] = useState<string[]>([]);
+  const [selectedPlayersB, setSelectedPlayersB] = useState<string[]>([]);
+  const [listSelectedTeamAPlayer, setListSelectedTeamAPlayer] = useState<any[]>([]);
+  const [listSelectedTeamBPlayer, setListSelectedTeamBPlayer] = useState<any[]>([]);
+  const [blockFilter, setBlockFilter] = useState<'1' | '2' | 'all'>('all');
+
+  const [playerStatsA, setPlayerStatsA] = useState<PlayerStat[]>([]);
+  const [playerStatsB, setPlayerStatsB] = useState<PlayerStat[]>([]);
 
 
   return {
@@ -268,6 +299,8 @@ export const useCustomHook = () => {
     setEditedName,
     editedStatus,
     setEditedStatus,
+    searchQuery,
+    setSearchQuery,
 
     blockNumber,
     setBlockNumber,
@@ -283,6 +316,12 @@ export const useCustomHook = () => {
     setBlocksData,
     weeksAvailable,
     setWeeksAvailable,
+    filterWeek,
+    setFilterWeek,
+    filterTeam,
+    setFilterTeam,
+    filterStatus,
+    setFilterStatus,
 
     scores,
     setScores,
@@ -295,7 +334,38 @@ export const useCustomHook = () => {
     playerScores,
     setPlayerScores,
     savedMatches,
-    setSavedMatches
+    setSavedMatches,
 
+    selectedBlock,
+    setSelectedBlock,
+    selectedTeamS,
+    setSelectedTeamS,
+    selectedWeek,
+    setSelectedWeek,
+    players,
+    setPlayers,
+    allScoresData,
+    setAllScoresData,
+    
+    data,
+    setData,
+    teamA,
+    setTeamA,
+    teamB,
+    setTeamB,
+    selectedPlayersA,
+    setSelectedPlayersA,
+    selectedPlayersB,
+    setSelectedPlayersB,
+    listSelectedTeamAPlayer,
+    setListSelectedTeamAPlayer,
+    listSelectedTeamBPlayer,
+    setListSelectedTeamBPlayer,
+    blockFilter,
+    setBlockFilter,
+    playerStatsA,
+    setPlayerStatsA,
+    playerStatsB,
+    setPlayerStatsB,
   }
 };

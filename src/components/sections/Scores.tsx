@@ -1,16 +1,15 @@
 import {
-  fetchAllMatchesDataByWeekAndBlock,
-  fetchBlocksData,
-  fetchWeeksByBlocks,
-  insertMatchResults,
-} from '../api';
-import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle
 } from '../ui/card';
+import {
+  getAllBlocksByLeagueId,
+  getAllMatchesDataByWeekAndBlock,
+  getWeeksByBlocks
+} from '../api/get';
 import {
   Select,
   SelectContent,
@@ -54,6 +53,7 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Trash2 } from 'lucide-react';
 import { useCustomHook } from '../misc';
+import { addMatchResults } from '../api/add';
 
 export default function Scores() {
   const {
@@ -83,13 +83,13 @@ export default function Scores() {
   useEffect(() => {
     const loadData = async () => {
       setIsLoadingSkeleton(true);
-      const blockslist = await fetchBlocksData(selectedLeague);
+      const blockslist = await getAllBlocksByLeagueId(selectedLeague);
       setBlocksData(blockslist);
 
-      const weekslist = await fetchWeeksByBlocks(blockNumber, selectedLeague);
+      const weekslist = await getWeeksByBlocks(blockNumber, selectedLeague);
       setWeeksAvailable(weekslist);
 
-      const matchesList = await fetchAllMatchesDataByWeekAndBlock(weekInScores, blockNumber, selectedLeague);
+      const matchesList = await getAllMatchesDataByWeekAndBlock(weekInScores, blockNumber, selectedLeague);
       setScores(matchesList);
 
       setIsLoadingSkeleton(false);
@@ -185,7 +185,6 @@ export default function Scores() {
 
             <Accordion type="single" collapsible className="space-y-4">
               {scores.map((match: any, index: any) => {
-                console.log(match)
                 const team1 = match.team1;
                 const team2 = match.team2;
                 const bothScoreEntered = match.hasScore;
@@ -843,33 +842,74 @@ export default function Scores() {
                             </div>
                           </div>
                           <div className="flex justify-end pt-4 border-t">
-                            <Button
-                              onClick={async () => {
-                                await insertMatchResults(
-                                  index,
-                                  match,
-                                  playerScores,
-                                  setPlayerScores,
-                                  async (week: any, block: any) => {
-                                    const data = await fetchAllMatchesDataByWeekAndBlock(week, block, selectedLeague);
-                                    console.log(data)
-                                    if (data) setScores(data);
-                                  },
-                                  weekInScores,
-                                  blockNumber,
-                                  setIsLoadingSkeleton,
-                                  activePlayers,
-                                  selectedLeague
-                                );
+                            {(() => {
+                              const activeForTeam1 = handleGetActivePlayersForTeam(index, 1, team1, activePlayers) || [];
+                              const activeForTeam2 = handleGetActivePlayersForTeam(index, 2, team2, activePlayers) || [];
 
-                                setSavedMatches((prev) => [...prev, index]);
-                              }}
-                              hidden={
-                                savedMatches.includes(index) || bothScoreEntered 
-                              }
-                            >
-                              Save Match Scores
-                            </Button>
+                              const isActivePlayerComplete = (teamNum: 1 | 2, playerId: any) => {
+                                const teamScores = playerScores?.[index]?.[`team${teamNum}`] || {};
+                                const scoresObj = teamScores[playerId];
+                                if (!scoresObj) return false;
+                                const { game1, game2, game3 } = scoresObj;
+                                return (
+                                  game1 !== undefined && game1 !== '' &&
+                                  game2 !== undefined && game2 !== '' &&
+                                  game3 !== undefined && game3 !== ''
+                                );
+                              };
+
+                              const team1AllActiveComplete =
+                                activeForTeam1.length > 0 &&
+                                activeForTeam1.every((p: any) => isActivePlayerComplete(1, p.id));
+
+                              const team2AllActiveComplete =
+                                activeForTeam2.length > 0 &&
+                                activeForTeam2.every((p: any) => isActivePlayerComplete(2, p.id));
+
+                              const team1IsBlind = team1?.name?.toLowerCase() === "blind";
+                              const team2IsBlind = team2?.name?.toLowerCase() === "blind";
+
+                              let canSave = false;
+                              if (team1IsBlind && team2AllActiveComplete) canSave = true;
+                              else if (team2IsBlind && team1AllActiveComplete) canSave = true;
+                              else if (!team1IsBlind && !team2IsBlind && team1AllActiveComplete && team2AllActiveComplete)
+                                canSave = true;
+
+                              return (
+                                <Button
+                                  onClick={async () => {
+                                    await addMatchResults(
+                                      index,
+                                      match,
+                                      playerScores,
+                                      setPlayerScores,
+                                      async (week: any, block: any) => {
+                                        const data = await getAllMatchesDataByWeekAndBlock(week, block, selectedLeague);
+                                        if (data) setScores(data);
+                                      },
+                                      weekInScores,
+                                      blockNumber,
+                                      setIsLoadingSkeleton,
+                                      activePlayers,
+                                      selectedLeague
+                                    );
+                                    setSavedMatches((prev) => [...prev, index]);
+                                  }}
+                                  hidden={savedMatches.includes(index) || bothScoreEntered}
+                                  disabled={!canSave}
+                                  className={!canSave ? "opacity-50 cursor-not-allowed" : ""}
+                                  title={
+                                    !canSave
+                                      ? team1IsBlind || team2IsBlind
+                                        ? "Enter all scores for the non-blind team"
+                                        : "All inserted players must have scores entered for both teams"
+                                      : ""
+                                  }
+                                >
+                                  Save Match Scores
+                                </Button>
+                              );
+                            })()}
                           </div>
                         </CardContent>
                       </AccordionContent>

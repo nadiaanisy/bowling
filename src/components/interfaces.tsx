@@ -11,14 +11,7 @@ export interface BowlingContextType {
   userName?: string | null;
   leagues?: any[];
   hasBlock?: boolean;
-  
-// //   data: BowlingData;
-// //   addTimetableMatch: (week: number, team1Id: string, team2Id: string, blockNumber: 1 | 2) => void;
-// //   updateMatchScores: (blockNumber: 1 | 2, weekNumber: number, matchIndex: number, team1Scores: any[], team2Scores: any[]) => void;
-// //   getBlock: (blockNumber: 1 | 2) => Block;
 };
-
-
 
 export interface PlayerScoreDetails {
   id: number;
@@ -48,6 +41,7 @@ export interface MatchData {
   team1: TeamData;
   team2: TeamData;
   match_id: number;
+  status: 'completed' | 'pending';
   block1?: MatchData[];
   block2?: MatchData[];
 }

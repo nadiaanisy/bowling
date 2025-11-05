@@ -70,13 +70,12 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-5">
         {Array.from({ length: dashboardData?.total_blocks || 0 }).map((_, index) => {
           const block = dashboardData?.blocks?.[`block${index + 1}`];
-          const matchesPerWeek = 16;
 
           const total = block?.total ?? 0;
           const completed = block?.completed ?? 0;
 
-          const totalWeeks = total > 0 ? Math.ceil(total / matchesPerWeek) : 0;
-          const completedWeeks = total > 0 ? Math.floor(completed / matchesPerWeek) : 0;
+          const totalWeeks = total > 0 ? Math.ceil(total / dashboardData?.average_matches_per_week) : 0;
+          const completedWeeks = total > 0 ? Math.floor(completed / dashboardData?.average_matches_per_week) : 0;
           const weeksLeft = Math.max(totalWeeks - completedWeeks, 0);
 
           const status =

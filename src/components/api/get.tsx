@@ -85,8 +85,12 @@ export const getDashboardDataByLeagueId = async (
   leagueId: any
 ) => {
   try {
-    const totalTeams = await getHelper(table.teams, sql_query.all,  { count: 'exact', head: true})
+    const { data } = await getHelper(table.teams, sql_query.all, { count: 'exact' })
       .eq('league_id', leagueId);
+
+    const totalTeams = (data || []).filter(
+      (team: any) => team.name?.toLowerCase() !== 'blind'
+    ).length;
 
     const totalPlayers = await getHelper(table.players, sql_query.all, { count: 'exact', head: true })
       .eq('league_id', leagueId)
@@ -97,27 +101,46 @@ export const getDashboardDataByLeagueId = async (
 
     const allMatches = await getAllMatchesGroupedByMatchAndBlock();
 
-    // --- Initialize counter object ---
+    // --- Initialize counters ---
     const blockStats: Record<string, { completed: number; pending: number; total: number }> = {};
+    const matchesPerWeek: Record<string, number> = {};
 
-    // --- Loop through all blocks dynamically (not limited to 1 & 2) ---
+    // --- Loop through blocks dynamically ---
     Object.entries(allMatches as Record<string, any[]>).forEach(([blockKey, matches]) => {
       if (!Array.isArray(matches)) return;
 
-      blockStats[blockKey] = { completed: 0, pending: 0, total: matches.length };
+      const stats = { completed: 0, pending: 0, total: matches.length };
 
       matches.forEach((match) => {
-        if (match.status === 'completed') blockStats[blockKey].completed++;
-        else blockStats[blockKey].pending++;
+        // Exclude matches where either team is "blind"
+        const team1 = match.team1_name?.toLowerCase() ?? '';
+        const team2 = match.team2_name?.toLowerCase() ?? '';
+        const isBlindMatch = team1 === 'blind' || team2 === 'blind';
+        if (isBlindMatch) return;
+
+        if (match.status === 'completed') stats.completed++;
+        else stats.pending++;
+
+        // 🧩 Count matches per week
+        const week = match.week_number || 'unknown';
+        matchesPerWeek[week] = (matchesPerWeek[week] || 0) + 1;
       });
+
+      blockStats[blockKey] = stats;
     });
+
+    // --- Compute average matches per week ---
+    const totalMatches = Object.values(matchesPerWeek).reduce((sum, val) => sum + val, 0);
+    const totalWeeks = Object.keys(matchesPerWeek).length;
+    const averageMatchesPerWeek = totalWeeks > 0 ? Math.round(totalMatches / totalWeeks) : 0;
 
     // --- Return formatted dashboard summary ---
     return {
-      total_blocks: totalBlocks?.count,
-      total_teams: (totalTeams?.count ?? 0) - 1,
-      total_players: totalPlayers?.count,
-      blocks: blockStats, // 👈 return all blocks dynamically (block1, block2, etc)
+      total_blocks: totalBlocks?.count ?? 0,
+      total_teams: totalTeams,
+      total_players: totalPlayers?.count ?? 0,
+      blocks: blockStats,
+      average_matches_per_week: averageMatchesPerWeek,
     };
   } catch (error) {
     catchError('Error fetching dashboard data:', error);
@@ -570,5 +593,73 @@ export const getAllWeeklyScores = async (
     return flatData;
   } catch (err) {
     catchError('Unexpected error:', err);
+  }
+};
+
+/* --- GET PLAYERS BY TEAM ID --- */
+export const getPlayersByTeamId = async (
+  teamId: string
+) => {
+  try {
+    const { data, error } = await getHelper(table.players, sql_query.all)
+      .eq('team_id', teamId);
+
+    if (error) {
+      console.error('Error fetching players by team ID:', error, errorToastStyle);
+      return [];
+    }
+
+    return data;
+  } catch (err) {
+    catchError('Unexpected error:', err);
+    return [];
+  }
+};
+
+export const fetchPlayerWeeklyScores = async (playerId: string) => {
+  try {
+    const { data, error } = await getHelper(table.weeklyScore,
+    `
+      id,
+      match_id,
+      player_id,
+      team_id,
+      g1,
+      g2,
+      g3,
+      scratch,
+      hdc,
+      total_hdc,
+      avg,
+      created_at,
+      player:players (name),
+      team:teams (name)`
+    ).eq('player_id', playerId);
+
+    if (error) {
+      console.error('Error fetching player weekly scores:', error, errorToastStyle);
+      return [];
+    }
+
+    const flatData = data?.map((row: any) => ({
+      avg: row.avg,
+      g1: row.g1,
+      g2: row.g2,
+      g3: row.g3,
+      hdc: row.hdc,
+      id: row.id,
+      match_id: row.match_id,
+      player_id: row.player_id,
+      player_name: row.player?.name ?? null,
+      scratch: row.scratch,
+      team_id: row.team_id,
+      team_name: row.team?.name ?? null,
+      total_pins_hdc: row.total_hdc
+    }));
+
+    return flatData;
+  } catch (err) {
+    catchError('Unexpected error:', err);
+    return [];
   }
 };

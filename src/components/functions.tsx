@@ -1,4 +1,5 @@
 import { toast } from 'sonner';
+import { fetchPlayerWeeklyScores } from './api/get';
 // import { fetchPlayerWeeklyScores } from './api';
 
 /* --- STYLE SECTION --- */
@@ -247,6 +248,41 @@ export const handleGetActivePlayersForTeam = (
     .filter(Boolean); 
 };
 
+export const handlePlayerToggleA = (
+  playerId: string,
+  selectedLeague: any,
+  setSelectedPlayersA: React.Dispatch<React.SetStateAction<string[]>>
+) => {
+  setSelectedPlayersA(prev => {
+    if (prev.includes(playerId)) {
+      return prev.filter(id => id !== playerId);
+    } else {
+      if (selectedLeague === '1' && prev.length >= 4) {
+        return [...prev.slice(1), playerId];
+      }
+      return [...prev, playerId];
+    }
+  });
+};
+
+export const handlePlayerToggleB = (
+  playerId: string,
+  selectedLeague: string,
+  setSelectedPlayersB: React.Dispatch<React.SetStateAction<string[]>>
+) => {
+  setSelectedPlayersB(prev => {
+    if (prev.includes(playerId)) {
+      return prev.filter(id => id !== playerId);
+    } else {
+      if (selectedLeague === '1' && prev.length >= 4) {
+        return [...prev.slice(1), playerId];
+      }
+      return [...prev, playerId];
+    }
+  });
+};
+
+
 /* CALCULATION */
 /* --- CALCULATE TEAM COLUMN TOTALS --- */
 export const calculateTeamColumnTotals = (
@@ -332,4 +368,57 @@ export const calculateConsistency = (games: number[]) => {
   const avg = games.reduce((sum, g) => sum + g, 0) / games.length;
   const variance = games.reduce((sum, g) => sum + Math.pow(g - avg, 2), 0) / games.length;
   return Math.round(Math.sqrt(variance));
+};
+
+/* --- CALCULATE PLAYER STATS --- */
+export const calculatePlayerStats = async (playerId: string, playerName: string, teamId: string, teamName: string) => {
+  const scores = await fetchPlayerWeeklyScores(playerId);
+  if (scores.length === 0) return null;
+
+  const games: number[] = [];
+  let totalPins = 0;
+
+  console.log(scores)
+
+  scores.forEach(score => {
+    const playerGames = [score.g1, score.g2, score.g3];
+    games.push(...playerGames);
+    totalPins += score.scratch;
+  });
+
+  const gamesPlayed = games.length;
+  const average = parseFloat((totalPins / gamesPlayed).toFixed(2));
+  const highGame = Math.max(...games);
+  const lowGame = Math.min(...games);
+
+  const variance = games.reduce((sum, g) => sum + Math.pow(g - average, 2), 0) / gamesPlayed;
+  const consistency = Math.round(Math.sqrt(variance));
+
+  console.log({
+    playerId,
+    name: playerName,
+    teamId,
+    teamName,
+    average,
+    highGame,
+    lowGame,
+    totalPins,
+    gamesPlayed,
+    consistency,
+    games,
+  });
+  return {
+    playerId,
+    name: playerName,
+    teamId,
+    teamName,
+    average,
+    highGame,
+    lowGame,
+    totalPins,
+    gamesPlayed,
+    consistency,
+    games,
+  };
+  return []
 };

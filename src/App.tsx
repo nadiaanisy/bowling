@@ -14,10 +14,10 @@ import {
 import Login from './components/sections/Login';
 import Teams from './components/sections/Teams';
 import Scores from './components/sections/Scores';
-// import Forecast from './components/sections/Forecast';
+import Forecast from './components/sections/Forecast';
 import Dashboard from './components/sections/Dashboard';
 import Timetable from './components/sections/Timetable';
-// import Statistics from './components/sections/Statistics';
+import Statistics from './components/sections/Statistics';
 import LeagueSelection from './components/sections/LeagueSelection';
 
 /* --- UI --- */
@@ -60,10 +60,10 @@ function AppContent() {
         return <Timetable />;
       case 'scores':
         return <Scores />;
-      // case 'statistics':
-      //   return <Statistics />;
-//       // case 'forecast':
-//       //   return <Forecast />;
+      case 'statistics':
+        return <Statistics />;
+      case 'forecast':
+        return <Forecast />;
       default:
         return <Dashboard />;
     }
