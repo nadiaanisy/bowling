@@ -7,8 +7,8 @@ import {
 } from '../ui/card';
 import { useEffect } from 'react';
 import { useCustomHook } from '../misc';
-import { fetchDashboardDataByLeagueId } from '../api';
 import { Skeleton } from '../ui/skeleton';
+import { getDashboardDataByLeagueId } from '../api/get';
 
 export default function Dashboard() {
   const {
@@ -23,7 +23,7 @@ export default function Dashboard() {
     // Fetch dashboard data when the component mounts
     const fetchData = async () => {
       setIsLoadingSkeleton(true);
-      const data = await fetchDashboardDataByLeagueId(selectedLeague);
+      const data = await getDashboardDataByLeagueId(selectedLeague);
       setDashboardData(data);
       setIsLoadingSkeleton(false);
     };

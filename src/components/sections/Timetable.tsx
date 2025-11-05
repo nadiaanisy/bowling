@@ -4,12 +4,10 @@ import {
   useMemo
 } from 'react';
 import {
-  fetchAllTeams,
-  fetchBlocksData,
-  addMatch,
-  fetchAllMatchesGroupedByMatchAndBlock,
-  deleteMatch
-} from '../api';
+  getAllBlocksByLeagueId,
+  getAllMatchesGroupedByMatchAndBlock,
+  getAllTeamsByLeagueId
+} from '../api/get';
 import {
   Card,
   CardContent,
@@ -56,11 +54,12 @@ import {
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { addMatch } from '../api/add';
 import { Button } from '../ui/button';
 import { useCustomHook} from '../misc';
 import { MatchData } from '../interfaces';
 import { Skeleton } from '../ui/skeleton';
-import { errorToastStyle } from '../functions';
+import { deleteMatch } from '../api/delete';
 
 export default function Timetable() {
   const {
@@ -105,15 +104,15 @@ export default function Timetable() {
       setIsLoadingSkeleton(true);
 
       // 1️⃣ Fetch blocks
-      const blocks = await fetchBlocksData(selectedLeague);
+      const blocks = await getAllBlocksByLeagueId(selectedLeague);
       setBlocksData(blocks);
 
       // 2️⃣ Fetch teams
-      const allTeams = await fetchAllTeams(selectedLeague);
+      const allTeams = await getAllTeamsByLeagueId(selectedLeague);
       setTeams(allTeams);
 
       // 3️⃣ Fetch matches
-      const data = await fetchAllMatchesGroupedByMatchAndBlock();
+      const data = await getAllMatchesGroupedByMatchAndBlock();
       setMatches(data);
 
       setIsLoadingSkeleton(false);
@@ -209,7 +208,7 @@ export default function Timetable() {
 
   const refreshMatches = async () => {
     setIsLoadingSkeleton(true);
-    const data = await fetchAllMatchesGroupedByMatchAndBlock();
+    const data = await getAllMatchesGroupedByMatchAndBlock();
     setMatches(data);
     setIsLoadingSkeleton(false);
   };
@@ -648,3 +647,4 @@ export default function Timetable() {
     </div>
   )
 }
+

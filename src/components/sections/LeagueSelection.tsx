@@ -17,14 +17,15 @@ import {
   DialogDescription,
   DialogFooter
 } from '../ui/dialog';
+import { toast } from 'sonner';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Trophy } from 'lucide-react';
 import { useCustomHook } from '../misc';
-import { getLeaguesByUser, addBlockForLeague } from '../api';
 import { Skeleton } from '../ui/skeleton';
-import { toast } from 'sonner';
+import { getLeaguesByUser } from '../api/get';
+import { addBlockForLeague } from '../api/add';
 import { successToastStyle } from '../functions';
 
 export default function LeagueSelection() {
