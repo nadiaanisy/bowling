@@ -22,7 +22,7 @@ import { Label } from '../ui/label';
 import { Button } from '../ui/button';
 import { Trophy } from 'lucide-react';
 import { useCustomHook } from '../misc';
-import { getLeaguesByUser, insertBlockForLeague } from '../api';
+import { getLeaguesByUser, addBlockForLeague } from '../api';
 import { Skeleton } from '../ui/skeleton';
 import { toast } from 'sonner';
 import { successToastStyle } from '../functions';
@@ -161,7 +161,7 @@ export default function LeagueSelection() {
             <Button
               onClick={async () => {
                 // ✅ Call insert
-                const result = await insertBlockForLeague(initialSelectedLeague, parseInt(blockCount));
+                const result = await addBlockForLeague(initialSelectedLeague, parseInt(blockCount));
                 if (result && initialSelectedLeague) {
                   setSelectedLeague(initialSelectedLeague);
                   sessionStorage.setItem("bowling-selected-league", initialSelectedLeague);

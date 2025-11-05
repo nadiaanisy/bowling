@@ -1,5 +1,5 @@
 import {
-  getTeamsAndPlayers,
+  getTeamsAndPlayersByLeagueId,
   addTeam,
   addPlayer,
   deleteTeam,
@@ -141,7 +141,7 @@ export default function Teams() {
   useEffect(() => {
     const loadTeams = async () => {
       setIsLoadingSkeleton(true);
-      const data = await getTeamsAndPlayers(selectedLeague);
+      const data = await getTeamsAndPlayersByLeagueId(selectedLeague);
       setTeams(data);
       setIsLoadingSkeleton(false);
     };
