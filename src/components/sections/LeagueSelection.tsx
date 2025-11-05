@@ -97,7 +97,7 @@ export default function LeagueSelection() {
                 >
                   <Button
                     variant="outline"
-                    className="w-full h-auto py-4 justify-start mt-2"
+                    className="w-full h-auto py-4 justify-start"
                     onClick={async () => {
                       const hasBlockResult: any = await selectLeague(league);
                       if (hasBlockResult === false) {
