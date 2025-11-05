@@ -85,20 +85,51 @@ export const handleWeekChanged = (
   setActivePlayers({});
 };
 
-/* --- HANDLE GET ACTIVE PLAYERS FOR TEAM --- */
-export const handleGetActivePlayersForTeam = (
+/* --- HANDLE SCORE CHANGE --- */
+export const handleScoreChange = (
   matchIndex: number,
   teamNum: 1 | 2,
-  team: any,
-  activePlayers: any
+  playerId: string,
+  game: 1 | 2 | 3,
+  value: string,
+  setPlayerScores: any
 ) => {
-  if (!team?.players) return [];
+  setPlayerScores((prev: any) => ({
+    ...prev,
+    [matchIndex]: {
+      ...prev[matchIndex],
+      [`team${teamNum}`]: {
+        ...prev[matchIndex]?.[`team${teamNum}`],
+        [playerId]: {
+          ...prev[matchIndex]?.[`team${teamNum}`]?.[playerId],
+          [`game${game}`]: value
+        }
+      }
+    }
+  }));
+};
 
-  const activePlayerIds = activePlayers[matchIndex]?.[`team${teamNum}`] || [];
-
-  return activePlayerIds
-    .map((id: string) => team.players.find((p: any) => p.id === id))
-    .filter(Boolean); 
+/* --- HANDLE HDC CHANGE --- */
+export const handleHdcChange = (
+  matchIndex: number,
+  teamNum: 1 | 2,
+  playerId: string,
+  value: string,
+  setPlayerScores: any
+) => {
+  setPlayerScores((prev: any) => ({
+    ...prev,
+    [matchIndex]: {
+      ...prev[matchIndex],
+      [`team${teamNum}`]: {
+        ...prev[matchIndex]?.[`team${teamNum}`],
+        [playerId]: {
+          ...prev[matchIndex]?.[`team${teamNum}`]?.[playerId],
+          hdc: value
+        }
+      }
+    }
+  }));
 };
 
 /* --- HANDLE GET LIST OF AVAILABLE PLAYERS FOR A TEAM WHO HAVEN'T BEEN SELECTED YET FOR THE MATCH --- */
@@ -200,10 +231,21 @@ export const handleRemovePlayerFromMatch = (
   }));
 };
 
+/* --- HANDLE GET ACTIVE PLAYERS FOR TEAM --- */
+export const handleGetActivePlayersForTeam = (
+  matchIndex: number,
+  teamNum: 1 | 2,
+  team: any,
+  activePlayers: any
+) => {
+  if (!team?.players) return [];
 
+  const activePlayerIds = activePlayers[matchIndex]?.[`team${teamNum}`] || [];
 
-
-
+  return activePlayerIds
+    .map((id: string) => team.players.find((p: any) => p.id === id))
+    .filter(Boolean); 
+};
 
 /* CALCULATION */
 /* --- CALCULATE TEAM COLUMN TOTALS --- */
@@ -267,30 +309,6 @@ export const calculateTeamTotalsFromData = (team: any) => {
   return totals;
 };
 
-/* --- HANDLE SCORE CHANGE --- */
-export const handleScoreChange = (
-  matchIndex: number,
-  teamNum: 1 | 2,
-  playerId: string,
-  game: 1 | 2 | 3,
-  value: string,
-  setPlayerScores: any
-) => {
-  setPlayerScores((prev: any) => ({
-    ...prev,
-    [matchIndex]: {
-      ...prev[matchIndex],
-      [`team${teamNum}`]: {
-        ...prev[matchIndex]?.[`team${teamNum}`],
-        [playerId]: {
-          ...prev[matchIndex]?.[`team${teamNum}`]?.[playerId],
-          [`game${game}`]: value
-        }
-      }
-    }
-  }));
-};
-
 /* --- CALCULATE PLAYER TOTAL --- */
 export const calculatePlayerTotal = (playerScores: any) => {
   if (!playerScores) return 0;
@@ -308,25 +326,10 @@ export const calculatePlayerTotalHdc = (playerScores: any) => {
   return total + hdc;
 };
 
-/* --- HANDLE HDC CHANGE --- */
-export const handleHdcChange = (
-  matchIndex: number,
-  teamNum: 1 | 2,
-  playerId: string,
-  value: string,
-  setPlayerScores: any
-) => {
-  setPlayerScores((prev: any) => ({
-    ...prev,
-    [matchIndex]: {
-      ...prev[matchIndex],
-      [`team${teamNum}`]: {
-        ...prev[matchIndex]?.[`team${teamNum}`],
-        [playerId]: {
-          ...prev[matchIndex]?.[`team${teamNum}`]?.[playerId],
-          hdc: value
-        }
-      }
-    }
-  }));
+/* --- CALCULATE CONSISTENCY --- */
+export const calculateConsistency = (games: number[]) => {
+  if (!games.length) return 0;
+  const avg = games.reduce((sum, g) => sum + g, 0) / games.length;
+  const variance = games.reduce((sum, g) => sum + Math.pow(g - avg, 2), 0) / games.length;
+  return Math.round(Math.sqrt(variance));
 };

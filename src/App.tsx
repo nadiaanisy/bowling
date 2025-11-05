@@ -60,8 +60,8 @@ function AppContent() {
         return <Timetable />;
       case 'scores':
         return <Scores />;
-//       // case 'statistics':
-//       //   return <Statistics />;
+      // case 'statistics':
+      //   return <Statistics />;
 //       // case 'forecast':
 //       //   return <Forecast />;
       default:
