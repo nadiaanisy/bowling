@@ -1,11 +1,8 @@
 import {
-  getTeamsAndPlayersByLeagueId,
-  addTeam,
-  addPlayer,
-  deleteTeam,
-  deletePlayer,
-  updatePlayer
-} from '../api';
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 import {
   Card,
   CardContent,
@@ -53,6 +50,14 @@ import {
   Search
 } from 'lucide-react';
 import {
+  addTeam,
+  addPlayer,
+} from '../api/add';
+import {
+  deleteTeam,
+  deletePlayer,
+} from '../api/delete';
+import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger
@@ -61,11 +66,12 @@ import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Button } from '../ui/button';
+import { useCustomHook } from '../misc';
 import { Textarea } from '../ui/textarea';
 import { Skeleton } from '../ui/skeleton';
-import { useCustomHook } from '../misc';
 import { askConfirm } from '../functions';
-import { useEffect, useMemo, useState } from 'react';
+import { updatePlayer } from '../api/update';
+import { getTeamsAndPlayersByLeagueId } from '../api/get';
 
 function ConfirmDialog({
   open,
