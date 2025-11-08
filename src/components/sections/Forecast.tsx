@@ -86,7 +86,7 @@ export default function Forecast() {
 
 
       /**try */
-      const matches = await getAllMatchesGroupedByMatchAndBlock();
+      const matches = await getAllMatchesGroupedByMatchAndBlock(selectedLeague);
       setAllMatches(matches);
 
 

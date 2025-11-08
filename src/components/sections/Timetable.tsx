@@ -112,7 +112,7 @@ export default function Timetable() {
       setTeams(allTeams);
 
       // 3️⃣ Fetch matches
-      const data = await getAllMatchesGroupedByMatchAndBlock();
+      const data = await getAllMatchesGroupedByMatchAndBlock(selectedLeague);
       setMatches(data);
 
       setIsLoadingSkeleton(false);
@@ -208,7 +208,7 @@ export default function Timetable() {
 
   const refreshMatches = async () => {
     setIsLoadingSkeleton(true);
-    const data = await getAllMatchesGroupedByMatchAndBlock();
+    const data = await getAllMatchesGroupedByMatchAndBlock(selectedLeague);
     setMatches(data);
     setIsLoadingSkeleton(false);
   };

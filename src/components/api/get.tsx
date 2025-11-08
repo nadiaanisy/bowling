@@ -99,7 +99,7 @@ export const getDashboardDataByLeagueId = async (
     const totalBlocks = await getHelper(table.blocks, sql_query.all, { count: 'exact', head: true })
       .eq('league_id', leagueId);
 
-    const allMatches = await getAllMatchesGroupedByMatchAndBlock();
+    const allMatches = await getAllMatchesGroupedByMatchAndBlock(leagueId);
 
     // --- Initialize counters ---
     const blockStats: Record<string, { completed: number; pending: number; total: number }> = {};
@@ -239,9 +239,11 @@ export const getAllPlayersByLeagueId = async (
 };
 
 /* --- Get All MATCH [Grouped by Match & Block] --- */
-export const getAllMatchesGroupedByMatchAndBlock = async (): Promise<any> => {
+export const getAllMatchesGroupedByMatchAndBlock = async (
+  leagueId: any
+): Promise<any> => {
    try {
-    const { data, error } = await supabase.rpc('get_full_timetable');
+    const { data, error } = await supabase.rpc('get_full_timetable', { p_league_id: leagueId });
 
     if (error) {
       console.error('Error fetching full timetable:' + error, errorToastStyle);
