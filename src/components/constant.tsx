@@ -19,6 +19,7 @@ export const menuItems = [
 export const table = {
   user: 'user',
   teams: 'teams',
+  lanes: 'lanes',
   blocks: 'blocks',
   players: 'players',
   leagues: 'leagues',

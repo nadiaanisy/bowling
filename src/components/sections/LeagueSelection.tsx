@@ -111,8 +111,8 @@ export default function LeagueSelection() {
                       <div className="h-10 w-10 bg-secondary rounded-full flex items-center justify-center">
                         <Trophy className="h-5 w-5" />
                       </div>
-                      <div className="text-left">
-                        <div>{league.name}</div>
+                      <div className="text-left whitespace-normal break-words">
+                        <div className="text-sm font-medium leading-tight">{league.name}</div>
                       </div>
                     </div>
                   </Button>
