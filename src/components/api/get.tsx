@@ -372,7 +372,7 @@ export const getAllMatchesDataByWeekAndBlock = async (
       `
         id,
         week_number,
-        lane,
+        lane:lanes!lane_id ( id, lane ),
         block:blocks ( id, number ),
         team1:teams!team1_id (
           id,
@@ -422,8 +422,8 @@ export const getAllMatchesDataByWeekAndBlock = async (
       .eq("block_id", blockNumber)
       .eq("week_number", week)
       .eq("league_id", selectedLeague)
-      .order("lane", { ascending: true })
       .order("id", { ascending: true })
+      .order("lane", { ascending: true, foreignTable: "lane" })
       .order("id", { ascending: true, foreignTable: "team1.players.weekly_scores" })
       .order("id", { ascending: true, foreignTable: "team2.players.weekly_scores" })
       .order("id", { ascending: true, foreignTable: "team1.players" })
@@ -487,7 +487,7 @@ export const getAllMatchesDataByWeekAndBlock = async (
         match_id: row.id,
         block_id: row.block?.id,
         week_number: row.week_number,
-        lane: row.lane,
+        lane: row.lane?.lane,
         hasScore,
         team1,
         team2,
@@ -665,3 +665,23 @@ export const fetchPlayerWeeklyScores = async (playerId: string) => {
     return [];
   }
 };
+
+/* --- GET ALL LANES BY LEAGUE ID --- */
+export const getAllLanesByLeagueId = async (
+  leagueId: any
+) => {
+  try {
+    const { data, error } = await getHelper(table.lanes, sql_query.all)
+      .eq('league_id', leagueId)
+      .order('id', { ascending: true });
+    if (error) {
+      toast.error('Error fetching lanes: ' + error.message, errorToastStyle);
+      return [];
+    }
+
+    return data || [];
+  } catch (err) {
+    catchError('Unexpected error:', err);
+    return [];
+  }
+}

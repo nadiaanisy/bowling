@@ -6,7 +6,8 @@ import {
 import {
   getAllBlocksByLeagueId,
   getAllMatchesGroupedByMatchAndBlock,
-  getAllTeamsByLeagueId
+  getAllTeamsByLeagueId,
+  getAllLanesByLeagueId
 } from '../api/get';
 import {
   Card,
@@ -56,7 +57,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { addMatch } from '../api/add';
 import { Button } from '../ui/button';
-import { useCustomHook} from '../misc';
+import { useCustomHook } from '../misc';
 import { MatchData } from '../interfaces';
 import { Skeleton } from '../ui/skeleton';
 import { deleteMatch } from '../api/delete';
@@ -86,7 +87,7 @@ export default function Timetable() {
     setFilterWeek,
     setFilterTeam,
     setFilterStatus
-  }  = useCustomHook();
+  } = useCustomHook();
 
   // Current block and week as numbers
   const currentWeek = week ? parseInt(week) : 0;
@@ -98,28 +99,29 @@ export default function Timetable() {
 
   const [usedTeams, setUsedTeams] = useState<string[]>([]);
   const [usedLanes, setUsedLanes] = useState<string[]>([]);
+  const [lanes, setLanes] = useState<any[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
       setIsLoadingSkeleton(true);
 
-      // 1️⃣ Fetch blocks
-      const blocks = await getAllBlocksByLeagueId(selectedLeague);
+      const [blocks, allTeams, lanesData, matchesData] = await Promise.all([
+        getAllBlocksByLeagueId(selectedLeague),
+        getAllTeamsByLeagueId(selectedLeague),
+        getAllLanesByLeagueId(selectedLeague), // 🆕 Fetch lanes
+        getAllMatchesGroupedByMatchAndBlock(selectedLeague),
+      ]);
+
       setBlocksData(blocks);
-
-      // 2️⃣ Fetch teams
-      const allTeams = await getAllTeamsByLeagueId(selectedLeague);
       setTeams(allTeams);
-
-      // 3️⃣ Fetch matches
-      const data = await getAllMatchesGroupedByMatchAndBlock(selectedLeague);
-      setMatches(data);
+      setLanes(lanesData);
+      setMatches(matchesData);
 
       setIsLoadingSkeleton(false);
     }
 
     loadData();
-  }, []);
+  }, [selectedLeague]);
 
   type BlockKey = 'block1' | 'block2';
   useEffect(() => {
@@ -338,19 +340,15 @@ export default function Timetable() {
                       <SelectValue placeholder="Select lane" />
                     </SelectTrigger>
                     <SelectContent>
-                      {Array.from({ length: (48 - 17 + 1) / 2 }, (_, i) => {
-                        const start = 17 + i * 2;
-                        const end = start + 1;
-                        const value = `${start}-${end}`;
-
+                      {lanes.map((lane: any) => {
+                        const value = lane.lane;
                         return (
                           <SelectItem
-                            key={value}
+                            key={lane.id}
                             value={value}
-                            // disabled={isDisabled}
                             disabled={usedLanes.includes(value)}
                           >
-                            Lane {start} - Lane {end}
+                            {value}
                           </SelectItem>
                         );
                       })}
