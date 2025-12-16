@@ -1,46 +1,34 @@
-import {
-  useEffect,
-  useState,
-  useMemo
-} from 'react';
+import { useEffect, useState, useMemo } from "react";
 import {
   getAllBlocksByLeagueId,
   getAllMatchesGroupedByMatchAndBlock,
   getAllTeamsByLeagueId,
-  getAllLanesByLeagueId
-} from '../api/get';
+  getAllLanesByLeagueId,
+} from "../api/get";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '../ui/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '../ui/tabs';
+  CardTitle,
+} from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from '../ui/table';
+  TableRow,
+} from "../ui/table";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
-import {
-  Trash2,
-  Filter
-} from 'lucide-react';
+} from "../ui/select";
+import { Trash2, Filter } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,17 +38,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
-} from '../ui/alert-dialog';
-import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { addMatch } from '../api/add';
-import { Button } from '../ui/button';
-import { useCustomHook } from '../misc';
-import { MatchData } from '../interfaces';
-import { Skeleton } from '../ui/skeleton';
-import { deleteMatch } from '../api/delete';
+  AlertDialogTrigger,
+} from "../ui/alert-dialog";
+import { Badge } from "../ui/badge";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { addMatch } from "../api/add";
+import { Button } from "../ui/button";
+import { useCustomHook } from "../misc";
+import { MatchData } from "../interfaces";
+import { Skeleton } from "../ui/skeleton";
+import { deleteMatch } from "../api/delete";
 
 export default function Timetable() {
   const {
@@ -86,13 +74,16 @@ export default function Timetable() {
     setSelectedLane,
     setFilterWeek,
     setFilterTeam,
-    setFilterStatus
+    setFilterStatus,
   } = useCustomHook();
 
   // Current block and week as numbers
   const currentWeek = week ? parseInt(week) : 0;
 
-  const [matches, setMatches] = useState<{ block1: MatchData[]; block2: MatchData[] }>({
+  const [matches, setMatches] = useState<{
+    block1: MatchData[];
+    block2: MatchData[];
+  }>({
     block1: [],
     block2: [],
   });
@@ -118,12 +109,12 @@ export default function Timetable() {
       setMatches(matchesData);
 
       setIsLoadingSkeleton(false);
-    }
+    };
 
     loadData();
   }, [selectedLeague]);
 
-  type BlockKey = 'block1' | 'block2';
+  type BlockKey = "block1" | "block2";
   useEffect(() => {
     if (!matches || !blockNumber || !week) return;
 
@@ -137,7 +128,9 @@ export default function Timetable() {
 
     // Extract used lanes and team IDs
     const lanes = filtered.map((m) => m.lane);
-    const teams = filtered.flatMap((m) => [m.team1.id.toString(), m.team2?.id?.toString()].filter(Boolean));
+    const teams = filtered.flatMap((m) =>
+      [m.team1.id.toString(), m.team2?.id?.toString()].filter(Boolean)
+    );
 
     setUsedLanes(lanes);
     setUsedTeams(teams);
@@ -169,13 +162,16 @@ export default function Timetable() {
     return blockMatches
       .filter((match) => {
         // Week filter
-        if (filterWeek !== 'all' && match.week_number !== parseInt(filterWeek)) {
+        if (
+          filterWeek !== "all" &&
+          match.week_number !== parseInt(filterWeek)
+        ) {
           return false;
         }
 
         // Team filter (check either side)
         if (
-          filterTeam !== 'all' &&
+          filterTeam !== "all" &&
           match.team1.id.toString() !== filterTeam &&
           match.team2.id.toString() !== filterTeam
         ) {
@@ -184,8 +180,8 @@ export default function Timetable() {
 
         // Status filter
         const isCompleted = !!match.hasScore;
-        if (filterStatus === 'completed' && !isCompleted) return false;
-        if (filterStatus === 'pending' && isCompleted) return false;
+        if (filterStatus === "completed" && !isCompleted) return false;
+        if (filterStatus === "pending" && isCompleted) return false;
 
         return true;
       })
@@ -194,17 +190,17 @@ export default function Timetable() {
 
   // Reset filters
   const resetFilters = () => {
-    setFilterWeek('all');
-    setFilterTeam('all');
-    setFilterStatus('all');
+    setFilterWeek("all");
+    setFilterTeam("all");
+    setFilterStatus("all");
   };
 
   // Count active filters
   const activeFiltersCount = useMemo(() => {
     let count = 0;
-    if (filterWeek !== 'all') count++;
-    if (filterTeam !== 'all') count++;
-    if (filterStatus !== 'all') count++;
+    if (filterWeek !== "all") count++;
+    if (filterTeam !== "all") count++;
+    if (filterStatus !== "all") count++;
     return count;
   }, [filterWeek, filterTeam, filterStatus]);
 
@@ -228,7 +224,9 @@ export default function Timetable() {
         <Card>
           <CardHeader>
             <CardTitle>Add Match to Schedule</CardTitle>
-            <CardDescription>Schedule a match between two teams</CardDescription>
+            <CardDescription>
+              Schedule a match between two teams
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form
@@ -264,7 +262,10 @@ export default function Timetable() {
                     </SelectTrigger>
                     <SelectContent>
                       {blocksData.map((block) => (
-                        <SelectItem key={block.id} value={block.number.toString()}>
+                        <SelectItem
+                          key={block.id}
+                          value={block.number.toString()}
+                        >
                           Block {block.number}
                         </SelectItem>
                       ))}
@@ -299,7 +300,8 @@ export default function Timetable() {
                           key={team.id}
                           value={team.id.toString()}
                           disabled={
-                            team.id.toString() === team2 || usedTeams.includes(team.id.toString())
+                            team.id.toString() === team2 ||
+                            usedTeams.includes(team.id.toString())
                           }
                         >
                           {team.name}
@@ -322,7 +324,8 @@ export default function Timetable() {
                           key={team.id}
                           value={team.id.toString()}
                           disabled={
-                            team.id.toString() === team1 || usedTeams.includes(team.id.toString())
+                            team.id.toString() === team1 ||
+                            usedTeams.includes(team.id.toString())
                           }
                         >
                           {team.name}
@@ -345,7 +348,7 @@ export default function Timetable() {
                         return (
                           <SelectItem
                             key={lane.id}
-                            value={value}
+                            value={lane.id}
                             disabled={usedLanes.includes(value)}
                           >
                             {value}
@@ -372,11 +375,16 @@ export default function Timetable() {
                   <Filter className="h-5 w-5" />
                   Filter Matches
                 </CardTitle>
-                <CardDescription>Filter matches by week, team, or status</CardDescription>
+                <CardDescription>
+                  Filter matches by week, team, or status
+                </CardDescription>
               </div>
               {activeFiltersCount > 0 && (
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">{activeFiltersCount} filter{activeFiltersCount > 1 ? 's' : ''} active</Badge>
+                  <Badge variant="secondary">
+                    {activeFiltersCount} filter
+                    {activeFiltersCount > 1 ? "s" : ""} active
+                  </Badge>
                   <Button variant="outline" size="sm" onClick={resetFilters}>
                     Clear Filters
                   </Button>
@@ -459,7 +467,7 @@ export default function Timetable() {
         <div className="mt-10">
           <Tabs
             value={`block${blockNumber}`}
-            onValueChange={(val) => setBlockNumber(val === 'block1' ? 1 : 2)}
+            onValueChange={(val) => setBlockNumber(val === "block1" ? 1 : 2)}
           >
             <TabsList>
               <TabsTrigger value="block1">Block 1</TabsTrigger>
@@ -508,9 +516,13 @@ export default function Timetable() {
                               <TableCell>{match.team2.name}</TableCell>
                               <TableCell>
                                 {match.hasScore ? (
-                                  <span className="text-green-600">Completed</span>
+                                  <span className="text-green-600">
+                                    Completed
+                                  </span>
                                 ) : (
-                                  <span className="text-muted-foreground">Pending</span>
+                                  <span className="text-muted-foreground">
+                                    Pending
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -524,16 +536,22 @@ export default function Timetable() {
                                         Are you absolutely sure?
                                       </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently
-                                        delete the match from the schedule.
+                                        This action cannot be undone. This will
+                                        permanently delete the match from the
+                                        schedule.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
                                       <AlertDialogAction
                                         variant="destructive"
                                         onClick={() =>
-                                          deleteMatch(match.match_id, refreshMatches)
+                                          deleteMatch(
+                                            match.match_id,
+                                            refreshMatches
+                                          )
                                         }
                                       >
                                         Delete
@@ -593,12 +611,18 @@ export default function Timetable() {
                               <TableCell>{match.team1.name}</TableCell>
                               <TableCell>{match.team2.name}</TableCell>
                               <TableCell>
-                                {(match.hasScore ||
-                                  (match.team1.name === "BLIND" && !match.hasScore) ||
-                                  (match.team2.name === "BLIND" && !match.hasScore)) ? (
-                                  <span className="text-green-600">Completed</span>
+                                {match.hasScore ||
+                                (match.team1.name === "BLIND" &&
+                                  !match.hasScore) ||
+                                (match.team2.name === "BLIND" &&
+                                  !match.hasScore) ? (
+                                  <span className="text-green-600">
+                                    Completed
+                                  </span>
                                 ) : (
-                                  <span className="text-muted-foreground">Pending</span>
+                                  <span className="text-muted-foreground">
+                                    Pending
+                                  </span>
                                 )}
                               </TableCell>
                               <TableCell>
@@ -612,16 +636,22 @@ export default function Timetable() {
                                         Are you absolutely sure?
                                       </AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        This action cannot be undone. This will permanently
-                                        delete the match from the schedule.
+                                        This action cannot be undone. This will
+                                        permanently delete the match from the
+                                        schedule.
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
                                       <AlertDialogAction
                                         variant="destructive"
                                         onClick={() =>
-                                          deleteMatch(match.match_id, refreshMatches)
+                                          deleteMatch(
+                                            match.match_id,
+                                            refreshMatches
+                                          )
                                         }
                                       >
                                         Delete
@@ -643,6 +673,5 @@ export default function Timetable() {
         </div>
       )}
     </div>
-  )
+  );
 }
-

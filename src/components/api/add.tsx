@@ -2,18 +2,15 @@ import {
   catchError,
   errorToastStyle,
   handleGetActivePlayersForTeam,
-  successToastStyle
-} from '../functions';
-import { toast } from 'sonner';
-import { table } from '../constant';
-import { insertHelper } from './supabaseHelper';
-import { getTeamsAndPlayersByLeagueId } from './get';
+  successToastStyle,
+} from "../functions";
+import { toast } from "sonner";
+import { table } from "../constant";
+import { insertHelper } from "./supabaseHelper";
+import { getTeamsAndPlayersByLeagueId } from "./get";
 
 /* --- ADD BLOCK FOR A LEAGUE --- */
-export const addBlockForLeague = async (
-  leagueId: any,
-  count: number
-) => {
+export const addBlockForLeague = async (leagueId: any, count: number) => {
   try {
     const blocks = Array.from({ length: count }, (_, i) => ({
       league_id: leagueId,
@@ -23,13 +20,16 @@ export const addBlockForLeague = async (
     const { error } = await insertHelper(table.blocks, blocks);
 
     if (error) {
-      toast.error('Error inserting league blocks: ' + error.message, errorToastStyle);
+      toast.error(
+        "Error inserting league blocks: " + error.message,
+        errorToastStyle
+      );
       return false;
     }
 
     return true;
   } catch (err) {
-    catchError('Error inserting league blocks:', err);
+    catchError("Error inserting league blocks:", err);
     return null;
   }
 };
@@ -45,17 +45,19 @@ export const addTeam = async (
 ) => {
   e.preventDefault();
   if (!newTeamName.trim()) {
-    toast.error('Please enter a team name.', errorToastStyle);
+    toast.error("Please enter a team name.", errorToastStyle);
     return;
   }
 
   setIsAddingTeam(true);
 
   try {
-    const { error } = await insertHelper(table.teams, [{ name: newTeamName, league_id: selectedLeagueId }]);
+    const { error } = await insertHelper(table.teams, [
+      { name: newTeamName, league_id: selectedLeagueId },
+    ]);
 
     if (error) {
-      toast.error('Error adding team: ' + error.message, errorToastStyle);
+      toast.error("Error adding team: " + error.message, errorToastStyle);
       return;
     }
 
@@ -64,9 +66,9 @@ export const addTeam = async (
 
     toast.success(`${newTeamName} added successfully!`, successToastStyle);
 
-    setNewTeamName('');
+    setNewTeamName("");
   } catch (err) {
-    catchError('Error adding team:', err);
+    catchError("Error adding team:", err);
   } finally {
     setIsAddingTeam(false);
   }
@@ -75,7 +77,7 @@ export const addTeam = async (
 /* --- ADD PLAYER(s) --- */
 export const addPlayer = (
   e: React.FormEvent,
-  mode: 'single' | 'multiple',
+  mode: "single" | "multiple",
   selectedTeam: any | null,
   selectedTeamName: string,
   newPlayerName: string,
@@ -84,73 +86,93 @@ export const addPlayer = (
   setMultiplePlayerNames: (value: string) => void,
   setDialogOpen: (value: boolean) => void,
   setTeams: (teams: any[]) => void,
-  selectedLeagueId: any,
+  selectedLeagueId: any
 ) => {
   e.preventDefault();
 
   const addPlayers = async () => {
     if (!selectedTeam) {
-      toast.error('Please select a team first.', errorToastStyle);
+      toast.error("Please select a team first.", errorToastStyle);
       return;
     }
 
     try {
-      if (mode === 'single') {
+      if (mode === "single") {
         if (!newPlayerName.trim()) {
-          toast.error('Please enter a player name.', errorToastStyle);
+          toast.error("Please enter a player name.", errorToastStyle);
           return;
         }
 
-        const { error } = await insertHelper(table.players, [{ name: newPlayerName, team_id: selectedTeam, status: 'active', league_id: selectedLeagueId }]);
+        const { error } = await insertHelper(table.players, [
+          {
+            name: newPlayerName,
+            team_id: selectedTeam,
+            status: "active",
+            league_id: selectedLeagueId,
+          },
+        ]);
 
         if (error) {
-          toast.error('Error adding player: ' + error.message, errorToastStyle);
+          toast.error("Error adding player: " + error.message, errorToastStyle);
           return;
         }
 
-        const updatedTeams = await getTeamsAndPlayersByLeagueId(selectedLeagueId);
+        const updatedTeams = await getTeamsAndPlayersByLeagueId(
+          selectedLeagueId
+        );
         setTeams(updatedTeams);
-        toast.success(`${newPlayerName} of ${selectedTeamName} added successfully!`, successToastStyle);
+        toast.success(
+          `${newPlayerName} of ${selectedTeamName} added successfully!`,
+          successToastStyle
+        );
 
-        setNewPlayerName('');
+        setNewPlayerName("");
       } else {
         if (!multiplePlayerNames.trim()) {
-          toast.error('Please enter at least one name.', errorToastStyle);
+          toast.error("Please enter at least one name.", errorToastStyle);
           return;
         }
 
         const names = multiplePlayerNames
-          .split('\n')
+          .split("\n")
           .map((name) => name.trim())
           .filter((name) => name.length > 0);
 
         if (names.length === 0) {
-          toast.error('No valid names provided.', errorToastStyle);
+          toast.error("No valid names provided.", errorToastStyle);
           return;
         }
 
         const playersToInsert = names.map((name) => ({
           name,
           team_id: selectedTeam,
-          status: 'active',
-          league_id: selectedLeagueId
+          status: "active",
+          league_id: selectedLeagueId,
         }));
 
         const { error } = await insertHelper(table.players, playersToInsert);
 
         if (error) {
-          toast.error('Error adding players: ' + error.message, errorToastStyle);
+          toast.error(
+            "Error adding players: " + error.message,
+            errorToastStyle
+          );
           return;
         }
 
-        const updatedTeams = await getTeamsAndPlayersByLeagueId(selectedLeagueId);
+        const updatedTeams = await getTeamsAndPlayersByLeagueId(
+          selectedLeagueId
+        );
         setTeams(updatedTeams);
-        toast.success(`Multiple players of ${selectedTeamName} added successfully!`, successToastStyle);
+        toast.success(
+          `Multiple players of ${selectedTeamName} added successfully!`,
+          successToastStyle
+        );
 
-        setMultiplePlayerNames('');
+        setMultiplePlayerNames("");
       }
     } catch (err) {
-      catchError('Error adding player(s):', err);
+      catchError("Error adding player(s):", err);
     } finally {
       setDialogOpen(false);
     }
@@ -176,15 +198,9 @@ export const addMatch = async (
   selectedLeagueId: any
 ) => {
   e.preventDefault();
-  
-  if (
-    !blockNumber ||
-    !week ||
-    !team1 ||
-    !team2 ||
-    !selectedLane
-  ) {
-    toast.error('Please fill all fields correctly', errorToastStyle);
+
+  if (!blockNumber || !week || !team1 || !team2 || !selectedLane) {
+    toast.error("Please fill all fields correctly", errorToastStyle);
     return;
   }
 
@@ -193,31 +209,30 @@ export const addMatch = async (
     return;
   }
 
-  
   try {
     const { error } = await insertHelper(table.timetable, {
       block_id: blockNumber,
       week_number: parseInt(week),
       team1_id: parseInt(team1),
       team2_id: parseInt(team2),
-      lane: selectedLane,
-      league_id: selectedLeagueId
-    })
+      lane_id: selectedLane,
+      league_id: selectedLeagueId,
+    });
 
     if (error) {
-      toast.error('Error adding match: ' + error.message, errorToastStyle);
+      toast.error("Error adding match: " + error.message, errorToastStyle);
     }
-    
-    toast.success('Match added!', successToastStyle);
+
+    toast.success("Match added!", successToastStyle);
 
     await refreshMatches();
 
-    setWeek((currentWeek).toString());
-    setTeam1('');
-    setTeam2('');
-    setSelectedLane('');
+    setWeek(currentWeek.toString());
+    setTeam1("");
+    setTeam2("");
+    setSelectedLane("");
   } catch (err) {
-    catchError('Error adding match:', err);
+    catchError("Error adding match:", err);
   }
 };
 
@@ -227,7 +242,10 @@ export const addMatchResults = async (
   match: any,
   scores: any,
   setScores: any,
-  fetchAllMatchesDataWithScoresByWeekAndBlock: (week: any, block: any) => Promise<void>,
+  fetchAllMatchesDataWithScoresByWeekAndBlock: (
+    week: any,
+    block: any
+  ) => Promise<void>,
   selectedWeek: any,
   selectedBlock: number,
   setIsLoadingSkeleton: any,
@@ -237,8 +255,20 @@ export const addMatchResults = async (
   try {
     const allScores: any[] = [];
 
-    const team1Players = handleGetActivePlayersForTeam(matchIndex, 1, match.team1, activePlayers) || [];
-    const team2Players = handleGetActivePlayersForTeam(matchIndex, 2, match.team2, activePlayers) || [];
+    const team1Players =
+      handleGetActivePlayersForTeam(
+        matchIndex,
+        1,
+        match.team1,
+        activePlayers
+      ) || [];
+    const team2Players =
+      handleGetActivePlayersForTeam(
+        matchIndex,
+        2,
+        match.team2,
+        activePlayers
+      ) || [];
 
     // ✅ Team 1
     if (team1Players.length > 0) {
@@ -301,16 +331,16 @@ export const addMatchResults = async (
     }
 
     if (allScores.length === 0) {
-      toast.error('No players to save for this match.', errorToastStyle);
+      toast.error("No players to save for this match.", errorToastStyle);
       return;
     }
 
     const { error } = await insertHelper(table.weeklyScore, allScores);
     if (error) {
-      toast.error('Error saving scores: ' + error.message, errorToastStyle);
+      toast.error("Error saving scores: " + error.message, errorToastStyle);
     }
 
-    toast.success('Scores saved successfully!', successToastStyle);
+    toast.success("Scores saved successfully!", successToastStyle);
 
     setScores((prev: any) => {
       const newScores = { ...prev };
@@ -319,9 +349,12 @@ export const addMatchResults = async (
     });
 
     setIsLoadingSkeleton(true);
-    await fetchAllMatchesDataWithScoresByWeekAndBlock(selectedWeek, selectedBlock);
+    await fetchAllMatchesDataWithScoresByWeekAndBlock(
+      selectedWeek,
+      selectedBlock
+    );
     setIsLoadingSkeleton(false);
   } catch (err: any) {
-    catchError('Error saving scores:', err);
+    catchError("Error saving scores:", err);
   }
 };
