@@ -211,6 +211,11 @@ export default function Timetable() {
     setIsLoadingSkeleton(false);
   };
 
+  const laneMap = useMemo(
+    () => Object.fromEntries(lanes.map((l) => [l.id, l.lane])),
+    [lanes]
+  );
+
   return (
     <div className="p-4">
       <div>
@@ -340,7 +345,9 @@ export default function Timetable() {
                   <Label htmlFor="lane">Lane</Label>
                   <Select value={selectedLane} onValueChange={setSelectedLane}>
                     <SelectTrigger id="lane">
-                      <SelectValue placeholder="Select lane" />
+                      <SelectValue placeholder="Select lane">
+                        {selectedLane ? laneMap[selectedLane] : "Select lane"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {lanes.map((lane: any) => {

@@ -215,7 +215,7 @@ export const addMatch = async (
       week_number: parseInt(week),
       team1_id: parseInt(team1),
       team2_id: parseInt(team2),
-      lane_id: selectedLane,
+      lane_id: parseInt(selectedLane),
       league_id: selectedLeagueId,
     });
 

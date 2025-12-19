@@ -1,45 +1,38 @@
-import
-  React, {
+import React, {
   createContext,
   ReactNode,
   useContext,
   useEffect,
-  useState
-} from 'react';
-import {
-  checkIfLeagueHasBlocks,
-  getLeaguesByUser,
-  loginUser
-} from './api/get';
-import {
-  BowlingContextType,
-  PlayerStat
-} from './interfaces';
-import { twMerge } from 'tailwind-merge';
-import { clsx, type ClassValue } from 'clsx';
+  useState,
+} from "react";
+import { checkIfLeagueHasBlocks, getLeaguesByUser, loginUser } from "./api/get";
+import { BowlingContextType, PlayerStat } from "./interfaces";
+import { twMerge } from "tailwind-merge";
+import { clsx, type ClassValue } from "clsx";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-};
+}
 
 const BowlingContext = createContext<BowlingContextType | undefined>(undefined);
 
-export const BowlingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const BowlingProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [leagues, setLeagues] = useState<any[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
-  const [selectedLeagueName, setSelectedLeagueName] = useState<string | null>(null);
+  const [selectedLeagueName, setSelectedLeagueName] = useState<string | null>(
+    null
+  );
   const [hasBlock, setHasBlock] = useState<boolean>(false);
 
   /* --- Auth --- */
-  const login = async (
-    username: string,
-    password: string
-  ) => {
+  const login = async (username: string, password: string) => {
     const user = await loginUser(username, password);
-    
+
     if (!user) return false;
 
     setIsAuthenticated(true);
@@ -55,12 +48,12 @@ export const BowlingProvider: React.FC<{ children: ReactNode }> = ({ children })
     setLeagues(leagueData);
 
     return true;
-  }
+  };
 
-    /* --- Persist session --- */
+  /* --- Persist session --- */
   useEffect(() => {
     const authStored = sessionStorage.getItem("bowling-auth");
-    const leagueStored = sessionStorage.getItem('bowling-selected-league');
+    const leagueStored = sessionStorage.getItem("bowling-selected-league");
     const userIdStored = sessionStorage.getItem("user_id");
 
     if (authStored === "true" && userIdStored) {
@@ -92,7 +85,7 @@ export const BowlingProvider: React.FC<{ children: ReactNode }> = ({ children })
     const hasBlock = await checkIfLeagueHasBlocks(league.id);
     setHasBlock(hasBlock ?? false);
     setSelectedLeagueName(league.name);
-    
+
     if (hasBlock) {
       setSelectedLeague(league.id);
       sessionStorage.setItem("bowling-selected-league", league.id);
@@ -105,28 +98,30 @@ export const BowlingProvider: React.FC<{ children: ReactNode }> = ({ children })
   const changeLeague = (league: any) => {
     setSelectedLeague(null);
     setSelectedLeagueName(null);
-    sessionStorage.setItem("bowling-selected-league", 'null');
-    localStorage.setItem("bowling-selected-league", 'null');
-  }
+    sessionStorage.setItem("bowling-selected-league", "null");
+    localStorage.setItem("bowling-selected-league", "null");
+  };
 
   return (
-    <BowlingContext.Provider value={{
-      login,
-      logout,
-      selectLeague,
-      selectedLeagueName,
-      isAuthenticated,
-      selectedLeague,
-      userId,
-      userName,
-      leagues,
-      hasBlock,
-      setSelectedLeague,
-      changeLeague
-    }}>
+    <BowlingContext.Provider
+      value={{
+        login,
+        logout,
+        selectLeague,
+        selectedLeagueName,
+        isAuthenticated,
+        selectedLeague,
+        userId,
+        userName,
+        leagues,
+        hasBlock,
+        setSelectedLeague,
+        changeLeague,
+      }}
+    >
       {children}
     </BowlingContext.Provider>
-  )
+  );
 };
 
 export const useBowlingHook = () => {
@@ -148,69 +143,75 @@ export const useCustomHook = () => {
     userId,
     hasBlock,
     setSelectedLeague,
-    changeLeague
+    changeLeague,
   } = useBowlingHook();
 
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState("dashboard");
   const [isLoadingSkeleton, setIsLoadingSkeleton] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   /* Login Related */
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   /* League Selection Related */
   const [leagues, setLeagues] = useState<any[]>([]);
   const [showInsertBlockDialog, setShowInsertBlockDialog] = useState(false);
-  const [blockCount, setBlockCount] = useState('2');
+  const [blockCount, setBlockCount] = useState("2");
 
   /* Dashboard Related */
   const [dashboardData, setDashboardData] = useState<any>(null);
 
   /* Teams Related */
-  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamName, setNewTeamName] = useState("");
   const [isAddingTeam, setIsAddingTeam] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmMessage, setConfirmMessage] = useState('');
-  const [confirmAction, setConfirmAction] = useState<() => void>(() => () => {});
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmAction, setConfirmAction] = useState<() => void>(
+    () => () => {}
+  );
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
-  const [selectedTeamName, setSelectedTeamName] = useState<string>('');
-  const [addMode, setAddMode] = useState<'single' | 'multiple'>('single');
-  const [newPlayerName, setNewPlayerName] = useState('');
-  const [multiplePlayerNames, setMultiplePlayerNames] = useState('');
-  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>({});
+  const [selectedTeamName, setSelectedTeamName] = useState<string>("");
+  const [addMode, setAddMode] = useState<"single" | "multiple">("single");
+  const [newPlayerName, setNewPlayerName] = useState("");
+  const [multiplePlayerNames, setMultiplePlayerNames] = useState("");
+  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
+    {}
+  );
   const [editingPlayer, setEditingPlayer] = useState<any | null>(null);
-  const [editedName, setEditedName] = useState('');
-  const [editedStatus, setEditedStatus] = useState('active');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [editedName, setEditedName] = useState("");
+  const [editedStatus, setEditedStatus] = useState("active");
+  const [searchQuery, setSearchQuery] = useState("");
 
   /* Timetable Related */
   const [blocksData, setBlocksData] = useState<any[]>([]);
   const [blockNumber, setBlockNumber] = useState<1 | 2>(1);
-  const [week, setWeek] = useState('1');
-  const [team1, setTeam1] = useState('');
-  const [team2, setTeam2] = useState('');
+  const [week, setWeek] = useState("1");
+  const [team1, setTeam1] = useState("");
+  const [team2, setTeam2] = useState("");
   const [selectedLane, setSelectedLane] = useState<string>("");
   const [weeksAvailable, setWeeksAvailable] = useState<number[]>([]);
-  const [filterWeek, setFilterWeek] = useState<string>('all');
-  const [filterTeam, setFilterTeam] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterWeek, setFilterWeek] = useState<string>("all");
+  const [filterTeam, setFilterTeam] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
 
   /* Scores Related */
   const [scores, setScores] = useState<any>({});
   const [activePlayers, setActivePlayers] = useState<any>({});
-  const [weekInScores, setWeekInScores] = useState('');
-  const [selectedPlayerDropdown, setSelectedPlayerDropdown] = useState<{ [matchIndex: number]: { [teamNum: number]: string } }>({});
+  const [weekInScores, setWeekInScores] = useState("");
+  const [selectedPlayerDropdown, setSelectedPlayerDropdown] = useState<{
+    [matchIndex: number]: { [teamNum: number]: string };
+  }>({});
   const [playerScores, setPlayerScores] = useState<any>({});
   const [savedMatches, setSavedMatches] = useState<number[]>([]);
 
   /* Statistics Related */
-  const [selectedBlock, setSelectedBlock] = useState<'1' | '2' | 'all'>('all');
-  const [selectedTeamS, setSelectedTeamS] = useState<string>('all');
-  const [selectedWeek, setSelectedWeek] = useState<string>('all');
+  const [selectedBlock, setSelectedBlock] = useState<"1" | "2" | "all">("all");
+  const [selectedTeamS, setSelectedTeamS] = useState<string>("all");
+  const [selectedWeek, setSelectedWeek] = useState<string>("all");
   const [players, setPlayers] = useState<any[]>([]);
   const [allScoresData, setAllScoresData] = useState<any>([]);
 
@@ -218,18 +219,21 @@ export const useCustomHook = () => {
   const [data, setData] = useState<{
     teams: any[];
     blocks: any[];
-  }>({ teams: [], blocks: [] })
-  const [teamA, setTeamA] = useState<string>('');
-  const [teamB, setTeamB] = useState<string>('');
+  }>({ teams: [], blocks: [] });
+  const [teamA, setTeamA] = useState<string>("");
+  const [teamB, setTeamB] = useState<string>("");
   const [selectedPlayersA, setSelectedPlayersA] = useState<string[]>([]);
   const [selectedPlayersB, setSelectedPlayersB] = useState<string[]>([]);
-  const [listSelectedTeamAPlayer, setListSelectedTeamAPlayer] = useState<any[]>([]);
-  const [listSelectedTeamBPlayer, setListSelectedTeamBPlayer] = useState<any[]>([]);
-  const [blockFilter, setBlockFilter] = useState<'1' | '2' | 'all'>('all');
+  const [listSelectedTeamAPlayer, setListSelectedTeamAPlayer] = useState<any[]>(
+    []
+  );
+  const [listSelectedTeamBPlayer, setListSelectedTeamBPlayer] = useState<any[]>(
+    []
+  );
+  const [blockFilter, setBlockFilter] = useState<"1" | "2" | "all">("all");
 
   const [playerStatsA, setPlayerStatsA] = useState<PlayerStat[]>([]);
   const [playerStatsB, setPlayerStatsB] = useState<PlayerStat[]>([]);
-
 
   return {
     isAuthenticated,
@@ -249,7 +253,7 @@ export const useCustomHook = () => {
     setIsLoadingSkeleton,
     mobileMenuOpen,
     setMobileMenuOpen,
-    
+
     username,
     setUsername,
     password,
@@ -346,7 +350,7 @@ export const useCustomHook = () => {
     setPlayers,
     allScoresData,
     setAllScoresData,
-    
+
     data,
     setData,
     teamA,
@@ -367,5 +371,5 @@ export const useCustomHook = () => {
     setPlayerStatsA,
     playerStatsB,
     setPlayerStatsB,
-  }
+  };
 };

@@ -1,32 +1,29 @@
-import {
-  useEffect,
-  useState
-} from 'react';
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '../ui/card';
+  CardTitle,
+} from "../ui/card";
 import {
   Dialog,
   DialogContent,
-  DialogHeader, 
+  DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
-} from '../ui/dialog';
-import { toast } from 'sonner';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Button } from '../ui/button';
-import { Trophy } from 'lucide-react';
-import { useCustomHook } from '../misc';
-import { Skeleton } from '../ui/skeleton';
-import { getLeaguesByUser } from '../api/get';
-import { addBlockForLeague } from '../api/add';
-import { successToastStyle } from '../functions';
+  DialogFooter,
+} from "../ui/dialog";
+import { toast } from "sonner";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
+import { Trophy } from "lucide-react";
+import { useCustomHook } from "../misc";
+import { Skeleton } from "../ui/skeleton";
+import { getLeaguesByUser } from "../api/get";
+import { addBlockForLeague } from "../api/add";
+import { successToastStyle } from "../functions";
 
 export default function LeagueSelection() {
   const {
@@ -42,10 +39,12 @@ export default function LeagueSelection() {
     blockCount,
     selectedLeagueName,
     selectedLeague,
-    setSelectedLeague
+    setSelectedLeague,
   } = useCustomHook();
 
-  const [initialSelectedLeague, setInitialSelectedLeague] = useState<string | null>(null);
+  const [initialSelectedLeague, setInitialSelectedLeague] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     const loadLeagues = async () => {
@@ -68,7 +67,9 @@ export default function LeagueSelection() {
             </div>
           </div>
           <CardTitle className="font-bold">Select a League</CardTitle>
-          <CardDescription>Choose which bowling league you want to manage</CardDescription>
+          <CardDescription>
+            Choose which bowling league you want to manage
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -89,7 +90,9 @@ export default function LeagueSelection() {
                 </div>
               ))
             ) : leagues.length === 0 ? (
-              <div className="text-center text-muted-foreground">No leagues available</div>
+              <div className="text-center text-muted-foreground">
+                No leagues available
+              </div>
             ) : (
               leagues.map((league) => (
                 <div
@@ -112,7 +115,9 @@ export default function LeagueSelection() {
                         <Trophy className="h-5 w-5" />
                       </div>
                       <div className="text-left whitespace-normal break-words">
-                        <div className="text-sm font-medium leading-tight">{league.name}</div>
+                        <div className="text-sm font-medium leading-tight">
+                          {league.name}
+                        </div>
                       </div>
                     </div>
                   </Button>
@@ -124,15 +129,19 @@ export default function LeagueSelection() {
       </Card>
 
       {/* Block Setup Dialog */}
-      <Dialog open={showInsertBlockDialog} onOpenChange={setShowInsertBlockDialog}>
+      <Dialog
+        open={showInsertBlockDialog}
+        onOpenChange={setShowInsertBlockDialog}
+      >
         <DialogContent
-          onInteractOutside={(e) => e.preventDefault()} 
+          onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
           <DialogHeader>
             <DialogTitle>Set Up Blocks</DialogTitle>
             <DialogDescription>
-              This league has no block data yet. How many blocks would you like to create for <b>{selectedLeagueName}</b>?
+              This league has no block data yet. How many blocks would you like
+              to create for <b>{selectedLeagueName}</b>?
             </DialogDescription>
           </DialogHeader>
 
@@ -162,20 +171,36 @@ export default function LeagueSelection() {
             <Button
               onClick={async () => {
                 // ✅ Call insert
-                const result = await addBlockForLeague(initialSelectedLeague, parseInt(blockCount));
+                const result = await addBlockForLeague(
+                  initialSelectedLeague,
+                  parseInt(blockCount)
+                );
                 if (result && initialSelectedLeague) {
                   setSelectedLeague(initialSelectedLeague);
-                  sessionStorage.setItem("bowling-selected-league", initialSelectedLeague);
-                  localStorage.setItem("bowling-selected-league", initialSelectedLeague);
+                  sessionStorage.setItem(
+                    "bowling-selected-league",
+                    initialSelectedLeague
+                  );
+                  localStorage.setItem(
+                    "bowling-selected-league",
+                    initialSelectedLeague
+                  );
 
                   // ✅ Close dialog
                   setShowInsertBlockDialog(false);
 
                   // ✅ Optional: show success toast
-                  toast.success(`Successfully created ${blockCount} block(s) for ${selectedLeagueName}`, successToastStyle);
+                  toast.success(
+                    `Successfully created ${blockCount} block(s) for ${selectedLeagueName}`,
+                    successToastStyle
+                  );
                 }
               }}
-              disabled={!blockCount || parseInt(blockCount) < 1 || parseInt(blockCount) > 10}
+              disabled={
+                !blockCount ||
+                parseInt(blockCount) < 1 ||
+                parseInt(blockCount) > 10
+              }
             >
               Create Blocks
             </Button>

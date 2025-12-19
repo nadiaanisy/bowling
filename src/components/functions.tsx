@@ -1,31 +1,49 @@
-import { toast } from 'sonner';
-import { fetchPlayerWeeklyScores } from './api/get';
-// import { fetchPlayerWeeklyScores } from './api';
+import { toast } from "sonner";
+import { fetchPlayerWeeklyScores } from "./api/get";
 
 /* --- STYLE SECTION --- */
 export const errorToastStyle = {
   style: {
-    background: '#fee2e2',
-    color: '#b91c1c',
-    border: '1px solid #fca5a5',
-  }
+    background: "#fee2e2",
+    color: "#b91c1c",
+    border: "1px solid #fca5a5",
+  },
 };
 
 export const successToastStyle = {
   style: {
-    background: '#e2feefff',
-    color: '#1cb968ff',
-    border: '1px solid #a5fcc6ff',
-  }
+    background: "#e2feefff",
+    color: "#1cb968ff",
+    border: "1px solid #a5fcc6ff",
+  },
 };
 
 /* --- CATCH ERROR TOAST --- */
-export const catchError = (
-  customErrMessage: string,
-  err: any
- ) => {
+export const catchError = (customErrMessage: string, err: any) => {
   const message = err instanceof Error ? err.message : String(err);
   toast.error(customErrMessage + message, errorToastStyle);
+};
+
+/* --- LOGIN --- */
+export const handleLoginButton = async (
+  e: React.FormEvent,
+  login: (username: string, password: string) => Promise<boolean>,
+  username: string,
+  password: string,
+  setLoading: (loading: boolean) => void
+) => {
+  e.preventDefault();
+  setLoading(true);
+  const isLoggedIn = await login(username, password);
+  if (!isLoggedIn) {
+    toast.error(
+      "Login failed. Please check your credentials.",
+      errorToastStyle
+    );
+    setLoading(false);
+  } else {
+    setLoading(false);
+  }
 };
 
 /* --- ASK CONFIRMATION --- */
@@ -41,25 +59,6 @@ export const askConfirm = (
   setConfirmOpen(true);
 };
 
-/* --- LOGIN --- */
-export const handleLoginButton = async (
-  e: React.FormEvent,
-  login: (username: string, password: string) => Promise<boolean>,
-  username: string,
-  password: string,
-  setLoading: (loading: boolean) => void
-) => {
-  e.preventDefault();
-  setLoading(true);
-  const isLoggedIn = await login(username, password);
-  if (!isLoggedIn) {
-    toast.error('Login failed. Please check your credentials.', errorToastStyle);
-    setLoading(false);
-  } else {
-    setLoading(false);
-  }
-};
-
 /* --- HANDLE BLOCK CHANGED IN SCORES.TSX--- */
 export const handleBlockChanged = (
   blockNumber: number,
@@ -69,7 +68,7 @@ export const handleBlockChanged = (
   setActivePlayers: (val: Record<string, boolean>) => void
 ) => {
   setBlockNumber(blockNumber);
-  setWeek('');
+  setWeek("");
   setScores({});
   setActivePlayers({});
 };
@@ -79,7 +78,7 @@ export const handleWeekChanged = (
   week: string,
   setWeek: (val: string) => void,
   setScores: (val: Record<string, number>) => void,
-  setActivePlayers: (val: Record<string, boolean>) => void,
+  setActivePlayers: (val: Record<string, boolean>) => void
 ) => {
   setWeek(week);
   setScores({});
@@ -103,10 +102,10 @@ export const handleScoreChange = (
         ...prev[matchIndex]?.[`team${teamNum}`],
         [playerId]: {
           ...prev[matchIndex]?.[`team${teamNum}`]?.[playerId],
-          [`game${game}`]: value
-        }
-      }
-    }
+          [`game${game}`]: value,
+        },
+      },
+    },
   }));
 };
 
@@ -126,10 +125,10 @@ export const handleHdcChange = (
         ...prev[matchIndex]?.[`team${teamNum}`],
         [playerId]: {
           ...prev[matchIndex]?.[`team${teamNum}`]?.[playerId],
-          hdc: value
-        }
-      }
-    }
+          hdc: value,
+        },
+      },
+    },
   }));
 };
 
@@ -173,8 +172,8 @@ export const handleAddPlayerToMatch = (
       ...prev,
       [matchIndex]: {
         ...prevMatch,
-        [`team${teamNum}`]: updatedPlayers
-      }
+        [`team${teamNum}`]: updatedPlayers,
+      },
     };
   });
 
@@ -183,8 +182,8 @@ export const handleAddPlayerToMatch = (
     ...prev,
     [matchIndex]: {
       ...prev[matchIndex],
-      [teamNum]: ''
-    }
+      [teamNum]: "",
+    },
   }));
 };
 
@@ -203,8 +202,10 @@ export const handleRemovePlayerFromMatch = (
     ...prev,
     [matchIndex]: {
       ...prev[matchIndex],
-      [`team${teamNum}`]: (prev[matchIndex]?.[`team${teamNum}`] || []).filter((id: string) => id !== playerId)
-    }
+      [`team${teamNum}`]: (prev[matchIndex]?.[`team${teamNum}`] || []).filter(
+        (id: string) => id !== playerId
+      ),
+    },
   }));
 
   setPlayerScores((prev: any) => {
@@ -218,8 +219,8 @@ export const handleRemovePlayerFromMatch = (
       ...prev,
       [matchIndex]: {
         ...prev[matchIndex],
-        [`team${teamNum}`]: newMatchScores
-      }
+        [`team${teamNum}`]: newMatchScores,
+      },
     };
   });
 
@@ -227,8 +228,8 @@ export const handleRemovePlayerFromMatch = (
     ...prev,
     [matchIndex]: {
       ...prev[matchIndex],
-      [teamNum]: ''
-    }
+      [teamNum]: "",
+    },
   }));
 };
 
@@ -245,45 +246,9 @@ export const handleGetActivePlayersForTeam = (
 
   return activePlayerIds
     .map((id: string) => team.players.find((p: any) => p.id === id))
-    .filter(Boolean); 
+    .filter(Boolean);
 };
 
-export const handlePlayerToggleA = (
-  playerId: string,
-  selectedLeague: any,
-  setSelectedPlayersA: React.Dispatch<React.SetStateAction<string[]>>
-) => {
-  setSelectedPlayersA(prev => {
-    if (prev.includes(playerId)) {
-      return prev.filter(id => id !== playerId);
-    } else {
-      if (selectedLeague === '1' && prev.length >= 4) {
-        return [...prev.slice(1), playerId];
-      }
-      return [...prev, playerId];
-    }
-  });
-};
-
-export const handlePlayerToggleB = (
-  playerId: string,
-  selectedLeague: string,
-  setSelectedPlayersB: React.Dispatch<React.SetStateAction<string[]>>
-) => {
-  setSelectedPlayersB(prev => {
-    if (prev.includes(playerId)) {
-      return prev.filter(id => id !== playerId);
-    } else {
-      if (selectedLeague === '1' && prev.length >= 4) {
-        return [...prev.slice(1), playerId];
-      }
-      return [...prev, playerId];
-    }
-  });
-};
-
-
-/* CALCULATION */
 /* --- CALCULATE TEAM COLUMN TOTALS --- */
 export const calculateTeamColumnTotals = (
   teamPlayers: any[] = [],
@@ -366,21 +331,62 @@ export const calculatePlayerTotalHdc = (playerScores: any) => {
 export const calculateConsistency = (games: number[]) => {
   if (!games.length) return 0;
   const avg = games.reduce((sum, g) => sum + g, 0) / games.length;
-  const variance = games.reduce((sum, g) => sum + Math.pow(g - avg, 2), 0) / games.length;
+  const variance =
+    games.reduce((sum, g) => sum + Math.pow(g - avg, 2), 0) / games.length;
   return Math.round(Math.sqrt(variance));
 };
 
+/* --- HANDLE PLAYER TOGGLE FOR SELECTING PLAYERS IN A TEAM --- */
+export const handlePlayerToggleA = (
+  playerId: string,
+  selectedLeague: any,
+  setSelectedPlayersA: React.Dispatch<React.SetStateAction<string[]>>
+) => {
+  setSelectedPlayersA((prev) => {
+    if (prev.includes(playerId)) {
+      return prev.filter((id) => id !== playerId);
+    } else {
+      if (selectedLeague === "1" && prev.length >= 4) {
+        return [...prev.slice(1), playerId];
+      }
+      return [...prev, playerId];
+    }
+  });
+};
+
+export const handlePlayerToggleB = (
+  playerId: string,
+  selectedLeague: string,
+  setSelectedPlayersB: React.Dispatch<React.SetStateAction<string[]>>
+) => {
+  setSelectedPlayersB((prev) => {
+    if (prev.includes(playerId)) {
+      return prev.filter((id) => id !== playerId);
+    } else {
+      if (selectedLeague === "1" && prev.length >= 4) {
+        return [...prev.slice(1), playerId];
+      }
+      return [...prev, playerId];
+    }
+  });
+};
+
 /* --- CALCULATE PLAYER STATS --- */
-export const calculatePlayerStats = async (playerId: string, playerName: string, teamId: string, teamName: string) => {
+export const calculatePlayerStats = async (
+  playerId: string,
+  playerName: string,
+  teamId: string,
+  teamName: string
+) => {
   const scores = await fetchPlayerWeeklyScores(playerId);
   if (scores.length === 0) return null;
 
   const games: number[] = [];
   let totalPins = 0;
 
-  console.log(scores)
+  console.log(scores);
 
-  scores.forEach(score => {
+  scores.forEach((score: any) => {
     const playerGames = [score.g1, score.g2, score.g3];
     games.push(...playerGames);
     totalPins += score.scratch;
@@ -391,7 +397,8 @@ export const calculatePlayerStats = async (playerId: string, playerName: string,
   const highGame = Math.max(...games);
   const lowGame = Math.min(...games);
 
-  const variance = games.reduce((sum, g) => sum + Math.pow(g - average, 2), 0) / gamesPlayed;
+  const variance =
+    games.reduce((sum, g) => sum + Math.pow(g - average, 2), 0) / gamesPlayed;
   const consistency = Math.round(Math.sqrt(variance));
 
   console.log({
@@ -420,5 +427,5 @@ export const calculatePlayerStats = async (playerId: string, playerName: string,
     consistency,
     games,
   };
-  return []
+  return [];
 };

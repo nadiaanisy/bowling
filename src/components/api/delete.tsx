@@ -1,12 +1,8 @@
-import {
-  catchError,
-  errorToastStyle,
-  successToastStyle
-} from '../functions';
-import { toast } from 'sonner';
-import { table } from '../constant';
-import { deleteHelper } from './supabaseHelper';
-import { getTeamsAndPlayersByLeagueId } from './get';
+import { catchError, errorToastStyle, successToastStyle } from "../functions";
+import { toast } from "sonner";
+import { table } from "../constant";
+import { deleteHelper } from "./supabaseHelper";
+import { getTeamsAndPlayersByLeagueId } from "./get";
 
 /* --- DELETE TEAM --- */
 export const deleteTeam = async (
@@ -15,19 +11,19 @@ export const deleteTeam = async (
   selectedLeagueId: any
 ) => {
   try {
-    const { error } = await deleteHelper(table.teams).eq('id', teamId);
+    const { error } = await deleteHelper(table.teams).eq("id", teamId);
 
     if (error) {
-      toast.error('Error deleting team: ' + error.message, errorToastStyle);
+      toast.error("Error deleting team: " + error.message, errorToastStyle);
       return;
     }
 
-    toast.success('Team deleted successfully!', successToastStyle);
+    toast.success("Team deleted successfully!", successToastStyle);
 
     const updatedTeams = await getTeamsAndPlayersByLeagueId(selectedLeagueId);
     setTeams(updatedTeams);
   } catch (err) {
-    catchError('Error deleting team: ', err);
+    catchError("Error deleting team: ", err);
   }
 };
 
@@ -38,19 +34,19 @@ export const deletePlayer = async (
   selectedLeagueId: any
 ) => {
   try {
-    const { error } = await deleteHelper(table.players).eq('id', playerId);
+    const { error } = await deleteHelper(table.players).eq("id", playerId);
 
     if (error) {
-      toast.error('Error deleting player: ' + error.message, errorToastStyle);
+      toast.error("Error deleting player: " + error.message, errorToastStyle);
       return;
     }
 
-    toast.success('Player deleted successfully!', successToastStyle);
+    toast.success("Player deleted successfully!", successToastStyle);
 
     const updatedTeams = await getTeamsAndPlayersByLeagueId(selectedLeagueId);
     setTeams(updatedTeams);
   } catch (err) {
-    catchError('Error deleting player: ', err);
+    catchError("Error deleting player: ", err);
   }
 };
 
@@ -60,21 +56,21 @@ export const deleteMatch = async (
   refreshMatches: () => Promise<void>
 ) => {
   if (!matchId) {
-    toast.error('Invalid match selected', errorToastStyle);
+    toast.error("Invalid match selected", errorToastStyle);
     return;
   }
 
   try {
-    const { error } = await deleteHelper(table.timetable).eq('id', matchId);
+    const { error } = await deleteHelper(table.timetable).eq("id", matchId);
 
     if (error) {
-      toast.error('Error deleting match: ' + error.message, errorToastStyle);
+      toast.error("Error deleting match: " + error.message, errorToastStyle);
       return;
     }
 
-    toast.success('Match deleted successfully!', successToastStyle);
+    toast.success("Match deleted successfully!", successToastStyle);
     await refreshMatches();
   } catch (err) {
-    catchError('Error deleting match:', err);
+    catchError("Error deleting match:", err);
   }
 };

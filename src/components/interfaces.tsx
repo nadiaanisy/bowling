@@ -11,7 +11,7 @@ export interface BowlingContextType {
   userName?: string | null;
   leagues?: any[];
   hasBlock?: boolean;
-};
+}
 
 export interface PlayerScoreDetails {
   id: number;
@@ -41,7 +41,7 @@ export interface MatchData {
   team1: TeamData;
   team2: TeamData;
   match_id: number;
-  status: 'completed' | 'pending';
+  status: "completed" | "pending";
   block1?: MatchData[];
   block2?: MatchData[];
 }

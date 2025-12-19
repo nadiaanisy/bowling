@@ -1,29 +1,20 @@
-import {
-  useEffect,
-  useMemo,
-  useState
-} from 'react';
+import { useEffect, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '../ui/card';
+  CardTitle,
+} from "../ui/card";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from '../ui/table';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '../ui/tabs';
+  TableRow,
+} from "../ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -31,15 +22,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
-} from '../ui/dialog';
+  DialogTrigger,
+} from "../ui/dialog";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/select';
+} from "../ui/select";
 import {
   Trash2,
   UserPlus,
@@ -47,31 +38,25 @@ import {
   ChevronDown,
   ChevronUp,
   Edit,
-  Search
-} from 'lucide-react';
-import {
-  addTeam,
-  addPlayer,
-} from '../api/add';
-import {
-  deleteTeam,
-  deletePlayer,
-} from '../api/delete';
+  Search,
+} from "lucide-react";
+import { addTeam, addPlayer } from "../api/add";
+import { deleteTeam, deletePlayer } from "../api/delete";
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger
-} from '../ui/collapsible';
-import { Badge } from '../ui/badge';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Button } from '../ui/button';
-import { useCustomHook } from '../misc';
-import { Textarea } from '../ui/textarea';
-import { Skeleton } from '../ui/skeleton';
-import { askConfirm } from '../functions';
-import { updatePlayer } from '../api/update';
-import { getTeamsAndPlayersByLeagueId } from '../api/get';
+  CollapsibleTrigger,
+} from "../ui/collapsible";
+import { Badge } from "../ui/badge";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
+import { useCustomHook } from "../misc";
+import { Textarea } from "../ui/textarea";
+import { Skeleton } from "../ui/skeleton";
+import { askConfirm } from "../functions";
+import { updatePlayer } from "../api/update";
+import { getTeamsAndPlayersByLeagueId } from "../api/get";
 
 function ConfirmDialog({
   open,
@@ -94,8 +79,12 @@ function ConfirmDialog({
           <DialogDescription>{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button variant="destructive" onClick={onConfirm}>Confirm</Button>
+          <Button variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={onConfirm}>
+            Confirm
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -140,7 +129,7 @@ export default function Teams() {
     setEditingPlayer,
     setEditedName,
     setEditedStatus,
-    setSearchQuery
+    setSearchQuery,
   } = useCustomHook();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -156,10 +145,10 @@ export default function Teams() {
   }, []);
 
   useEffect(() => {
-    if (addMode === 'single') {
-      setMultiplePlayerNames('');
-    } else if (addMode === 'multiple') {
-      setNewPlayerName('');
+    if (addMode === "single") {
+      setMultiplePlayerNames("");
+    } else if (addMode === "multiple") {
+      setNewPlayerName("");
     }
   }, [addMode]);
 
@@ -208,7 +197,8 @@ export default function Teams() {
                   setTeams
                 )
               }
-              className="flex gap-2">
+              className="flex gap-2"
+            >
               <div className="flex-1">
                 <Input
                   placeholder="Team name"
@@ -216,10 +206,7 @@ export default function Teams() {
                   onChange={(e) => setNewTeamName(e.target.value)}
                 />
               </div>
-              <Button
-                type="submit"
-                disabled={isAddingTeam}
-              >
+              <Button type="submit" disabled={isAddingTeam}>
                 Add Team
               </Button>
             </form>
@@ -229,24 +216,26 @@ export default function Teams() {
 
       <div className="mt-5">
         <Card>
-        <CardHeader>
-          <CardTitle>Search Teams</CardTitle>
-          <CardDescription>Search by team name or player name</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center">
-            <div className="flex items-center gap-2 bg-input-background border border-input rounded-md px-3 py-2 w-full">
-              <Search className="w-4 h-4 text-muted-foreground" />
-              <input
-                placeholder="Search teams or players..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
-              />
+          <CardHeader>
+            <CardTitle>Search Teams</CardTitle>
+            <CardDescription>
+              Search by team name or player name
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center">
+              <div className="flex items-center gap-2 bg-input-background border border-input rounded-md px-3 py-2 w-full">
+                <Search className="w-4 h-4 text-muted-foreground" />
+                <input
+                  placeholder="Search teams or players..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
+                />
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
       </div>
 
       {isLoadingSkeleton ? (
@@ -259,7 +248,7 @@ export default function Teams() {
                     <CardTitle>
                       <Skeleton className="h-5 w-32" />
                     </CardTitle>
-                    <div className='mt-5'>
+                    <div className="mt-5">
                       <Skeleton className="h-5 w-32" />
                     </div>
                   </div>
@@ -277,26 +266,40 @@ export default function Teams() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle>{team.name}</CardTitle>
-                      <CardDescription>{team?.players?.length} players</CardDescription>
+                      <CardDescription>
+                        {team?.players?.length} players
+                      </CardDescription>
                     </div>
                     <div className="flex gap-2">
                       {team.name !== "BLIND" && (
-                        <Dialog open={dialogOpen && selectedTeam === team.id} onOpenChange={(open) => {
-                          setDialogOpen(open);
-                          if (open) {
-                            setSelectedTeam(team.id);
-                            setSelectedTeamName(team.name);
-                            setAddMode('single');
-                          }
-                          if (!open) {
-                            setNewPlayerName('');
-                            setMultiplePlayerNames('');
-                            setSelectedTeam(null);
-                            setSelectedTeamName('');
-                          }
-                        }}>
+                        <Dialog
+                          open={dialogOpen && selectedTeam === team.id}
+                          onOpenChange={(open) => {
+                            setDialogOpen(open);
+                            if (open) {
+                              setSelectedTeam(team.id);
+                              setSelectedTeamName(team.name);
+                              setAddMode("single");
+                            }
+                            if (!open) {
+                              setNewPlayerName("");
+                              setMultiplePlayerNames("");
+                              setSelectedTeam(null);
+                              setSelectedTeamName("");
+                            }
+                          }}
+                        >
                           <DialogTrigger asChild>
-                            <Button variant="outline" size="sm" style={{borderStyle: 'var(--tw-border-style)', borderWidth: '1px', borderRadius: '8px', borderColor: '#0000001a'}}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              style={{
+                                borderStyle: "var(--tw-border-style)",
+                                borderWidth: "1px",
+                                borderRadius: "8px",
+                                borderColor: "#0000001a",
+                              }}
+                            >
                               <UserPlus className="h-4 w-4 mr-2" />
                               Add Player
                             </Button>
@@ -308,11 +311,21 @@ export default function Teams() {
                             onInteractOutside={(e) => e.preventDefault()}
                           >
                             <DialogHeader>
-                              <DialogTitle>Add Player(s) to {team.name}</DialogTitle>
-                              <DialogDescription>Choose to add a single player or multiple players at once</DialogDescription>
+                              <DialogTitle>
+                                Add Player(s) to {team.name}
+                              </DialogTitle>
+                              <DialogDescription>
+                                Choose to add a single player or multiple
+                                players at once
+                              </DialogDescription>
                             </DialogHeader>
-                            
-                            <Tabs value={addMode} onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}>
+
+                            <Tabs
+                              value={addMode}
+                              onValueChange={(v: any) =>
+                                setAddMode(v as "single" | "multiple")
+                              }
+                            >
                               <TabsList className="grid w-full grid-cols-2">
                                 <TabsTrigger value="single">
                                   <UserPlus className="h-4 w-4 mr-2" />
@@ -329,7 +342,7 @@ export default function Teams() {
                                   onSubmit={(e) =>
                                     addPlayer(
                                       e,
-                                      'single',
+                                      "single",
                                       selectedTeam,
                                       selectedTeamName,
                                       newPlayerName,
@@ -344,12 +357,16 @@ export default function Teams() {
                                 >
                                   <div className="space-y-4">
                                     <div className="space-y-2">
-                                      <Label htmlFor="playerName">Player Name</Label>
+                                      <Label htmlFor="playerName">
+                                        Player Name
+                                      </Label>
                                       <Input
                                         id="playerName"
                                         placeholder="Enter player name"
                                         value={newPlayerName}
-                                        onChange={(e) => setNewPlayerName(e.target.value)}
+                                        onChange={(e) =>
+                                          setNewPlayerName(e.target.value)
+                                        }
                                       />
                                     </div>
                                   </div>
@@ -364,7 +381,7 @@ export default function Teams() {
                                   onSubmit={(e) =>
                                     addPlayer(
                                       e,
-                                      'multiple',
+                                      "multiple",
                                       selectedTeam,
                                       selectedTeamName,
                                       newPlayerName,
@@ -379,12 +396,16 @@ export default function Teams() {
                                 >
                                   <div className="space-y-4">
                                     <div className="space-y-2">
-                                      <Label htmlFor="multiplePlayerNames">Player Names (one per line)</Label>
+                                      <Label htmlFor="multiplePlayerNames">
+                                        Player Names (one per line)
+                                      </Label>
                                       <Textarea
                                         id="multiplePlayerNames"
                                         placeholder="John Doe&#10;Jane Smith&#10;Mike Johnson"
                                         value={multiplePlayerNames}
-                                        onChange={(e) => setMultiplePlayerNames(e.target.value)}
+                                        onChange={(e) =>
+                                          setMultiplePlayerNames(e.target.value)
+                                        }
                                         rows={8}
                                         className="resize-none"
                                       />
@@ -423,12 +444,15 @@ export default function Teams() {
                 {team.players.length > 0 && (
                   <Collapsible
                     open={expandedTeams[team.id] ?? false}
-                    onOpenChange={(open) => setExpandedTeams(prev => ({ ...prev, [team.id]: open }))}
+                    onOpenChange={(open) =>
+                      setExpandedTeams((prev) => ({ ...prev, [team.id]: open }))
+                    }
                   >
                     <div className="border-t border-border px-6 py-3 bg-muted/30">
                       <CollapsibleTrigger className="flex items-center justify-between w-full hover:opacity-70 transition-opacity">
                         <span className="text-sm">
-                          {team.players.length} {team.players.length === 1 ? 'Player' : 'Players'}
+                          {team.players.length}{" "}
+                          {team.players.length === 1 ? "Player" : "Players"}
                         </span>
                         {expandedTeams[team.id] ?? true ? (
                           <ChevronUp className="h-4 w-4" />
@@ -442,9 +466,13 @@ export default function Teams() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead className='w-[25%]'>Player Name</TableHead>
+                              <TableHead className="w-[25%]">
+                                Player Name
+                              </TableHead>
                               <TableHead>Status</TableHead>
-                              <TableHead className="w-[100px]">Actions</TableHead>
+                              <TableHead className="w-[100px]">
+                                Actions
+                              </TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -453,14 +481,18 @@ export default function Teams() {
                                 <TableCell>{player.name}</TableCell>
                                 <TableCell>
                                   <Badge
-                                    variant={player.status === "active" ? "success" : "secondary"}
+                                    variant={
+                                      player.status === "active"
+                                        ? "success"
+                                        : "secondary"
+                                    }
                                     className={
                                       player.status === "active"
                                         ? "bg-green-500/20 text-green-600 border-green-500/30"
                                         : "bg-red-500/20 text-red-600 border-red-500/30"
                                     }
                                   >
-                                    {(player.status).toUpperCase()}
+                                    {player.status.toUpperCase()}
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
@@ -470,7 +502,9 @@ export default function Teams() {
                                     onClick={() => {
                                       setEditingPlayer(player);
                                       setEditedName(player.name);
-                                      setEditedStatus(player.status || 'Active');
+                                      setEditedStatus(
+                                        player.status || "Active"
+                                      );
                                     }}
                                   >
                                     <Edit className="h-4 w-4" />
@@ -481,7 +515,12 @@ export default function Teams() {
                                     onClick={() => {
                                       askConfirm(
                                         `Delete player ${player.name}?`,
-                                        () => deletePlayer(player.id, setTeams, selectedLeague),
+                                        () =>
+                                          deletePlayer(
+                                            player.id,
+                                            setTeams,
+                                            selectedLeague
+                                          ),
                                         setConfirmMessage,
                                         setConfirmAction,
                                         setConfirmOpen
@@ -512,9 +551,12 @@ export default function Teams() {
               onCancel={() => setConfirmOpen(false)}
             />
             <div className="flex gap-2">
-              <Dialog open={!!editingPlayer} onOpenChange={() => setEditingPlayer(null)}>
+              <Dialog
+                open={!!editingPlayer}
+                onOpenChange={() => setEditingPlayer(null)}
+              >
                 <DialogContent
-                  onInteractOutside={(e) => e.preventDefault()} 
+                  onInteractOutside={(e) => e.preventDefault()}
                   onEscapeKeyDown={(e) => e.preventDefault()}
                 >
                   <DialogHeader>
@@ -591,7 +633,9 @@ export default function Teams() {
           {teams.length === 0 && (
             <Card>
               <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">No teams yet. Add your first team above.</p>
+                <p className="text-center text-muted-foreground">
+                  No teams yet. Add your first team above.
+                </p>
               </CardContent>
             </Card>
           )}
@@ -599,7 +643,9 @@ export default function Teams() {
           {teams.length > 0 && filteredTeams.length === 0 && (
             <Card>
               <CardContent className="pt-6">
-                <p className="text-center text-muted-foreground">No teams match your search query.</p>
+                <p className="text-center text-muted-foreground">
+                  No teams match your search query.
+                </p>
               </CardContent>
             </Card>
           )}

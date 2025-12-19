@@ -1,18 +1,15 @@
-import {
-  useBowlingHook,
-  useCustomHook
-} from '../misc';
+import { useBowlingHook, useCustomHook } from "../misc";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '../ui/card';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Button } from '../ui/button';
-import { handleLoginButton } from '../functions';
+  CardTitle,
+} from "../ui/card";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
+import { Button } from "../ui/button";
+import { handleLoginButton } from "../functions";
 
 export default function Login() {
   const {
@@ -22,18 +19,27 @@ export default function Login() {
     loading,
     setUsername,
     setPassword,
-    setLoading
+    setLoading,
   } = useCustomHook();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-secondary/30">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center font-bold">My League Manager</CardTitle>
-          <CardDescription className="text-center">Enter your credentials to access the system</CardDescription>
+          <CardTitle className="text-center font-bold">
+            My League Manager
+          </CardTitle>
+          <CardDescription className="text-center">
+            Enter your credentials to access the system
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={(e) => handleLoginButton(e, login, username, password, setLoading)} className="space-y-4">
+          <form
+            onSubmit={(e) =>
+              handleLoginButton(e, login, username, password, setLoading)
+            }
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
@@ -56,7 +62,7 @@ export default function Login() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
         </CardContent>
