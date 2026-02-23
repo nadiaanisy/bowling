@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -67,7 +67,7 @@ function ConfirmDialog({
 }: {
   open: boolean;
   title: string;
-  message: string;
+  message: ReactNode;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
@@ -428,7 +428,9 @@ export default function Teams() {
                         size="sm"
                         onClick={() => {
                           askConfirm(
-                            `Delete team ${team.name}?`,
+                            <>
+                              Are you sure to proceed with deleting team <b>{team.name}</b>? This will also delete all players in the team. This action cannot be undone.
+                            </>,
                             () => deleteTeam(team.id, setTeams, selectedLeague),
                             setConfirmMessage,
                             setConfirmAction,
@@ -470,6 +472,7 @@ export default function Teams() {
                                 Player Name
                               </TableHead>
                               <TableHead>Status</TableHead>
+                              <TableHead>Notes</TableHead>
                               <TableHead className="w-[100px]">
                                 Actions
                               </TableHead>
@@ -495,6 +498,7 @@ export default function Teams() {
                                     {player.status.toUpperCase()}
                                   </Badge>
                                 </TableCell>
+                                <TableCell>{player.notes || "—"}</TableCell>
                                 <TableCell>
                                   <Button
                                     variant="ghost"
@@ -514,7 +518,9 @@ export default function Teams() {
                                     size="sm"
                                     onClick={() => {
                                       askConfirm(
-                                        `Delete player ${player.name}?`,
+                                        <>
+                                          Are you sure you want to delete player <b>{player.name}</b>? This action cannot be undone.
+                                        </>,
                                         () =>
                                           deletePlayer(
                                             player.id,

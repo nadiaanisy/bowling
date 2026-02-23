@@ -37,7 +37,7 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Overview of your bowling league</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-5">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(250px,1fr))]">
         {/* Total Teams */}
         <Card>
           <CardHeader className="pb-3">
@@ -65,54 +65,44 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
         </Card>
-      </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mt-5">
-        {Array.from({ length: dashboardData?.total_blocks || 0 }).map(
-          (_, index) => {
-            const block = dashboardData?.blocks?.[`block${index + 1}`];
+        {/* Block Progress Cards — ONLY if data.length <= 2 */}
+        {dashboardData?.total_blocks > 0 && (
+          <div className="contents"> {/* contents allows cards to participate in the parent grid */}
+            {Array.from({ length: dashboardData?.total_blocks || 0 }).map((_, index) => {
+              const block = dashboardData?.blocks?.[`block${index + 1}`];
+              const total = block?.total ?? 0;
+              const completed = block?.completed ?? 0;
+              const avgPerWeek = dashboardData?.average_matches_per_week || 1;
 
-            const total = block?.total ?? 0;
-            const completed = block?.completed ?? 0;
+              const totalWeeks = total > 0 ? Math.ceil(total / avgPerWeek) : 0;
+              const completedWeeks = total > 0 ? Math.floor(completed / avgPerWeek) : 0;
+              const weeksLeft = Math.max(totalWeeks - completedWeeks, 0);
 
-            const totalWeeks =
-              total > 0
-                ? Math.ceil(total / dashboardData?.average_matches_per_week)
-                : 0;
-            const completedWeeks =
-              total > 0
-                ? Math.floor(
-                    completed / dashboardData?.average_matches_per_week
-                  )
-                : 0;
-            const weeksLeft = Math.max(totalWeeks - completedWeeks, 0);
+              const status =
+                totalWeeks === 0
+                  ? "No data"
+                  : completedWeeks >= totalWeeks
+                  ? "Completed"
+                  : weeksLeft === 0
+                  ? "No weeks remaining"
+                  : `${weeksLeft} weeks remaining`;
 
-            const status =
-              totalWeeks === 0
-                ? "No data"
-                : completedWeeks >= totalWeeks
-                ? "Completed"
-                : weeksLeft === 0
-                ? "No weeks remaining"
-                : `${weeksLeft} weeks remaining`;
-
-            return (
-              <Card key={index}>
-                <CardHeader className="pb-3">
-                  <CardDescription>Block {index + 1} Progress</CardDescription>
-                  <CardTitle className="text-4xl">
-                    {isNaN(completedWeeks) || isNaN(totalWeeks)
-                      ? "0/0 weeks"
-                      : `${completedWeeks}/${totalWeeks} weeks`}
-                  </CardTitle>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">{status}</div>
-                </CardContent>
-              </Card>
-            );
-          }
+              return (
+                <Card key={index}>
+                  <CardHeader className="pb-3">
+                    <CardDescription>Block {index + 1} Progress</CardDescription>
+                    <CardTitle className="text-4xl">
+                      {`${completedWeeks}/${totalWeeks} weeks`}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-sm text-muted-foreground">{status}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </div>
 

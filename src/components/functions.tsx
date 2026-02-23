@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { fetchPlayerWeeklyScores } from "./api/get";
+import type { ReactNode } from "react";
 
 /* --- STYLE SECTION --- */
 export const errorToastStyle = {
@@ -48,9 +49,9 @@ export const handleLoginButton = async (
 
 /* --- ASK CONFIRMATION --- */
 export const askConfirm = (
-  message: string,
+  message: ReactNode,
   action: () => void,
-  setConfirmMessage: (msg: string) => void,
+  setConfirmMessage: (msg: ReactNode) => void,
   setConfirmAction: (fn: () => void) => void,
   setConfirmOpen: (open: boolean) => void
 ) => {

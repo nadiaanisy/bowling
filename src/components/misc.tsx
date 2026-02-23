@@ -169,7 +169,7 @@ export const useCustomHook = () => {
   const [teams, setTeams] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmMessage, setConfirmMessage] = useState<ReactNode>("");
   const [confirmAction, setConfirmAction] = useState<() => void>(
     () => () => {}
   );
