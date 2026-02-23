@@ -9,6 +9,7 @@ export const updatePlayer = async (
   playerId: number,
   newName: string,
   newStatus: string,
+  newNotes: string,
   selectedLeagueId: any,
   setTeams: (teams: any[]) => void
 ) => {
@@ -16,6 +17,7 @@ export const updatePlayer = async (
     const { error } = await updateHelper(table.players, {
       name: newName,
       status: newStatus,
+      notes: newNotes || "",
     }).eq("id", playerId);
 
     if (error) {

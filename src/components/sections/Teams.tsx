@@ -106,10 +106,12 @@ export default function Teams() {
     addMode,
     newPlayerName,
     multiplePlayerNames,
+    newPlayerNotes,
     expandedTeams,
     editingPlayer,
     editedName,
     editedStatus,
+    editedNotes,
     searchQuery,
     setNewTeamName,
     setIsAddingTeam,
@@ -124,11 +126,13 @@ export default function Teams() {
     setSelectedTeamName,
     setAddMode,
     setNewPlayerName,
+    setNewPlayerNotes,
     setMultiplePlayerNames,
     setExpandedTeams,
     setEditingPlayer,
     setEditedName,
     setEditedStatus,
+    setEditedNotes,
     setSearchQuery,
   } = useCustomHook();
   const [isSaving, setIsSaving] = useState(false);
@@ -149,6 +153,7 @@ export default function Teams() {
       setMultiplePlayerNames("");
     } else if (addMode === "multiple") {
       setNewPlayerName("");
+      setNewPlayerNotes("");
     }
   }, [addMode]);
 
@@ -346,8 +351,10 @@ export default function Teams() {
                                       selectedTeam,
                                       selectedTeamName,
                                       newPlayerName,
+                                      newPlayerNotes,
                                       multiplePlayerNames,
                                       setNewPlayerName,
+                                      setNewPlayerNotes,
                                       setMultiplePlayerNames,
                                       setDialogOpen,
                                       setTeams,
@@ -369,6 +376,19 @@ export default function Teams() {
                                         }
                                       />
                                     </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor="playerNotes">Notes</Label>
+                                      <Textarea
+                                        id="playerNotes"
+                                        placeholder="Optional notes about the player"
+                                        value={newPlayerNotes}
+                                        onChange={(e) =>
+                                          setNewPlayerNotes(e.target.value)
+                                        }
+                                        rows={4}
+                                        className="resize-none"
+                                      />
+                                    </div>
                                   </div>
                                   <DialogFooter className="mt-4">
                                     <Button type="submit">Add Player</Button>
@@ -385,8 +405,10 @@ export default function Teams() {
                                       selectedTeam,
                                       selectedTeamName,
                                       newPlayerName,
+                                      "",
                                       multiplePlayerNames,
                                       setNewPlayerName,
+                                      setNewPlayerNotes,
                                       setMultiplePlayerNames,
                                       setDialogOpen,
                                       setTeams,
@@ -509,6 +531,7 @@ export default function Teams() {
                                       setEditedStatus(
                                         player.status || "Active"
                                       );
+                                      setEditedNotes(player.notes || "");
                                     }}
                                   >
                                     <Edit className="h-4 w-4" />
@@ -583,6 +606,18 @@ export default function Teams() {
                     />
                   </div>
 
+                  <div className="space-y-4">
+                    <Label htmlFor="playerNotes">Notes</Label>
+                    <Textarea
+                      id="playerNotes"
+                      placeholder="Optional notes about the player"
+                      value={editedNotes}
+                      onChange={(e) => setEditedNotes(e.target.value)}
+                      rows={4}
+                      className="resize-none"
+                    />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="playerStatus">Status</Label>
                     <Select
@@ -615,6 +650,7 @@ export default function Teams() {
                             editingPlayer.id,
                             editedName,
                             editedStatus,
+                            editedNotes,
                             selectedLeague,
                             setTeams
                           );

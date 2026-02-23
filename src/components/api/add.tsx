@@ -81,8 +81,10 @@ export const addPlayer = (
   selectedTeam: any | null,
   selectedTeamName: string,
   newPlayerName: string,
+  newPlayerNotes: string,
   multiplePlayerNames: string,
   setNewPlayerName: (value: string) => void,
+  setNewPlayerNotes: (value: string) => void,
   setMultiplePlayerNames: (value: string) => void,
   setDialogOpen: (value: boolean) => void,
   setTeams: (teams: any[]) => void,
@@ -97,7 +99,7 @@ export const addPlayer = (
     }
 
     try {
-      if (mode === "single") {
+        if (mode === "single") {
         if (!newPlayerName.trim()) {
           toast.error("Please enter a player name.", errorToastStyle);
           return;
@@ -105,10 +107,11 @@ export const addPlayer = (
 
         const { error } = await insertHelper(table.players, [
           {
-            name: newPlayerName,
-            team_id: selectedTeam,
-            status: "active",
-            league_id: selectedLeagueId,
+              name: newPlayerName,
+              team_id: selectedTeam,
+              status: "active",
+              notes: newPlayerNotes || "",
+              league_id: selectedLeagueId,
           },
         ]);
 
@@ -127,6 +130,7 @@ export const addPlayer = (
         );
 
         setNewPlayerName("");
+        setNewPlayerNotes("");
       } else {
         if (!multiplePlayerNames.trim()) {
           toast.error("Please enter at least one name.", errorToastStyle);
@@ -147,6 +151,7 @@ export const addPlayer = (
           name,
           team_id: selectedTeam,
           status: "active",
+          notes: "",
           league_id: selectedLeagueId,
         }));
 

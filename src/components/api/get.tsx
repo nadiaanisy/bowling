@@ -265,7 +265,8 @@ export const getTeamsAndPlayersByLeagueId = async (leagueId: any) => {
         players (
           id,
           name,
-          status
+          status,
+          notes
         )
       `
     )

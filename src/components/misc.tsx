@@ -178,12 +178,14 @@ export const useCustomHook = () => {
   const [addMode, setAddMode] = useState<"single" | "multiple">("single");
   const [newPlayerName, setNewPlayerName] = useState("");
   const [multiplePlayerNames, setMultiplePlayerNames] = useState("");
+  const [newPlayerNotes, setNewPlayerNotes] = useState("");
   const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
     {}
   );
   const [editingPlayer, setEditingPlayer] = useState<any | null>(null);
   const [editedName, setEditedName] = useState("");
   const [editedStatus, setEditedStatus] = useState("active");
+  const [editedNotes, setEditedNotes] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   /* Timetable Related */
@@ -293,6 +295,8 @@ export const useCustomHook = () => {
     setAddMode,
     newPlayerName,
     setNewPlayerName,
+    newPlayerNotes,
+    setNewPlayerNotes,
     multiplePlayerNames,
     setMultiplePlayerNames,
     expandedTeams,
@@ -301,6 +305,8 @@ export const useCustomHook = () => {
     setEditingPlayer,
     editedName,
     setEditedName,
+    editedNotes,
+    setEditedNotes,
     editedStatus,
     setEditedStatus,
     searchQuery,
