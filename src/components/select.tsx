@@ -5,8 +5,8 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from 'lucide-react';
-import { cn } from '../misc';
 import * as React from 'react';
+import { cn } from '../utils/providers';
 import * as SelectPrimitive from '@radix-ui/react-select';
 
 function Select({
