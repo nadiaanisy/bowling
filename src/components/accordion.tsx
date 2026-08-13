@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
 import * as React from 'react';
-import { cn } from '../utils/providers';
+import { cn } from '../utils/functions';
 import { ChevronDownIcon } from 'lucide-react';
 import * as AccordionPrimitive from '@radix-ui/react-accordion';
 

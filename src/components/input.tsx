@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cn } from '../utils/providers';
+import { cn } from '../utils/functions';
 
 function Input({ className, type, ...props }: React.ComponentProps<"input">) {
   return (
