@@ -29,10 +29,10 @@ import {
   Card,
   CardContent
 } from '../components/card';
-import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Badge } from '../components/badge';
 import { Button } from '../components/button';
+import { useCustomHook } from '../utils/hooks';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 
 interface LandingProps {
@@ -40,7 +40,10 @@ interface LandingProps {
 }
 
 function LearnMorePage({ onBack, onGetStarted }: { onBack: () => void; onGetStarted: () => void }) {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const {
+    openFaq,
+    setOpenFaq
+  } = useCustomHook();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-950/20 overflow-hidden">
@@ -393,8 +396,12 @@ function LearnMorePage({ onBack, onGetStarted }: { onBack: () => void; onGetStar
 }
 
 export default function Landing({ onGetStarted }: LandingProps) {
-  const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
-  const [showLearnMore, setShowLearnMore] = useState(false);
+  const {
+    hoveredFeature,
+    setHoveredFeature,
+    showLearnMore,
+    setShowLearnMore,
+  } = useCustomHook();
 
   if (showLearnMore) {
     return <LearnMorePage onBack={() => setShowLearnMore(false)} onGetStarted={onGetStarted} />;
