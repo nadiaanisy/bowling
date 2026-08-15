@@ -14,16 +14,19 @@ import {
   CardHeader,
   CardTitle,
 } from '../components/card';
+import {
+  errorToastStyle,
+  getPasswordValidationError,
+  getUsernameValidationError,
+  handleLoginSubmit
+} from '../utils/functions';
+import { toast } from 'sonner';
+import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Input } from '../components/input';
 import { Label } from '../components/label';
 import { Button } from '../components/button';
 import { useCustomHook } from '../utils/hooks';
-import {
-  getPasswordValidationError,
-  getUsernameValidationError,
-  handleLoginSubmit
-} from '../utils/functions';
 
 interface LoginProps {
   onBack?: () => void;
@@ -42,9 +45,14 @@ export default function Login({ onBack }: LoginProps) {
     setShowPassword,
     fieldErrors,
     setFieldErrors,
-    status,
-    setStatus,
+    sessionExpired,
   } = useCustomHook();
+
+  useEffect(() => {
+    if (sessionExpired) {
+      toast.error('Your session expired. Please sign in again.', errorToastStyle);
+    }
+  }, [sessionExpired]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-purple-950/20 relative overflow-hidden">
@@ -98,8 +106,7 @@ export default function Login({ onBack }: LoginProps) {
                   Username,
                   Password,
                   setLoading,
-                  setFieldErrors,
-                  setStatus
+                  setFieldErrors
                 )
               }
               className="space-y-4"
@@ -122,9 +129,6 @@ export default function Login({ onBack }: LoginProps) {
                       ...currentErrors,
                       username: getUsernameValidationError(value)
                     }));
-                    if (!getUsernameValidationError(value) && !fieldErrors.password) {
-                      setStatus('');
-                    }
                   }}
                   autoComplete="username"
                   aria-invalid={Boolean(fieldErrors.username)}
@@ -153,9 +157,6 @@ export default function Login({ onBack }: LoginProps) {
                         ...currentErrors,
                         password: getPasswordValidationError(value)
                       }));
-                      if (!fieldErrors.username && !getPasswordValidationError(value)) {
-                        setStatus('');
-                      }
                     }}
                     autoComplete="current-password"
                     aria-invalid={Boolean(fieldErrors.password)}
@@ -175,7 +176,6 @@ export default function Login({ onBack }: LoginProps) {
                 </div>
                 {fieldErrors.password && <p id="password-error" className="text-sm text-destructive">{fieldErrors.password}</p>}
               </div>
-              <p className="sr-only" aria-live="polite" aria-atomic="true">{status}</p>
               <Button 
                 type="submit" 
                 disabled={Loading}
