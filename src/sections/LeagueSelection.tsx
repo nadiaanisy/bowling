@@ -17,7 +17,8 @@ import {
   handleBlockSetup,
   handleCreateLeague,
   handleDeleteLeague,
-  askConfirm
+  handleLeagueBlockSetup,
+  handleLeagueSelect
 } from '../utils/functions';
 import {
   Card,
@@ -49,14 +50,22 @@ import { useCustomHook } from '../utils/hooks';
 import { Skeleton } from '../components/skeleton';
 import { LeagueCard } from '../sub-components/LeagueCard';
 
-export default function LeagueSelection() {
+interface LeagueSelectionProps {
+  onBackToLanding?: () => void;
+  onLogout?: () => void;
+}
+
+export default function LeagueSelection({ onBackToLanding, onLogout }: LeagueSelectionProps) {
   const {
     listOfLeaguesByUser: leagues,
     userData,
     selectLeague,
     isLoadingLeagues,
+    leagueLoadError,
+    retryLoadLeagues,
     logout,
     showBlockDialog,
+    isLoadingLeagueDetails,
     blockCount,
     newLeagueName,
     showCreateLeagueDialog,
@@ -71,12 +80,12 @@ export default function LeagueSelection() {
     creatingLeague,
     deletingLeague,
     setShowBlockDialog,
+    setIsLoadingLeagueDetails,
     setBlockCount,
     setNewLeagueName,
     setListOfLeaguesByUser,
     setShowCreateLeagueDialog,
     setSelectedLeagueName,
-    setIsLoadingLeagues,
     setLeagueBlockStatus,
     setTeamCounts,
     setSelectedLeagueId,
@@ -90,7 +99,7 @@ export default function LeagueSelection() {
 
   useEffect(() => {
     let isCurrent = true;
-    setIsLoadingLeagues(leagues.length > 0);
+    setIsLoadingLeagueDetails(leagues.length > 0);
 
     Promise.all(
       leagues.map(async (league) => {
@@ -114,105 +123,15 @@ export default function LeagueSelection() {
       setTeamCounts(
         Object.fromEntries(details.map(({ id, teamCount }) => [id, teamCount]))
       );
-      setIsLoadingLeagues(false);
+      setIsLoadingLeagueDetails(false);
     }).catch(() => {
-      if (isCurrent) setIsLoadingLeagues(false);
+      if (isCurrent) setIsLoadingLeagueDetails(false);
     });
 
     return () => {
       isCurrent = false;
     };
   }, [leagues]);
-
-  const handleLeagueSelect = (
-    leagueId: string | number,
-    leagueName: string,
-    hasBlocks: boolean
-  ) => {
-    setSelectedLeagueId(leagueId);
-    setSelectedLeagueName(leagueName);
-    void selectLeague({ id: leagueId, hasBlocks });
-  };
-
-  const handleCreateBlocks = (
-    leagueId: string | number,
-    leagueName: string,
-    hasBlocks: boolean
-  ) => {
-    setSelectedLeagueId(leagueId);
-    setSelectedLeagueName(leagueName);
-    void selectLeague({ id: leagueId, hasBlocks });
-
-    if (!hasBlocks) {
-      setShowBlockDialog(true);
-    }
-  };
-
-  const createBlocks = async () => {
-    if (creatingBlocks) return;
-
-    setCreatingBlocks(true);
-
-    try {
-      await handleBlockSetup(selectedLeagueId, blockCount, () => {
-        if (selectedLeagueId !== null) {
-          setLeagueBlockStatus((currentStatus) => ({
-            ...currentStatus,
-            [String(selectedLeagueId)]: true
-          }));
-        }
-        setShowBlockDialog(false);
-      });
-    } finally {
-      setCreatingBlocks(false);
-    }
-  };
-
-  const createLeague = async () => {
-    if (creatingLeague) return;
-
-    setCreatingLeague(true);
-
-    try {
-      const league = await handleCreateLeague(newLeagueName, userData?.id);
-
-      if (!league) return;
-
-      setListOfLeaguesByUser([...leagues, league]);
-      setNewLeagueName('');
-      setShowCreateLeagueDialog(false);
-    } finally {
-      setCreatingLeague(false);
-    }
-  };
-
-  const deleteLeague = async (leagueId: string | number, leagueName: string) => {
-    askConfirm(
-      `Delete "${leagueName}" and all of its data?`,
-      async () => {
-        await handleDeleteLeague(leagueId, () => {
-          setListOfLeaguesByUser(leagues.filter((league) => league.id !== leagueId));
-          setLeagueBlockStatus((currentStatus) => {
-            const nextStatus = { ...currentStatus };
-            delete nextStatus[String(leagueId)];
-            return nextStatus;
-          });
-          setTeamCounts((currentCounts) => {
-            const nextCounts = { ...currentCounts };
-            delete nextCounts[String(leagueId)];
-            return nextCounts;
-          });
-        });
-      },
-      setConfirmMessage,
-      setConfirmAction,
-      setConfirmOpen
-    );
-  };
-
-  const goToHome = () => {
-    window.location.assign('/');
-  };
 
   return (
     <>
@@ -230,7 +149,7 @@ export default function LeagueSelection() {
             <div className="flex items-center justify-between">
               <button
                 type="button"
-                onClick={goToHome}
+                onClick={onBackToLanding}
                 aria-label="Go to Strike Manager home page"
                 className="flex items-center gap-3 text-left"
               >
@@ -245,7 +164,7 @@ export default function LeagueSelection() {
               </button>
               <Button
                 variant="outline"
-                onClick={logout}
+                onClick={onLogout ?? logout}
                 className="gap-2 text-muted-foreground hover:text-foreground glass border-border/50"
               >
                 <LogOut className="h-4 w-4" />
@@ -279,17 +198,39 @@ export default function LeagueSelection() {
                 </div>
               </motion.div>
               <h2 className="text-3xl font-bold gradient-text">
-                {leagues.length === 0 ? 'No Leagues Yet' : 'Select a League'}
+                {leagueLoadError
+                  ? 'Unable to load leagues'
+                  : isLoadingLeagues
+                  ? 'Loading leagues...'
+                  : leagues.length === 0
+                  ? 'No Leagues Yet'
+                  : 'Select a League'}
               </h2>
               <p className="text-muted-foreground">
-                {leagues.length === 0
+                {leagueLoadError
+                  ? 'Your leagues could not be loaded. Please retry or sign in again.'
+                  : isLoadingLeagues
+                  ? 'Fetching your bowling leagues'
+                  : leagues.length === 0
                   ? 'Create your first league to get started'
                   : 'Choose which bowling league you want to manage'}
               </p>
             </div>
 
-            {/* Empty state */}
-            {leagues.length === 0 ? (
+            {/* League loading error */}
+            {leagueLoadError ? (
+              <Card className="glass border-border/50">
+                <CardContent className="py-12 flex flex-col items-center gap-5 text-center">
+                  <p className="text-sm text-destructive" role="alert">{leagueLoadError}</p>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    <Button onClick={() => void retryLoadLeagues()} disabled={isLoadingLeagues}>
+                      {isLoadingLeagues ? 'Retrying...' : 'Retry'}
+                    </Button>
+                    <Button variant="outline" onClick={onLogout ?? logout}>Sign out</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : leagues.length === 0 && !isLoadingLeagues ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -320,10 +261,10 @@ export default function LeagueSelection() {
             ) : (
               <>
                 {/* League cards */}
-                {isLoadingLeagues ? (
+                {isLoadingLeagues || isLoadingLeagueDetails ? (
                   <div className={`space-y-4 ${leagues.length > 3 ? 'max-h-[28rem] overflow-y-auto pr-2' : ''}`}>
-                    {leagues.map((league) => (
-                      <Card key={league.id} className="glass border-border/50">
+                    {(leagues.length > 0 ? leagues : [{ id: 'loading' }]).map((league) => (
+                        <Card key={league.id} className="glass border-border/50">
                         <CardContent className="p-5">
                           <div className="flex items-center justify-between gap-4">
                             <div className="flex items-center gap-4 min-w-0">
@@ -351,10 +292,30 @@ export default function LeagueSelection() {
                         onOpen={() => handleLeagueSelect(
                           league.id,
                           league.name,
-                          leagueBlockStatus[league.id] ?? false
+                          leagueBlockStatus[league.id] ?? false,
+                          selectLeague,
+                          setSelectedLeagueId,
+                          setSelectedLeagueName
                         )}
-                        onSetupBlocks={() => handleCreateBlocks(league.id, league.name, false)}
-                        onDelete={() => deleteLeague(league.id, league.name)}
+                        onSetupBlocks={() => handleLeagueBlockSetup(
+                          league.id,
+                          league.name,
+                          false,
+                          selectLeague,
+                          setSelectedLeagueId,
+                          setSelectedLeagueName,
+                          setShowBlockDialog
+                        )}
+                        onDelete={() => handleDeleteLeague(
+                          league.id,
+                          league.name,
+                          setListOfLeaguesByUser,
+                          setLeagueBlockStatus,
+                          setTeamCounts,
+                          setConfirmMessage,
+                          setConfirmAction,
+                          setConfirmOpen
+                        )}
                       />
                     ))}
                   </div>
@@ -413,7 +374,15 @@ export default function LeagueSelection() {
                 id="leagueName"
                 value={newLeagueName}
                 onChange={(e) => setNewLeagueName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && createLeague()}
+                  onKeyDown={(e) => e.key === 'Enter' && void handleCreateLeague(
+                    creatingLeague,
+                    setCreatingLeague,
+                    newLeagueName,
+                    userData?.id,
+                    setListOfLeaguesByUser,
+                    setNewLeagueName,
+                    setShowCreateLeagueDialog
+                  )}
                 placeholder="e.g. Sunray League"
                 className="bg-input border-border/50"
                 autoFocus
@@ -428,7 +397,15 @@ export default function LeagueSelection() {
               Cancel
             </Button>
             <Button
-              onClick={createLeague}
+              onClick={() => void handleCreateLeague(
+                creatingLeague,
+                setCreatingLeague,
+                newLeagueName,
+                userData?.id,
+                setListOfLeaguesByUser,
+                setNewLeagueName,
+                setShowCreateLeagueDialog
+              )}
               disabled={creatingLeague || !newLeagueName.trim()}
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md shadow-purple-500/30"
             >
@@ -487,7 +464,14 @@ export default function LeagueSelection() {
           </div>
           <DialogFooter>
             <Button
-              onClick={createBlocks}
+              onClick={() => void handleBlockSetup(
+                creatingBlocks,
+                setCreatingBlocks,
+                selectedLeagueId,
+                blockCount,
+                setLeagueBlockStatus,
+                setShowBlockDialog
+              )}
               disabled={creatingBlocks || !blockCount || parseInt(blockCount) < 1 || parseInt(blockCount) > 10}
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md shadow-purple-500/30"
             >
