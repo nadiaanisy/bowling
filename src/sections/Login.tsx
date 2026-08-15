@@ -2,7 +2,10 @@ import {
   Trophy,
   Lock,
   ArrowLeft,
-  User
+  User,
+  Eye,
+  EyeOff,
+  Loader2
 } from 'lucide-react';
 import {
   Card,
@@ -16,7 +19,11 @@ import { Input } from '../components/input';
 import { Label } from '../components/label';
 import { Button } from '../components/button';
 import { useCustomHook } from '../utils/hooks';
-import { handleLoginButton } from '../utils/functions';
+import {
+  getPasswordValidationError,
+  getUsernameValidationError,
+  handleLoginSubmit
+} from '../utils/functions';
 
 interface LoginProps {
   onBack?: () => void;
@@ -31,6 +38,12 @@ export default function Login({ onBack }: LoginProps) {
     setUsername,
     setPassword,
     setLoading,
+    showPassword,
+    setShowPassword,
+    fieldErrors,
+    setFieldErrors,
+    status,
+    setStatus,
   } = useCustomHook();
 
   return (
@@ -54,7 +67,7 @@ export default function Login({ onBack }: LoginProps) {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="relative z-10 w-[560px]"
+        className="relative z-10 w-full max-w-[560px] px-4"
       >
         <Card className="w-full glass border-border/50 shadow-2xl shadow-purple-500/20">
           <CardHeader className="text-center space-y-4">
@@ -79,9 +92,18 @@ export default function Login({ onBack }: LoginProps) {
           <CardContent>
             <form
               onSubmit={(e) =>
-                handleLoginButton(e, login, Username, Password, setLoading)
+                handleLoginSubmit(
+                  e,
+                  login,
+                  Username,
+                  Password,
+                  setLoading,
+                  setFieldErrors,
+                  setStatus
+                )
               }
               className="space-y-4"
+              noValidate
             >
               <div className="space-y-2">
                 <Label htmlFor="username" className="flex items-center gap-2">
@@ -93,9 +115,24 @@ export default function Login({ onBack }: LoginProps) {
                   type="text"
                   placeholder="Enter username"
                   value={Username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setUsername(value);
+                    setFieldErrors((currentErrors) => ({
+                      ...currentErrors,
+                      username: getUsernameValidationError(value)
+                    }));
+                    if (!getUsernameValidationError(value) && !fieldErrors.password) {
+                      setStatus('');
+                    }
+                  }}
+                  autoComplete="username"
+                  aria-invalid={Boolean(fieldErrors.username)}
+                  aria-describedby={fieldErrors.username ? 'username-error' : undefined}
+                  disabled={Loading}
                   className="bg-input-background border-border/50"
                 />
+                {fieldErrors.username && <p id="username-error" className="text-sm text-destructive">{fieldErrors.username}</p>}
               </div>
 
               <div className="space-y-2">
@@ -103,21 +140,48 @@ export default function Login({ onBack }: LoginProps) {
                   <Lock className="h-4 w-4" />
                   Password
                 </Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Enter password"
-                  value={Password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-input-background border-border/50"
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter password"
+                    value={Password}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setPassword(value);
+                      setFieldErrors((currentErrors) => ({
+                        ...currentErrors,
+                        password: getPasswordValidationError(value)
+                      }));
+                      if (!fieldErrors.username && !getPasswordValidationError(value)) {
+                        setStatus('');
+                      }
+                    }}
+                    autoComplete="current-password"
+                    aria-invalid={Boolean(fieldErrors.password)}
+                    aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                    disabled={Loading}
+                    className="bg-input-background border-border/50 pr-11"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    disabled={Loading}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {fieldErrors.password && <p id="password-error" className="text-sm text-destructive">{fieldErrors.password}</p>}
               </div>
+              <p className="sr-only" aria-live="polite" aria-atomic="true">{status}</p>
               <Button 
                 type="submit" 
                 disabled={Loading}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/50"
               >
-                {Loading ? "Logging in..." : "Login"}
+                {Loading ? <><Loader2 className="h-4 w-4 animate-spin" />Logging in...</> : "Login"}
               </Button>
             </form>
           </CardContent>
