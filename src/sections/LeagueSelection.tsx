@@ -53,9 +53,14 @@ import { LeagueCard } from '../sub-components/LeagueCard';
 interface LeagueSelectionProps {
   onBackToLanding?: () => void;
   onLogout?: () => void;
+  onLeagueOpened?: () => void;
 }
 
-export default function LeagueSelection({ onBackToLanding, onLogout }: LeagueSelectionProps) {
+export default function LeagueSelection({
+  onBackToLanding,
+  onLogout,
+  onLeagueOpened
+}: LeagueSelectionProps) {
   const {
     listOfLeaguesByUser: leagues,
     userData,
@@ -289,14 +294,17 @@ export default function LeagueSelection({ onBackToLanding, onLogout }: LeagueSel
                         hasBlocks={leagueBlockStatus[league.id] ?? false}
                         teamCount={teamCounts[league.id] ?? 0}
                         index={index}
-                        onOpen={() => handleLeagueSelect(
-                          league.id,
-                          league.name,
-                          leagueBlockStatus[league.id] ?? false,
-                          selectLeague,
-                          setSelectedLeagueId,
-                          setSelectedLeagueName
-                        )}
+                        onOpen={() => {
+                          onLeagueOpened?.();
+                          handleLeagueSelect(
+                            league.id,
+                            league.name,
+                            leagueBlockStatus[league.id] ?? false,
+                            selectLeague,
+                            setSelectedLeagueId,
+                            setSelectedLeagueName
+                          );
+                        }}
                         onSetupBlocks={() => handleLeagueBlockSetup(
                           league.id,
                           league.name,
