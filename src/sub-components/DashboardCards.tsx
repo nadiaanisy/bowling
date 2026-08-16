@@ -18,11 +18,12 @@ interface SummaryCardProps {
 export function DashboardSummaryCard({ label, value, isLoading }: SummaryCardProps) {
   return (
     <motion.div
+      className="h-full"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
     >
-      <Card>
+      <Card className="flex h-full flex-col">
         <CardHeader className="pb-3">
           <CardDescription>{label}</CardDescription>
           <CardTitle className="text-4xl">
