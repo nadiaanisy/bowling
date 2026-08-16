@@ -21,7 +21,13 @@ import {
   handleDeletePlayer,
   handleDeletePlayers,
   handleDeleteTeam,
-  handleDeleteTeams
+  handleDeleteTeams,
+  getSelectedPlayersForTeam,
+  getVisibleMembers,
+  hasPlayerChanges,
+  hasTeamChanges,
+  togglePlayerSelection,
+  deleteSelectedPlayersForTeam
 } from '../utils/functions';
 import {
   Card,
@@ -158,6 +164,7 @@ export default function Teams() {
     setConfirmMessage,
     setConfirmAction,
   } = useCustomHook();
+
   const filteredTeams = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return teams;
@@ -167,84 +174,6 @@ export default function Teams() {
       team.members.some((member) => member.name.toLowerCase().includes(query))
     );
   }, [searchQuery, teams]);
-  // const { data, isLoading, addTeam, deleteTeam, addPlayer, addPlayers, deletePlayer } = useBowling();
-  const getSelectedPlayersForTeam = (teamId: string | number) =>
-    selectedPlayers[String(teamId)] ?? [];
-
-  const getVisibleMembers = (team: LeagueTeamWithMembers) => {
-    const query = searchQuery.trim().toLowerCase();
-    if (!query || team.name.toLowerCase().includes(query)) return team.members;
-    return team.members.filter((member) => member.name.toLowerCase().includes(query));
-  };
-
-  const hasPlayerChanges = (player: LeagueTeamWithMembers['members'][number]) => {
-    const currentStatus = editingPlayerStatus.trim().toLowerCase() || 'active';
-    const originalStatus = player.status?.trim().toLowerCase() || 'active';
-
-    return editingPlayerName.trim() !== player.name.trim() ||
-      currentStatus !== originalStatus ||
-      editingPlayerNotes.trim() !== (player.notes?.trim() || '');
-  };
-
-  const hasTeamChanges = () => {
-    const originalTeam = teams.find((team) => team.id === editingTeamId);
-    return Boolean(
-      originalTeam &&
-      editingTeamName.trim() &&
-      (
-        editingTeamName.trim() !== originalTeam.name.trim() ||
-        editingTeamNotes.trim() !== (originalTeam.notes?.trim() || '')
-      )
-    );
-  };
-
-  const togglePlayerSelection = (teamId: string | number, playerId: string | number) => {
-    const teamKey = String(teamId);
-    setSelectedPlayers((currentSelection) => {
-      const currentPlayers = currentSelection[teamKey] ?? [];
-      const isSelected = currentPlayers.some((id) => String(id) === String(playerId));
-
-      return {
-        ...currentSelection,
-        [teamKey]: isSelected
-          ? currentPlayers.filter((id) => String(id) !== String(playerId))
-          : [...currentPlayers, playerId]
-      };
-    });
-  };
-
-  const deleteSelectedPlayersForTeam = (team: LeagueTeamWithMembers) => {
-    const selectedIds = new Set(
-      getSelectedPlayersForTeam(team.id).map((id) => String(id))
-    );
-    const selectedMembers = team.members.filter((member) =>
-      selectedIds.has(String(member.id))
-    );
-
-    setPendingDeleteType('players');
-    handleDeletePlayers(
-      deletingPlayer,
-      setDeletingPlayer,
-      selectedMembers,
-      team.id,
-      team.name,
-      selectedLeague,
-      setTeams,
-      setConfirmMessage,
-      setConfirmAction,
-      setConfirmOpen,
-      () => {
-        setBulkDeleteMode((current) => ({
-          ...current,
-          [String(team.id)]: false
-        }));
-        setSelectedPlayers((current) => ({
-          ...current,
-          [String(team.id)]: []
-        }));
-      }
-    );
-  };
 
   const selectedTeamRecords = teams.filter((team) =>
     selectedTeams.some((id) => String(id) === String(team.id))
@@ -278,32 +207,6 @@ export default function Teams() {
       isCurrent = false;
     };
   }, [selectedLeague, teamsReloadKey, setTeams, setIsLoadingTeams, setTeamsLoadError]);
-
-
-  // const handleAddPlayer = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (selectedTeam && newPlayerName.trim()) {
-  //     addPlayer(selectedTeam, newPlayerName);
-  //     setNewPlayerName('');
-  //     setDialogOpen(false);
-  //   }
-  // };
-
-  // const handleAddMultiplePlayers = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   if (selectedTeam && multiplePlayerNames.trim()) {
-  //     const names = multiplePlayerNames
-  //       .split('\n')
-  //       .map(name => name.trim())
-  //       .filter(name => name.length > 0);
-      
-  //     if (names.length > 0) {
-  //       addPlayers(selectedTeam, names);
-  //       setMultiplePlayerNames('');
-  //       setDialogOpen(false);
-  //     }
-  //   }
-  // };
 
   return (
     <div className="space-y-6">
@@ -687,7 +590,7 @@ export default function Teams() {
                                 aria-label={`Select all players in ${team.name}`}
                                 checked={
                                   team.members.length > 0 &&
-                                  getSelectedPlayersForTeam(team.id).length === team.members.length
+                                getSelectedPlayersForTeam(team.id, selectedPlayers).length === team.members.length
                                 }
                                 onChange={(event) => {
                                   setSelectedPlayers((currentSelection) => ({
@@ -707,17 +610,17 @@ export default function Teams() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {getVisibleMembers(team).map((player) => (
+                        {getVisibleMembers(team, searchQuery).map((player) => (
                           <TableRow key={player.id}>
                             {bulkDeleteMode[String(team.id)] && (
                               <TableCell className="w-8 px-1">
                                 <input
                                   type="checkbox"
                                   aria-label={`Select ${player.name}`}
-                                  checked={getSelectedPlayersForTeam(team.id).some(
+                                  checked={getSelectedPlayersForTeam(team.id, selectedPlayers).some(
                                     (id) => String(id) === String(player.id)
                                   )}
-                                  onChange={() => togglePlayerSelection(team.id, player.id)}
+                                  onChange={() => setSelectedPlayers(togglePlayerSelection(team.id, player.id, selectedPlayers))}
                                   disabled={deletingPlayer}
                                 />
                               </TableCell>
@@ -831,7 +734,7 @@ export default function Teams() {
                                         disabled={
                                           updatingPlayer ||
                                           !editingPlayerName.trim() ||
-                                          !hasPlayerChanges(player)
+                                          !hasPlayerChanges(player, editingPlayerName, editingPlayerStatus, editingPlayerNotes)
                                         }
                                       >
                                         {updatingPlayer ? 'Saving...' : 'Save changes'}
@@ -877,17 +780,32 @@ export default function Teams() {
                     </Table>
                     {bulkDeleteMode[String(team.id)] && (
                       <div className="mt-4 flex gap-2">
-                        {getSelectedPlayersForTeam(team.id).length > 0 && (
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="gap-2"
-                            disabled={deletingPlayer}
-                            onClick={() => deleteSelectedPlayersForTeam(team)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Delete selected ({getSelectedPlayersForTeam(team.id).length})
+                        {getSelectedPlayersForTeam(team.id, selectedPlayers).length > 0 && (
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="gap-2"
+                              disabled={deletingPlayer}
+                              onClick={() => {
+                                setPendingDeleteType('players');
+                                deleteSelectedPlayersForTeam(
+                                  team,
+                                  selectedPlayers,
+                                  deletingPlayer,
+                                  setDeletingPlayer,
+                                  selectedLeague,
+                                  setTeams,
+                                  setConfirmMessage,
+                                  setConfirmAction,
+                                  setConfirmOpen,
+                                  setBulkDeleteMode,
+                                  setSelectedPlayers
+                                );
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Delete selected ({getSelectedPlayersForTeam(team.id, selectedPlayers).length})
                           </Button>
                         )}
                         <Button
@@ -988,7 +906,7 @@ export default function Teams() {
               </Button>
               <Button
                 type="submit"
-                disabled={updatingTeam || !editingTeamName.trim() || !hasTeamChanges()}
+                disabled={updatingTeam || !editingTeamName.trim() || !hasTeamChanges(teams.find((team) => team.id === editingTeamId), editingTeamName, editingTeamNotes)}
               >
                 {updatingTeam ? 'Saving...' : 'Save changes'}
               </Button>
