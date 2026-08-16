@@ -74,6 +74,13 @@ export function LeagueCard({
                     No blocks set up yet — create to get started
                   </p>
                 )}
+                {(league.created_at || league.updated_at) && (
+                  <p className="text-[11px] text-muted-foreground/80 mt-1">
+                    {league.updated_at
+                      ? `Last Updated on ${new Date(league.updated_at).toLocaleDateString()}`
+                      : `Created on ${new Date(league.created_at as string).toLocaleDateString()}`}
+                  </p>
+                )}
               </div>
             </div>
 

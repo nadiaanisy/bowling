@@ -101,6 +101,11 @@ export default function LeagueSelection({
     setCreatingLeague,
     setDeletingLeague,
   } = useCustomHook();
+  const leagueIds = leagues.map((league) => String(league.id)).join(',');
+
+  useEffect(() => {
+    void retryLoadLeagues();
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -136,7 +141,7 @@ export default function LeagueSelection({
     return () => {
       isCurrent = false;
     };
-  }, [leagues]);
+  }, [leagueIds]);
 
   return (
     <>
@@ -478,7 +483,15 @@ export default function LeagueSelection({
                 selectedLeagueId,
                 blockCount,
                 setLeagueBlockStatus,
-                setShowBlockDialog
+                setShowBlockDialog,
+                (updatedAt) => {
+                  if (!updatedAt || selectedLeagueId === null) return;
+                  setListOfLeaguesByUser((currentLeagues) => currentLeagues.map((league) =>
+                    league.id === selectedLeagueId
+                      ? { ...league, updated_at: updatedAt }
+                      : league
+                  ));
+                }
               )}
               disabled={creatingBlocks || !blockCount || parseInt(blockCount) < 1 || parseInt(blockCount) > 10}
               className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md shadow-purple-500/30"
