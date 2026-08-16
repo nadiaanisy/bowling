@@ -16,7 +16,10 @@ import {
 } from '../components/card';
 import {
   errorToastStyle,
+  getConfirmPasswordValidationError,
   getPasswordValidationError,
+  getPasswordStrength,
+  getSignupNameValidationError,
   getUsernameValidationError,
   handleLoginSubmit,
   handleSignupSubmit
@@ -51,9 +54,20 @@ export default function Login({ onBack }: LoginProps) {
     setSignupMode,
     signupName,
     setSignupName,
+    signupNameError,
+    setSignupNameError,
     confirmPassword,
     setConfirmPassword,
+    confirmPasswordError,
+    setConfirmPasswordError,
   } = useCustomHook();
+
+  const isSignupValid = Boolean(
+    signupName.trim() &&
+    Username.trim().length >= 3 &&
+    Password.length >= 6 &&
+    Password === confirmPassword
+  );
 
   useEffect(() => {
     if (sessionExpired) {
@@ -118,11 +132,15 @@ export default function Login({ onBack }: LoginProps) {
                       confirmPassword,
                       setLoading,
                       setFieldErrors,
+                      setSignupNameError,
+                      setConfirmPasswordError,
                       () => {
                         setSignupMode(false);
                         setSignupName('');
+                        setSignupNameError('');
                         setPassword('');
                         setConfirmPassword('');
+                        setConfirmPasswordError('');
                         setFieldErrors({ username: '', password: '' });
                       }
                     )
@@ -150,11 +168,16 @@ export default function Login({ onBack }: LoginProps) {
                       type="text"
                       placeholder="Enter your name"
                       value={signupName}
-                      onChange={(event) => setSignupName(event.target.value)}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setSignupName(value);
+                        setSignupNameError(getSignupNameValidationError(value));
+                      }}
                       autoComplete="name"
                       disabled={Loading}
                       className="bg-input-background border-border/50"
                     />
+                    {signupNameError && <p className="text-sm text-destructive">{signupNameError}</p>}
                   </>
                 )}
                 <Label htmlFor="username" className="flex items-center gap-2">
@@ -201,6 +224,9 @@ export default function Login({ onBack }: LoginProps) {
                         ...currentErrors,
                         password: getPasswordValidationError(value)
                       }));
+                      if (signupMode) {
+                        setConfirmPasswordError(getConfirmPasswordValidationError(value, confirmPassword));
+                      }
                     }}
                     autoComplete={signupMode ? 'new-password' : 'current-password'}
                     aria-invalid={Boolean(fieldErrors.password)}
@@ -219,6 +245,11 @@ export default function Login({ onBack }: LoginProps) {
                   </button>
                 </div>
                 {fieldErrors.password && <p id="password-error" className="text-sm text-destructive">{fieldErrors.password}</p>}
+                {signupMode && Password && (
+                  <p className="text-xs text-muted-foreground">
+                    Password strength: <span className="font-medium">{getPasswordStrength(Password)}</span>
+                  </p>
+                )}
               </div>
               {signupMode && (
                 <div className="space-y-2">
@@ -231,15 +262,22 @@ export default function Login({ onBack }: LoginProps) {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Confirm password"
                     value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      setConfirmPassword(value);
+                      setConfirmPasswordError(getConfirmPasswordValidationError(Password, value));
+                    }}
                     autoComplete="new-password"
+                    aria-invalid={Boolean(confirmPasswordError)}
+                    aria-describedby={confirmPasswordError ? 'confirm-password-error' : undefined}
                     disabled={Loading}
                   />
+                  {confirmPasswordError && <p id="confirm-password-error" className="text-sm text-destructive">{confirmPasswordError}</p>}
                 </div>
               )}
               <Button 
                 type="submit" 
-                disabled={Loading}
+                disabled={Loading || (signupMode && !isSignupValid)}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/50"
               >
                 {Loading ? <><Loader2 className="h-4 w-4 animate-spin" />{signupMode ? 'Creating account...' : 'Logging in...'}</> : signupMode ? 'Create account' : 'Login'}
@@ -251,10 +289,14 @@ export default function Login({ onBack }: LoginProps) {
                 disabled={Loading}
                 onClick={() => {
                   setSignupMode((mode) => !mode);
+                  setUsername('');
                   setSignupName('');
                   setFieldErrors({ username: '', password: '' });
+                  setSignupNameError('');
                   setPassword('');
                   setConfirmPassword('');
+                  setConfirmPasswordError('');
+                  setShowPassword(false);
                 }}
               >
                 {signupMode ? 'Already have an account? Log in' : 'Need an account? Sign up'}
