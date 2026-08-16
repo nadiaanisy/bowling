@@ -18,7 +18,8 @@ import {
   errorToastStyle,
   getPasswordValidationError,
   getUsernameValidationError,
-  handleLoginSubmit
+  handleLoginSubmit,
+  handleSignupSubmit
 } from '../utils/functions';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
@@ -46,6 +47,12 @@ export default function Login({ onBack }: LoginProps) {
     fieldErrors,
     setFieldErrors,
     sessionExpired,
+    signupMode,
+    setSignupMode,
+    signupName,
+    setSignupName,
+    confirmPassword,
+    setConfirmPassword,
   } = useCustomHook();
 
   useEffect(() => {
@@ -94,25 +101,62 @@ export default function Login({ onBack }: LoginProps) {
             </motion.div>
             <div>
               <CardTitle className="text-3xl gradient-text">Strike Manager</CardTitle>
-              <CardDescription className="mt-2">Enter your credentials to access the system</CardDescription>
+              <CardDescription className="mt-2">
+                {signupMode ? 'Create an account to manage your league' : 'Enter your credentials to access the system'}
+              </CardDescription>
             </div>
           </CardHeader>
           <CardContent>
             <form
               onSubmit={(e) =>
-                handleLoginSubmit(
-                  e,
-                  login,
-                  Username,
-                  Password,
-                  setLoading,
-                  setFieldErrors
-                )
+                signupMode
+                  ? handleSignupSubmit(
+                      e,
+                      signupName,
+                      Username,
+                      Password,
+                      confirmPassword,
+                      setLoading,
+                      setFieldErrors,
+                      () => {
+                        setSignupMode(false);
+                        setSignupName('');
+                        setPassword('');
+                        setConfirmPassword('');
+                        setFieldErrors({ username: '', password: '' });
+                      }
+                    )
+                  : handleLoginSubmit(
+                      e,
+                      login,
+                      Username,
+                      Password,
+                      setLoading,
+                      setFieldErrors
+                    )
               }
               className="space-y-4"
               noValidate
             >
               <div className="space-y-2">
+                {signupMode && (
+                  <>
+                    <Label htmlFor="signup-name" className="flex items-center gap-2">
+                      <User className="h-4 w-4" />
+                      Name
+                    </Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Enter your name"
+                      value={signupName}
+                      onChange={(event) => setSignupName(event.target.value)}
+                      autoComplete="name"
+                      disabled={Loading}
+                      className="bg-input-background border-border/50"
+                    />
+                  </>
+                )}
                 <Label htmlFor="username" className="flex items-center gap-2">
                   <User className="h-4 w-4" />
                   Username
@@ -158,7 +202,7 @@ export default function Login({ onBack }: LoginProps) {
                         password: getPasswordValidationError(value)
                       }));
                     }}
-                    autoComplete="current-password"
+                    autoComplete={signupMode ? 'new-password' : 'current-password'}
                     aria-invalid={Boolean(fieldErrors.password)}
                     aria-describedby={fieldErrors.password ? 'password-error' : undefined}
                     disabled={Loading}
@@ -171,17 +215,49 @@ export default function Login({ onBack }: LoginProps) {
                     className="absolute inset-y-0 right-2 flex items-center rounded-md p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     disabled={Loading}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" /> }
                   </button>
                 </div>
                 {fieldErrors.password && <p id="password-error" className="text-sm text-destructive">{fieldErrors.password}</p>}
               </div>
+              {signupMode && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password" className="flex items-center gap-2">
+                    <Lock className="h-4 w-4" />
+                    Confirm password
+                  </Label>
+                  <Input
+                    id="confirm-password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Confirm password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    autoComplete="new-password"
+                    disabled={Loading}
+                  />
+                </div>
+              )}
               <Button 
                 type="submit" 
                 disabled={Loading}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/50"
               >
-                {Loading ? <><Loader2 className="h-4 w-4 animate-spin" />Logging in...</> : "Login"}
+                {Loading ? <><Loader2 className="h-4 w-4 animate-spin" />{signupMode ? 'Creating account...' : 'Logging in...'}</> : signupMode ? 'Create account' : 'Login'}
+              </Button>
+              <Button
+                type="button"
+                variant="link"
+                className="w-full"
+                disabled={Loading}
+                onClick={() => {
+                  setSignupMode((mode) => !mode);
+                  setSignupName('');
+                  setFieldErrors({ username: '', password: '' });
+                  setPassword('');
+                  setConfirmPassword('');
+                }}
+              >
+                {signupMode ? 'Already have an account? Log in' : 'Need an account? Sign up'}
               </Button>
             </form>
           </CardContent>
