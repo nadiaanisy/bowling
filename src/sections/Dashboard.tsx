@@ -15,8 +15,7 @@ import {
 } from '../sub-components/DashboardCards';
 import { Button } from '../components/button';
 import { useCustomHook } from '../utils/hooks';
-
-const DEFAULT_MATCHES_PER_WEEK = 16;
+import { DEFAULT_MATCHES_PER_WEEK } from '../utils/constants';
 
 export default function Dashboard() {
   const {
@@ -86,9 +85,20 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1>Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your bowling league</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1>Dashboard</h1>
+          <p className="text-muted-foreground">Overview of your bowling league</p>
+        </div>
+        <Button
+          variant="outline"
+          onClick={retryDashboard}
+          disabled={isLoadingSkeleton}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoadingSkeleton ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {dashboardLoadError && (
