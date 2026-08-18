@@ -3,30 +3,20 @@ import {
   useEffect
 } from 'react';
 import {
-  Trash2,
-  UserPlus,
-  Users,
-  ChevronDown,
-  ChevronUp,
+  Loader2,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
   Search,
-  Pencil,
   X
 } from 'lucide-react';
 import {
   handleCreateTeam,
-  handleCreatePlayer,
-  handleCreatePlayers,
-  handleUpdatePlayer,
   handleUpdateTeam,
-  handleDeletePlayer,
-  handleDeleteTeam,
   handleDeleteTeams,
-  getSelectedPlayersForTeam,
-  getVisibleMembers,
-  hasPlayerChanges,
   hasTeamChanges,
-  togglePlayerSelection,
-  deleteSelectedPlayersForTeam
+  setAllTeamsExpanded,
+  toggleSelectAllTeams
 } from '../utils/functions';
 import {
   Card,
@@ -35,60 +25,14 @@ import {
   CardHeader,
   CardTitle
 } from '../components/card';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger
-} from '../components/tabs';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '../components/table';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '../components/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '../components/select';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger
-} from '../components/collapsible';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from '../components/alert-dialog';
 import { Input } from '../components/input';
-import { Label } from '../components/label';
 import { Button } from '../components/button';
 import { useCustomHook } from '../utils/hooks';
 import { Skeleton } from '../components/skeleton';
-import { Textarea } from '../components/textarea';
+import { TeamCard } from '../sub-components/TeamCard';
 import { getTeamsWithMembersByLeague } from '../utils/api/get';
-import { TeamActionsMenu } from '../sub-components/TeamActionsMenu';
-
+import { EditTeamDialog } from '../sub-components/EditTeamDialog';
+import { ConfirmDeleteDialog } from '../sub-components/ConfirmDeleteDialog';
 
 export default function Teams() {
   const {
@@ -123,6 +67,12 @@ export default function Teams() {
     setSelectedPlayers,
     bulkDeleteMode,
     setBulkDeleteMode,
+    bulkPlayerTypeValue,
+    setBulkPlayerTypeValue,
+    bulkTransferTeamId,
+    setBulkTransferTeamId,
+    bulkUpdatingPlayers,
+    setBulkUpdatingPlayers,
     openTeamMenu,
     setOpenTeamMenu,
     pendingDeleteType,
@@ -184,6 +134,10 @@ export default function Teams() {
     selectedTeams.some((id) => String(id) === String(team.id))
   );
 
+  const teamsWithPlayers = filteredTeams.filter((team) => team.members.length > 0);
+  const canExpandAll = teamsWithPlayers.some((team) => !(expandedTeams[team.id] ?? false));
+  const canCollapseAll = teamsWithPlayers.some((team) => expandedTeams[team.id] ?? false);
+
   useEffect(() => {
     let isCurrent = true;
 
@@ -220,7 +174,19 @@ export default function Teams() {
           <h1>Teams Management</h1>
           <p className="text-muted-foreground">Manage teams and their players</p>
         </div>
-        {bulkTeamDeleteMode ? (
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={retryTeams}
+            disabled={isLoadingTeams}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoadingTeams ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          {bulkTeamDeleteMode ? (
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -233,17 +199,7 @@ export default function Teams() {
                   ))
                 }
                 onChange={(event) => {
-                  setSelectedTeams((current) => {
-                    if (event.target.checked) {
-                      const merged = [...current, ...filteredTeams.map((team) => team.id)];
-                      return Array.from(
-                        new Map(merged.map((id) => [String(id), id])).values()
-                      );
-                    }
-
-                    const visibleIds = new Set(filteredTeams.map((team) => String(team.id)));
-                    return current.filter((id) => !visibleIds.has(String(id)));
-                  });
+                  setSelectedTeams((current) => toggleSelectAllTeams(event.target.checked, filteredTeams, current));
                 }}
               />
               Select all
@@ -292,6 +248,7 @@ export default function Teams() {
             Bulk Delete Teams
           </Button>
         )}
+        </div>
       </div>
 
       <Card className="mx-auto w-full max-w-3xl">
@@ -321,7 +278,8 @@ export default function Teams() {
               onChange={(event) => setNewTeamName(event.target.value)}
               disabled={creatingTeam}
             />
-            <Button type="submit" disabled={creatingTeam || !newTeamName.trim()}>
+            <Button type="submit" disabled={creatingTeam || !newTeamName.trim()} className="gap-2">
+              {creatingTeam && <Loader2 className="h-4 w-4 animate-spin" />}
               {creatingTeam ? 'Adding...' : 'Add Team'}
             </Button>
           </form>
@@ -361,513 +319,114 @@ export default function Teams() {
         </Card>
       )}
 
+      {!isLoadingTeams && !teamsLoadError && teams.length > 0 && (
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={!canExpandAll}
+            onClick={() => setAllTeamsExpanded(filteredTeams, true, setExpandedTeams)}
+          >
+            <Maximize2 className="h-4 w-4" />
+            Expand all
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            disabled={!canCollapseAll}
+            onClick={() => setAllTeamsExpanded(filteredTeams, false, setExpandedTeams)}
+          >
+            <Minimize2 className="h-4 w-4" />
+            Collapse all
+          </Button>
+        </div>
+      )}
+
       {isLoadingTeams && (
-        <div className="mx-auto grid w-full max-w-3xl gap-4">
-          {[1, 2].map((item) => (
-            <Card key={item}>
-              <CardHeader>
-                <Skeleton className="h-6 w-40" />
-                <Skeleton className="h-4 w-24" />
-              </CardHeader>
-              <CardContent><Skeleton className="h-4 w-full" /></CardContent>
-            </Card>
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap justify-center gap-4">
+          {[1, 2, 3, 4].map((item) => (
+            <div key={item} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] xl:w-[calc(25%-0.75rem)]">
+              <Card>
+                <CardHeader>
+                  <Skeleton className="h-6 w-2/3" />
+                  <Skeleton className="h-4 w-24" />
+                </CardHeader>
+                <CardContent><Skeleton className="h-4 w-full" /></CardContent>
+              </Card>
+            </div>
           ))}
         </div>
       )}
 
-      {!isLoadingTeams && !teamsLoadError && <div className="mx-auto grid w-full max-w-3xl gap-4">
+      {!isLoadingTeams && !teamsLoadError && <div className="mx-auto flex w-full max-w-7xl flex-wrap justify-center gap-4">
         {filteredTeams.map((team) => (
-          <Card key={team.id} className="relative">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    {bulkTeamDeleteMode && (
-                      <input
-                        type="checkbox"
-                        aria-label={`Select team ${team.name}`}
-                        checked={selectedTeams.some((id) => String(id) === String(team.id))}
-                        onChange={() => setSelectedTeams((current) =>
-                          current.some((id) => String(id) === String(team.id))
-                            ? current.filter((id) => String(id) !== String(team.id))
-                            : [...current, team.id]
-                        )}
-                      />
-                    )}
-                    <CardTitle>{team.name}</CardTitle>
-                  </div>
-                  <CardDescription>
-                    {team.members.length} players
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Dialog open={dialogOpen && selectedTeam === team.id} onOpenChange={(open) => {
-                    setDialogOpen(open);
-                    if (open) {
-                      setSelectedTeam(team.id);
-                      setAddMode('single');
-                    }
-                    if (!open) {
-                      setNewPlayerName('');
-                      setMultiplePlayerNames('');
-                    }
-                  }}>
-                  <TeamActionsMenu
-                    teamName={team.name}
-                    memberCount={team.members.length}
-                    deletingTeam={deletingTeam}
-                    deletingPlayer={deletingPlayer}
-                    open={openTeamMenu === String(team.id)}
-                    onToggle={() => setOpenTeamMenu((current) =>
-                      current === String(team.id) ? null : String(team.id)
-                    )}
-                    onAddPlayer={() => {
-                      setSelectedTeam(team.id);
-                      setDialogOpen(true);
-                      setAddMode('single');
-                      setOpenTeamMenu(null);
-                    }}
-                    onEditTeam={() => {
-                      setEditingTeamId(team.id);
-                      setEditingTeamName(team.name);
-                      setEditingTeamNotes(team.notes ?? '');
-                      setOpenTeamMenu(null);
-                    }}
-                    onBulkDelete={() => {
-                      setBulkDeleteMode((current) => ({
-                        ...current,
-                        [String(team.id)]: true
-                      }));
-                      setOpenTeamMenu(null);
-                    }}
-                    onDeleteTeam={() => {
-                      setOpenTeamMenu(null);
-                      setPendingDeleteType('team');
-                      handleDeleteTeam(
-                        deletingTeam,
-                        setDeletingTeam,
-                        team.id,
-                        team.name,
-                        selectedLeague,
-                        setTeams,
-                        setConfirmMessage,
-                        setConfirmAction,
-                        setConfirmOpen
-                      );
-                    }}
-                  />
-                    <DialogContent
-                      className="sm:max-w-[500px]"
-                      onPointerDownOutside={(event) => event.preventDefault()}
-                    >
-                      <DialogHeader>
-                        <DialogTitle>Add Player(s) to {team.name}</DialogTitle>
-                        <DialogDescription>Choose to add a single player or multiple players at once</DialogDescription>
-                      </DialogHeader>
-                      
-                      <div className="mb-4 space-y-2">
-                        <Label htmlFor="player-type">Player type</Label>
-                        <Select value={playerType} onValueChange={(value) => setPlayerType(value as 'regular' | 'substitute')}>
-                          <SelectTrigger id="player-type"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="regular">Regular</SelectItem>
-                            <SelectItem value="substitute">Substitute</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <Tabs value={addMode} onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}>
-                        <TabsList className="grid w-full grid-cols-2">
-                          <TabsTrigger value="single">
-                            <UserPlus className="h-4 w-4 mr-2" />
-                            Single Player
-                          </TabsTrigger>
-                          <TabsTrigger value="multiple">
-                            <Users className="h-4 w-4 mr-2" />
-                            Multiple Players
-                          </TabsTrigger>
-                        </TabsList>
-
-                        <TabsContent value="single">
-                          <form
-                            onSubmit={(event) => {
-                              event.preventDefault();
-                              if (selectedTeam === null) return;
-
-                              void handleCreatePlayer(
-                                creatingPlayer,
-                                setCreatingPlayer,
-                                newPlayerName,
-                                selectedTeam,
-                                team.name,
-                                team.members,
-                                selectedLeague,
-                                playerType,
-                                setTeams,
-                                (name) => {
-                                  setNewPlayerName(name);
-                                  if (!name) setDialogOpen(false);
-                                }
-                              );
-                            }}
-                          >
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="playerName">Player Name</Label>
-                                <Input
-                                  id="playerName"
-                                  placeholder="Enter player name"
-                                  value={newPlayerName}
-                                  onChange={(e) => setNewPlayerName(e.target.value)}
-                                />
-                              </div>
-                            </div>
-                            <DialogFooter className="mt-4">
-                              <Button type="submit" disabled={creatingPlayer || !newPlayerName.trim()}>
-                                {creatingPlayer ? 'Adding...' : 'Add Player'}
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </TabsContent>
-
-                        <TabsContent value="multiple">
-                          <form
-                            onSubmit={(event) => {
-                              event.preventDefault();
-                              if (selectedTeam === null) return;
-
-                              void handleCreatePlayers(
-                                creatingPlayer,
-                                setCreatingPlayer,
-                                multiplePlayerNames,
-                                selectedTeam,
-                                team.name,
-                                team.members,
-                                selectedLeague,
-                                playerType,
-                                setTeams,
-                                (names) => {
-                                  setMultiplePlayerNames(names);
-                                  if (!names) setDialogOpen(false);
-                                }
-                              );
-                            }}
-                          >
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="multiplePlayerNames">Player Names (one per line)</Label>
-                                <Textarea
-                                  id="multiplePlayerNames"
-                                  placeholder="John Doe&#10;Jane Smith&#10;Mike Johnson"
-                                  value={multiplePlayerNames}
-                                  onChange={(e) => setMultiplePlayerNames(e.target.value)}
-                                  rows={8}
-                                  className="resize-none"
-                                />
-                                <p className="text-sm text-muted-foreground">
-                                  Enter each player name on a new line
-                                </p>
-                              </div>
-                            </div>
-                            <DialogFooter className="mt-4">
-                              <Button type="submit" disabled={creatingPlayer || !multiplePlayerNames.trim()}>
-                                {creatingPlayer ? 'Adding...' : 'Add Players'}
-                              </Button>
-                            </DialogFooter>
-                          </form>
-                        </TabsContent>
-                      </Tabs>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </div>
-            </CardHeader>
-            {team.members.length > 0 && (
-              <Collapsible
-                open={expandedTeams[team.id] ?? true}
-                onOpenChange={(open) => setExpandedTeams(prev => ({ ...prev, [team.id]: open }))}
-              >
-                <div className="border-t border-border px-6 py-3 bg-muted/30">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full hover:opacity-70 transition-opacity">
-                    <span className="text-sm">
-                      {team.members.length} {team.members.length === 1 ? 'Player' : 'Players'}
-                    </span>
-                    {expandedTeams[team.id] ?? true ? (
-                      <ChevronUp className="h-4 w-4" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4" />
-                    )}
-                  </CollapsibleTrigger>
-                </div>
-                <CollapsibleContent>
-                  <CardContent className="pt-0">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {bulkDeleteMode[String(team.id)] && (
-                            <TableHead className="w-8 px-1">
-                              <input
-                                type="checkbox"
-                                aria-label={`Select all players in ${team.name}`}
-                                checked={
-                                  team.members.length > 0 &&
-                                getSelectedPlayersForTeam(team.id, selectedPlayers).length === team.members.length
-                                }
-                                onChange={(event) => {
-                                  setSelectedPlayers((currentSelection) => ({
-                                    ...currentSelection,
-                                    [String(team.id)]: event.target.checked
-                                      ? team.members.map((member) => member.id)
-                                      : []
-                                  }));
-                                }}
-                              />
-                            </TableHead>
-                          )}
-                          <TableHead className={bulkDeleteMode[String(team.id)] ? 'px-1' : undefined}>
-                            Player Name
-                          </TableHead>
-                          <TableHead className="w-[100px] text-center">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {getVisibleMembers(team, searchQuery).map((player) => (
-                          <TableRow key={player.id}>
-                            {bulkDeleteMode[String(team.id)] && (
-                              <TableCell className="w-8 px-1">
-                                <input
-                                  type="checkbox"
-                                  aria-label={`Select ${player.name}`}
-                                  checked={getSelectedPlayersForTeam(team.id, selectedPlayers).some(
-                                    (id) => String(id) === String(player.id)
-                                  )}
-                                  onChange={() => setSelectedPlayers(togglePlayerSelection(team.id, player.id, selectedPlayers))}
-                                  disabled={deletingPlayer}
-                                />
-                              </TableCell>
-                            )}
-                            <TableCell className={bulkDeleteMode[String(team.id)] ? 'px-1' : undefined}>
-                              {player.name}
-                            </TableCell>
-                            <TableCell className="text-center">
-                              <Dialog
-                                open={editingPlayerId === player.id}
-                                onOpenChange={(open) => {
-                                  if (!open && !updatingPlayer) setEditingPlayerId(null);
-                                }}
-                              >
-                                <DialogTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    aria-label={`Edit ${player.name}`}
-                                    onClick={() => {
-                                      setEditingPlayerId(player.id);
-                                      setEditingPlayerName(player.name);
-                                      const normalizedStatus = player.status?.trim().toLowerCase();
-                                      setEditingPlayerStatus(
-                                        normalizedStatus === 'inactive' ? normalizedStatus : 'active'
-                                      );
-                                      setEditingPlayerType(player.type ?? 'regular');
-                                      setEditingPlayerNotes(player.notes ?? '');
-                                    }}
-                                  >
-                                    <Pencil className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent onPointerDownOutside={(event) => event.preventDefault()}>
-                                  <DialogHeader>
-                                    <DialogTitle>Edit player</DialogTitle>
-                                    <DialogDescription>Update this player's name, status, or notes.</DialogDescription>
-                                  </DialogHeader>
-                                  <form
-                                    onSubmit={(event) => {
-                                      event.preventDefault();
-                                      if (editingPlayerId === null) return;
-
-                                      void handleUpdatePlayer(
-                                        updatingPlayer,
-                                        setUpdatingPlayer,
-                                        editingPlayerId,
-                                        team.id,
-                                        selectedLeague,
-                                        editingPlayerName,
-                                        editingPlayerType,
-                                        editingPlayerStatus,
-                                        editingPlayerNotes,
-                                        player.name,
-                                        player.type,
-                                        player.status,
-                                        player.notes,
-                                        setTeams,
-                                        () => setEditingPlayerId(null)
-                                      );
-                                    }}
-                                    className="space-y-4"
-                                  >
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`edit-player-name-${player.id}`}>Name</Label>
-                                      <Input
-                                        id={`edit-player-name-${player.id}`}
-                                        value={editingPlayerName}
-                                        onChange={(event) => setEditingPlayerName(event.target.value)}
-                                        disabled={updatingPlayer}
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`edit-player-status-${player.id}`}>Status</Label>
-                                      <Select
-                                        value={editingPlayerStatus || 'active'}
-                                        onValueChange={setEditingPlayerStatus}
-                                        disabled={updatingPlayer}
-                                      >
-                                        <SelectTrigger id={`edit-player-status-${player.id}`}>
-                                          <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="active">Active</SelectItem>
-                                          <SelectItem value="inactive">Inactive</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`edit-player-type-${player.id}`}>Type</Label>
-                                      <Select value={editingPlayerType} onValueChange={(value) => setEditingPlayerType(value as 'regular' | 'substitute')} disabled={updatingPlayer}>
-                                        <SelectTrigger id={`edit-player-type-${player.id}`}><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="regular">Regular</SelectItem>
-                                          <SelectItem value="substitute">Substitute</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor={`edit-player-notes-${player.id}`}>Notes</Label>
-                                      <Textarea
-                                        id={`edit-player-notes-${player.id}`}
-                                        value={editingPlayerNotes}
-                                        onChange={(event) => setEditingPlayerNotes(event.target.value)}
-                                        disabled={updatingPlayer}
-                                        rows={4}
-                                      />
-                                    </div>
-                                    <DialogFooter>
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => setEditingPlayerId(null)}
-                                        disabled={updatingPlayer}
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        type="submit"
-                                        disabled={
-                                          updatingPlayer ||
-                                          !editingPlayerName.trim() ||
-                                          !hasPlayerChanges(
-                                            player,
-                                            editingPlayerName,
-                                            editingPlayerType,
-                                            editingPlayerStatus,
-                                            editingPlayerNotes
-                                          )
-                                        }
-                                      >
-                                        {updatingPlayer ? 'Saving...' : 'Save changes'}
-                                      </Button>
-                                    </DialogFooter>
-                                  </form>
-                                </DialogContent>
-                              </Dialog>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                                onClick={() => {
-                                  setPendingDeleteType('player');
-                                  handleDeletePlayer(
-                                    deletingPlayer,
-                                    setDeletingPlayer,
-                                    player.id,
-                                    player.name,
-                                    team.name,
-                                    team.id,
-                                    selectedLeague,
-                                    setTeams,
-                                    setConfirmMessage,
-                                    setConfirmAction,
-                                    setConfirmOpen,
-                                    () => {
-                                      setSelectedPlayers((current) => ({
-                                        ...current,
-                                        [String(team.id)]: (current[String(team.id)] ?? [])
-                                          .filter((id) => String(id) !== String(player.id))
-                                      }));
-                                    }
-                                  )
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                    {bulkDeleteMode[String(team.id)] && (
-                      <div className="mt-4 flex gap-2">
-                        {getSelectedPlayersForTeam(team.id, selectedPlayers).length > 0 && (
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="sm"
-                              className="gap-2"
-                              disabled={deletingPlayer}
-                              onClick={() => {
-                                setPendingDeleteType('players');
-                                deleteSelectedPlayersForTeam(
-                                  team,
-                                  selectedPlayers,
-                                  deletingPlayer,
-                                  setDeletingPlayer,
-                                  selectedLeague,
-                                  setTeams,
-                                  setConfirmMessage,
-                                  setConfirmAction,
-                                  setConfirmOpen,
-                                  setBulkDeleteMode,
-                                  setSelectedPlayers
-                                );
-                              }}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                              Delete selected ({getSelectedPlayersForTeam(team.id, selectedPlayers).length})
-                          </Button>
-                        )}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setBulkDeleteMode((current) => ({
-                              ...current,
-                              [String(team.id)]: false
-                            }));
-                            setSelectedPlayers((current) => ({
-                              ...current,
-                              [String(team.id)]: []
-                            }));
-                          }}
-                        >
-                          Done
-                        </Button>
-                      </div>
-                    )}
-                  </CardContent>
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-          </Card>
+          <div key={team.id} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] xl:w-[calc(25%-0.75rem)]">
+          <TeamCard
+            team={team}
+            teams={teams}
+            searchQuery={searchQuery}
+            selectedLeague={selectedLeague}
+            bulkTeamDeleteMode={bulkTeamDeleteMode}
+            selectedTeams={selectedTeams}
+            setSelectedTeams={setSelectedTeams}
+            setTeams={setTeams}
+            deletingTeam={deletingTeam}
+            setDeletingTeam={setDeletingTeam}
+            deletingPlayer={deletingPlayer}
+            setDeletingPlayer={setDeletingPlayer}
+            updatingPlayer={updatingPlayer}
+            setUpdatingPlayer={setUpdatingPlayer}
+            openTeamMenu={openTeamMenu}
+            setOpenTeamMenu={setOpenTeamMenu}
+            setPendingDeleteType={setPendingDeleteType}
+            setConfirmMessage={setConfirmMessage}
+            setConfirmAction={setConfirmAction}
+            setConfirmOpen={setConfirmOpen}
+            selectedTeam={selectedTeam}
+            setSelectedTeam={setSelectedTeam}
+            dialogOpen={dialogOpen}
+            setDialogOpen={setDialogOpen}
+            addMode={addMode}
+            setAddMode={setAddMode}
+            playerType={playerType}
+            setPlayerType={setPlayerType}
+            newPlayerName={newPlayerName}
+            setNewPlayerName={setNewPlayerName}
+            multiplePlayerNames={multiplePlayerNames}
+            setMultiplePlayerNames={setMultiplePlayerNames}
+            creatingPlayer={creatingPlayer}
+            setCreatingPlayer={setCreatingPlayer}
+            setEditingTeamId={setEditingTeamId}
+            setEditingTeamName={setEditingTeamName}
+            setEditingTeamNotes={setEditingTeamNotes}
+            expandedTeams={expandedTeams}
+            setExpandedTeams={setExpandedTeams}
+            bulkDeleteMode={bulkDeleteMode}
+            setBulkDeleteMode={setBulkDeleteMode}
+            selectedPlayers={selectedPlayers}
+            setSelectedPlayers={setSelectedPlayers}
+            editingPlayerId={editingPlayerId}
+            setEditingPlayerId={setEditingPlayerId}
+            editingPlayerName={editingPlayerName}
+            setEditingPlayerName={setEditingPlayerName}
+            editingPlayerStatus={editingPlayerStatus}
+            setEditingPlayerStatus={setEditingPlayerStatus}
+            editingPlayerType={editingPlayerType}
+            setEditingPlayerType={setEditingPlayerType}
+            editingPlayerNotes={editingPlayerNotes}
+            setEditingPlayerNotes={setEditingPlayerNotes}
+            bulkPlayerTypeValue={bulkPlayerTypeValue}
+            setBulkPlayerTypeValue={setBulkPlayerTypeValue}
+            bulkTransferTeamId={bulkTransferTeamId}
+            setBulkTransferTeamId={setBulkTransferTeamId}
+            bulkUpdatingPlayers={bulkUpdatingPlayers}
+            setBulkUpdatingPlayers={setBulkUpdatingPlayers}
+          />
+          </div>
         ))}
       </div>}
 
@@ -887,118 +446,58 @@ export default function Teams() {
         </Card>
       )}
 
-      <Dialog
+      <EditTeamDialog
         open={editingTeamId !== null}
         onOpenChange={(open) => {
           if (!open && !updatingTeam) setEditingTeamId(null);
         }}
-      >
-        <DialogContent onPointerDownOutside={(event) => event.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>Edit team</DialogTitle>
-            <DialogDescription>Update the team name for this league.</DialogDescription>
-          </DialogHeader>
-          <form
-            className="space-y-4"
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (editingTeamId === null) return;
+        editingTeamName={editingTeamName}
+        setEditingTeamName={setEditingTeamName}
+        editingTeamNotes={editingTeamNotes}
+        setEditingTeamNotes={setEditingTeamNotes}
+        updatingTeam={updatingTeam}
+        hasChanges={hasTeamChanges(teams.find((team) => team.id === editingTeamId), editingTeamName, editingTeamNotes)}
+        onCancel={() => setEditingTeamId(null)}
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (editingTeamId === null) return;
 
-              void handleUpdateTeam(
-                updatingTeam,
-                setUpdatingTeam,
-                editingTeamId,
-                selectedLeague,
-                editingTeamName,
-                editingTeamNotes,
-                teams,
-                setTeams,
-                () => setEditingTeamId(null)
-              );
-            }}
-          >
-            <div className="space-y-2">
-              <Label htmlFor="edit-team-name">Team name</Label>
-              <Input
-                id="edit-team-name"
-                value={editingTeamName}
-                onChange={(event) => setEditingTeamName(event.target.value)}
-                disabled={updatingTeam}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-team-notes">Notes</Label>
-              <Textarea
-                id="edit-team-notes"
-                value={editingTeamNotes}
-                onChange={(event) => setEditingTeamNotes(event.target.value)}
-                disabled={updatingTeam}
-                rows={4}
-              />
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setEditingTeamId(null)} disabled={updatingTeam}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={updatingTeam || !editingTeamName.trim() || !hasTeamChanges(teams.find((team) => team.id === editingTeamId), editingTeamName, editingTeamNotes)}
-              >
-                {updatingTeam ? 'Saving...' : 'Save changes'}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          void handleUpdateTeam(
+            updatingTeam,
+            setUpdatingTeam,
+            editingTeamId,
+            selectedLeague,
+            editingTeamName,
+            editingTeamNotes,
+            teams,
+            setTeams,
+            () => setEditingTeamId(null)
+          );
+        }}
+      />
 
-      <AlertDialog
+      <ConfirmDeleteDialog
         open={confirmOpen}
         onOpenChange={(open) => {
           if (!open && (deletingTeam || deletingPlayer)) return;
           setConfirmOpen(open);
           if (!open) setPendingDeleteType(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {pendingDeleteType === 'team'
-                ? 'Delete team?'
-                : pendingDeleteType === 'teams'
-                ? 'Delete selected teams?'
-                : pendingDeleteType === 'players'
-                ? 'Delete selected players?'
-                : pendingDeleteType === 'player'
-                ? 'Delete player?'
-                : 'Confirm deletion'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>{confirmMessage}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingTeam || deletingPlayer}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              variant="destructive"
-              disabled={deletingTeam || deletingPlayer}
-              onClick={async (event) => {
-                event.preventDefault();
-                if (deletingTeam || deletingPlayer) return;
-
-                setDeletingTeam(true);
-                try {
-                  await confirmAction();
-                } finally {
-                  setDeletingTeam(false);
-                  setDeletingPlayer(false);
-                  setConfirmOpen(false);
-                  setPendingDeleteType(null);
-                }
-              }}
-            >
-              {deletingTeam || deletingPlayer ? 'Deleting...' : 'Delete'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        pendingDeleteType={pendingDeleteType}
+        confirmMessage={confirmMessage}
+        isDeleting={deletingTeam || deletingPlayer}
+        onConfirm={async () => {
+          setDeletingTeam(true);
+          try {
+            await confirmAction();
+          } finally {
+            setDeletingTeam(false);
+            setDeletingPlayer(false);
+            setConfirmOpen(false);
+            setPendingDeleteType(null);
+          }
+        }}
+      />
     </div>
   );
 }
