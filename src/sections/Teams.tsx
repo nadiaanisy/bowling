@@ -19,7 +19,6 @@ import {
   handleUpdatePlayer,
   handleUpdateTeam,
   handleDeletePlayer,
-  handleDeletePlayers,
   handleDeleteTeam,
   handleDeleteTeams,
   getSelectedPlayersForTeam,
