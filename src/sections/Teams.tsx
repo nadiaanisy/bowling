@@ -700,6 +700,7 @@ export default function Teams() {
                                         editingPlayerStatus,
                                         editingPlayerNotes,
                                         player.name,
+                                        player.type,
                                         player.status,
                                         player.notes,
                                         setTeams,
@@ -768,7 +769,13 @@ export default function Teams() {
                                         disabled={
                                           updatingPlayer ||
                                           !editingPlayerName.trim() ||
-                                          !hasPlayerChanges(player, editingPlayerName, editingPlayerStatus, editingPlayerNotes)
+                                          !hasPlayerChanges(
+                                            player,
+                                            editingPlayerName,
+                                            editingPlayerType,
+                                            editingPlayerStatus,
+                                            editingPlayerNotes
+                                          )
                                         }
                                       >
                                         {updatingPlayer ? 'Saving...' : 'Save changes'}
