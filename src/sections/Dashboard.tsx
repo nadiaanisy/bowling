@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { RefreshCw } from 'lucide-react';
 import {
   getBlockCountByLeague,
   getDashboardDataByLeagueId
@@ -8,6 +7,7 @@ import {
   Card,
   CardContent
 } from '../components/card';
+import { RefreshCw } from 'lucide-react';
 import {
   DashboardBlockProgress,
   DashboardBlockSummary,
