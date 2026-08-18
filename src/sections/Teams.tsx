@@ -87,7 +87,6 @@ import { useCustomHook } from '../utils/hooks';
 import { Skeleton } from '../components/skeleton';
 import { Textarea } from '../components/textarea';
 import { getTeamsWithMembersByLeague } from '../utils/api/get';
-import type { LeagueTeamWithMembers } from '../utils/interfaces';
 import { TeamActionsMenu } from '../sub-components/TeamActionsMenu';
 
 
