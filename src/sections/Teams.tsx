@@ -667,9 +667,7 @@ export default function Teams() {
                                       setEditingPlayerName(player.name);
                                       const normalizedStatus = player.status?.trim().toLowerCase();
                                       setEditingPlayerStatus(
-                                        normalizedStatus === 'inactive' || normalizedStatus === 'substitute'
-                                          ? normalizedStatus
-                                          : 'active'
+                                        normalizedStatus === 'inactive' ? normalizedStatus : 'active'
                                       );
                                       setEditingPlayerType(player.type ?? 'regular');
                                       setEditingPlayerNotes(player.notes ?? '');
@@ -730,7 +728,6 @@ export default function Teams() {
                                         <SelectContent>
                                           <SelectItem value="active">Active</SelectItem>
                                           <SelectItem value="inactive">Inactive</SelectItem>
-                                          <SelectItem value="substitute">Substitute</SelectItem>
                                         </SelectContent>
                                       </Select>
                                     </div>
