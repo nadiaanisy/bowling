@@ -147,6 +147,8 @@ export default function Teams() {
     setDeletingPlayer,
     creatingPlayer,
     setCreatingPlayer,
+    playerType,
+    setPlayerType,
     updatingPlayer,
     setUpdatingPlayer,
     editingPlayerId,
@@ -155,6 +157,8 @@ export default function Teams() {
     setEditingPlayerName,
     editingPlayerStatus,
     setEditingPlayerStatus,
+    editingPlayerType,
+    setEditingPlayerType,
     editingPlayerNotes,
     setEditingPlayerNotes,
     confirmOpen,
@@ -284,7 +288,7 @@ export default function Teams() {
             onClick={() => setBulkTeamDeleteMode(true)}
             disabled={teams.length === 0}
           >
-            Select teams
+            Bulk Delete Teams
           </Button>
         )}
       </div>
@@ -451,12 +455,25 @@ export default function Teams() {
                       );
                     }}
                   />
-                    <DialogContent className="sm:max-w-[500px]">
+                    <DialogContent
+                      className="sm:max-w-[500px]"
+                      onPointerDownOutside={(event) => event.preventDefault()}
+                    >
                       <DialogHeader>
                         <DialogTitle>Add Player(s) to {team.name}</DialogTitle>
                         <DialogDescription>Choose to add a single player or multiple players at once</DialogDescription>
                       </DialogHeader>
                       
+                      <div className="mb-4 space-y-2">
+                        <Label htmlFor="player-type">Player type</Label>
+                        <Select value={playerType} onValueChange={(value) => setPlayerType(value as 'regular' | 'substitute')}>
+                          <SelectTrigger id="player-type"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="regular">Regular</SelectItem>
+                            <SelectItem value="substitute">Substitute</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <Tabs value={addMode} onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}>
                         <TabsList className="grid w-full grid-cols-2">
                           <TabsTrigger value="single">
@@ -483,6 +500,7 @@ export default function Teams() {
                                 team.name,
                                 team.members,
                                 selectedLeague,
+                                playerType,
                                 setTeams,
                                 (name) => {
                                   setNewPlayerName(name);
@@ -524,6 +542,7 @@ export default function Teams() {
                                 team.name,
                                 team.members,
                                 selectedLeague,
+                                playerType,
                                 setTeams,
                                 (names) => {
                                   setMultiplePlayerNames(names);
@@ -650,13 +669,14 @@ export default function Teams() {
                                           ? normalizedStatus
                                           : 'active'
                                       );
+                                      setEditingPlayerType(player.type ?? 'regular');
                                       setEditingPlayerNotes(player.notes ?? '');
                                     }}
                                   >
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent>
+                                <DialogContent onPointerDownOutside={(event) => event.preventDefault()}>
                                   <DialogHeader>
                                     <DialogTitle>Edit player</DialogTitle>
                                     <DialogDescription>Update this player's name, status, or notes.</DialogDescription>
@@ -673,6 +693,7 @@ export default function Teams() {
                                         team.id,
                                         selectedLeague,
                                         editingPlayerName,
+                                        editingPlayerType,
                                         editingPlayerStatus,
                                         editingPlayerNotes,
                                         player.name,
@@ -706,6 +727,16 @@ export default function Teams() {
                                         <SelectContent>
                                           <SelectItem value="active">Active</SelectItem>
                                           <SelectItem value="inactive">Inactive</SelectItem>
+                                          <SelectItem value="substitute">Substitute</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label htmlFor={`edit-player-type-${player.id}`}>Type</Label>
+                                      <Select value={editingPlayerType} onValueChange={(value) => setEditingPlayerType(value as 'regular' | 'substitute')} disabled={updatingPlayer}>
+                                        <SelectTrigger id={`edit-player-type-${player.id}`}><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="regular">Regular</SelectItem>
                                           <SelectItem value="substitute">Substitute</SelectItem>
                                         </SelectContent>
                                       </Select>
@@ -857,7 +888,7 @@ export default function Teams() {
           if (!open && !updatingTeam) setEditingTeamId(null);
         }}
       >
-        <DialogContent>
+        <DialogContent onPointerDownOutside={(event) => event.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Edit team</DialogTitle>
             <DialogDescription>Update the team name for this league.</DialogDescription>

@@ -71,7 +71,7 @@ export function TeamActionsMenu({
         </button>
         <button type="button" onClick={onBulkDelete} disabled={memberCount === 0 || deletingPlayer} className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50">
           <ListX className="h-4 w-4" />
-          Bulk delete
+          Bulk delete player
         </button>
         <div className="my-1 border-t" />
         <button type="button" onClick={onDeleteTeam} disabled={deletingTeam} className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm text-destructive hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50">
