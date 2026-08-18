@@ -171,9 +171,12 @@ export default function Teams() {
 
   const filteredTeams = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return teams;
+    const sortedTeams = [...teams].sort((firstTeam, secondTeam) =>
+      firstTeam.name.localeCompare(secondTeam.name, undefined, { sensitivity: 'base' })
+    );
+    if (!query) return sortedTeams;
 
-    return teams.filter((team) =>
+    return sortedTeams.filter((team) =>
       team.name.toLowerCase().includes(query) ||
       team.members.some((member) => member.name.toLowerCase().includes(query))
     );
