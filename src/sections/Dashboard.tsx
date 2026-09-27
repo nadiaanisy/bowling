@@ -8,13 +8,13 @@ import {
 } from '../components/card';
 import { useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
+import { Button } from '../components/button';
+import { useCustomHook } from '../utils/hooks';
 import {
   DashboardBlockProgress,
   DashboardBlockSummary,
   DashboardSummaryCard
-} from '../sub-components/DashboardCards';
-import { Button } from '../components/button';
-import { useCustomHook } from '../utils/hooks';
+} from '../sub-components/Dashboard/DashboardCards';
 import { DEFAULT_MATCHES_PER_WEEK } from '../utils/constants';
 
 export default function Dashboard() {
