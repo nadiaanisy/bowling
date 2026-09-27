@@ -15,65 +15,7 @@ import {
 } from '../../components/card';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
-
-const capabilities = [
-  {
-    value: '3+',
-    label: 'Leagues',
-    sublabel: 'Sunray · Sunshine · Valuefest · Many More',
-    icon: Trophy,
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    value: '10+',
-    label: 'Teams / League',
-    sublabel: 'Full roster management',
-    icon: Users,
-    color: 'from-cyan-500 to-blue-500',
-  },
-  {
-    value: '10+',
-    label: 'Weeks / Block',
-    sublabel: 'Multi-block seasons',
-    icon: Calendar,
-    color: 'from-green-500 to-emerald-500',
-  },
-  {
-    value: '∞',
-    label: 'Players Tracked',
-    sublabel: 'No limits on roster size',
-    icon: UserCircle,
-    color: 'from-orange-500 to-red-500',
-  },
-  {
-    value: '5',
-    label: 'Forecast Factors',
-    sublabel: 'AI scoring dimensions',
-    icon: Zap,
-    color: 'from-violet-500 to-purple-500',
-  },
-  {
-    value: '6+',
-    label: 'Chart Types',
-    sublabel: 'Interactive analytics',
-    icon: BarChart3,
-    color: 'from-pink-500 to-rose-500',
-  },
-  {
-    value: '100%',
-    label: 'Auto Calculations',
-    sublabel: 'Averages & handicaps',
-    icon: RefreshCw,
-    color: 'from-teal-500 to-cyan-500',
-  },
-  {
-    value: '↗',
-    label: 'Transfer History',
-    sublabel: 'Full career preservation',
-    icon: Shuffle,
-    color: 'from-amber-500 to-orange-500',
-  },
-];
+import { capabilities } from '../../utils/constants';
 
 export default function Capabilities() {
   return (
