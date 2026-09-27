@@ -69,6 +69,11 @@ export default function Login({ onBack }: LoginProps) {
     Password === confirmPassword
   );
 
+  const isLoginValid = Boolean(
+    Username.trim().length >= 3 &&
+    Password.length >= 6
+  );
+
   useEffect(() => {
     if (sessionExpired) {
       toast.error('Your session expired. Please sign in again.', errorToastStyle);
@@ -277,7 +282,7 @@ export default function Login({ onBack }: LoginProps) {
               )}
               <Button 
                 type="submit" 
-                disabled={Loading || (signupMode && !isSignupValid)}
+                disabled={Loading || (signupMode ? !isSignupValid : !isLoginValid)}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/50"
               >
                 {Loading ? <><Loader2 className="h-4 w-4 animate-spin" />{signupMode ? 'Creating account...' : 'Logging in...'}</> : signupMode ? 'Create account' : 'Login'}
