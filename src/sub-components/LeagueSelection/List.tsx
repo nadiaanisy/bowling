@@ -17,7 +17,7 @@ import { motion } from 'motion/react';
 import { League } from '../../utils/interfaces';
 import { Button } from '../../components/button';
 import { Skeleton } from '../../components/skeleton';
-import { LeagueCard } from '../../sub-components2/LeagueCard';
+import { LeagueCard } from '../../sub-components/LeagueSelection/LeagueCard';
 
 interface ListProps {
   leagues: League[];
