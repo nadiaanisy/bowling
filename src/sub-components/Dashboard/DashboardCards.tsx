@@ -30,12 +30,12 @@ export function DashboardSummaryCard({
 }: SummaryCardProps) {
   return (
     <motion.div
-      className="h-full"
+      // key={`progress-${index}`}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
     >
-      <Card className="flex h-full flex-col">
+      <Card>
         <CardHeader className="pb-3">
           <CardDescription>{label}</CardDescription>
           <CardTitle className="text-4xl">
@@ -44,13 +44,18 @@ export function DashboardSummaryCard({
             ) : (
               <div className="space-y-1">
                 <div>{value}</div>
-                {value === 0 && (
-                  <p className="text-xs font-normal text-muted-foreground">No data</p>
-                )}
               </div>
             )}
           </CardTitle>
         </CardHeader>
+
+        <CardContent>
+          <div className="text-sm text-muted-foreground">
+          {value === 0 && (
+            <p className="text-xs font-normal text-muted-foreground">No data</p>
+          )}
+          </div>
+        </CardContent>
       </Card>
     </motion.div>
   );
