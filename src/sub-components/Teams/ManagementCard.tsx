@@ -18,6 +18,7 @@ interface ManagementCardProps {
   setNewTeamName: (value: string) => void;
   creatingTeam: boolean;
   onCreateTeam: () => void;
+  onOpenBulkCreate: () => void;
   searchQuery: string;
   setSearchQuery: (value: string) => void;
   filteredTeamsCount: number;
@@ -28,6 +29,7 @@ export default function ManagementCard({
   setNewTeamName,
   creatingTeam,
   onCreateTeam,
+  onOpenBulkCreate,
   searchQuery,
   setSearchQuery,
   filteredTeamsCount
@@ -43,37 +45,50 @@ export default function ManagementCard({
       </CardHeader>
 
       <CardContent className="grid gap-4 md:grid-cols-2">
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            onCreateTeam();
-          }}
-          className="flex gap-2"
-        >
-          <Input
-            placeholder="Team name"
-            value={newTeamName}
-            onChange={(event) =>
-              setNewTeamName(event.target.value)
-            }
-            disabled={creatingTeam}
-          />
+        <div className="flex gap-2">
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              onCreateTeam();
+            }}
+            className="flex min-w-0 flex-1 gap-2"
+          >
+            <Input
+              placeholder="Team name"
+              value={newTeamName}
+              onChange={(event) =>
+                setNewTeamName(event.target.value)
+              }
+              disabled={creatingTeam}
+            />
+
+            <Button
+              type="submit"
+              disabled={
+                creatingTeam ||
+                !newTeamName.trim()
+              }
+              className="gap-2"
+            >
+              {creatingTeam && (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              )}
+
+              {creatingTeam
+                ? 'Adding...'
+                : 'Add Team'}
+            </Button>
+          </form>
 
           <Button
-            type="submit"
-            disabled={
-              creatingTeam ||
-              !newTeamName.trim()
-            }
-            className="gap-2"
+            type="button"
+            variant="outline"
+            onClick={onOpenBulkCreate}
+            disabled={creatingTeam}
           >
-            {creatingTeam && (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            )}
-
-            {creatingTeam ? 'Adding...' : 'Add Team'}
+            Add Teams
           </Button>
-        </form>
+        </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

@@ -5,6 +5,7 @@ import {
 import type React from 'react';
 import {
   handleCreateTeam,
+  handleCreateTeams,
   handleUpdateTeam,
   handleDeleteTeams,
   hasTeamChanges,
@@ -17,6 +18,7 @@ import { Cards } from '../sub-components/Teams/Cards';
 import { getTeamsWithMembersByLeague } from '../utils/api/get';
 import ManagementCard from '../sub-components/Teams/ManagementCard';
 import { EditTeamDialog } from '../sub-components/Teams/EditTeamDialog';
+import { AddTeamsDialog } from '../sub-components/Teams/AddTeamsDialog';
 import { ConfirmDeleteDialog } from '../sub-components/Teams/ConfirmDeleteDialog';
 
 export default function Teams() {
@@ -100,6 +102,12 @@ export default function Teams() {
     setConfirmOpen,
     setConfirmMessage,
     setConfirmAction,
+    bulkTeamDialogOpen,
+    setBulkTeamDialogOpen,
+    multipleTeamNames,
+    setMultipleTeamNames,
+    creatingTeams,
+    setCreatingTeams,
   } = useCustomHook();
 
   const filteredTeams = useMemo(() => {
@@ -325,9 +333,46 @@ export default function Teams() {
             setNewTeamName
           );
         }}
+        onOpenBulkCreate={() => {
+          setMultipleTeamNames('');
+          setBulkTeamDialogOpen(true);
+        }}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         filteredTeamsCount={filteredTeams.length}
+      />
+
+      <AddTeamsDialog
+        open={bulkTeamDialogOpen}
+        onOpenChange={(open) => {
+          if (creatingTeams) return;
+
+          setBulkTeamDialogOpen(open);
+
+          if (!open) {
+            setMultipleTeamNames('');
+          }
+        }}
+        teamNames={multipleTeamNames}
+        setTeamNames={setMultipleTeamNames}
+        creatingTeams={creatingTeams}
+        existingTeams={teams}
+        onSubmit={(event) => {
+          event.preventDefault();
+
+          void handleCreateTeams(
+            creatingTeams,
+            setCreatingTeams,
+            multipleTeamNames,
+            selectedLeague,
+            teams,
+            setTeams,
+            setMultipleTeamNames,
+            () => {
+              setBulkTeamDialogOpen(false);
+            }
+          );
+        }}
       />
 
       <Grid
