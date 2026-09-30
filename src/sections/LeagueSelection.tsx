@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import {
   checkIfLeagueHasBlocks,
   getTeamCountByLeague
- } from '../utils/api/get';
+} from '../utils/api/get';
+import { useEffect } from 'react';
 import { useCustomHook } from '../utils/hooks';
 import List from '../sub-components/LeagueSelection/List';
 import Header from '../sub-components/LeagueSelection/Header';

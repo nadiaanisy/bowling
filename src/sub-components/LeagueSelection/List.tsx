@@ -4,16 +4,16 @@ import {
   FolderOpen
 } from 'lucide-react';
 import {
-  handleDeleteLeague,
-  handleLeagueBlockSetup,
-  handleLeagueSelect
-} from '../../utils/functions';
-import {
   Card,
   CardContent
 } from '../../components/card';
 import type React from 'react';
 import { motion } from 'motion/react';
+import {
+  handleDeleteLeague,
+  handleLeagueBlockSetup,
+  handleLeagueSelect
+} from '../../utils/functions/league';
 import { League } from '../../utils/interfaces';
 import { Button } from '../../components/button';
 import { Skeleton } from '../../components/skeleton';

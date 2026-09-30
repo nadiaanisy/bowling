@@ -14,7 +14,7 @@ import {
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
 import { Button } from '../../components/button';
-import { handleCreateLeague } from '../../utils/functions';
+import { handleCreateLeague } from '../../utils/functions/league';
 
 interface CreateDialogProps {
   open: boolean;

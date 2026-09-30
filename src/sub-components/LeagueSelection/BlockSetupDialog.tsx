@@ -14,7 +14,7 @@ import {
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
 import { Button } from '../../components/button';
-import { handleBlockSetup } from '../../utils/functions';
+import { handleBlockSetup } from '../../utils/functions/league';
 
 interface BlockSetupDialogProps {
   open: boolean;
