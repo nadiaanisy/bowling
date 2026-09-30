@@ -13,7 +13,7 @@ import {
   hasPlayerChanges,
   selectAllPlayersForTeam,
   togglePlayerSelection
-} from '../../utils/functions';
+} from '../../utils/functions/teams';
 import type {
   LeagueMember,
   LeagueTeamWithMembers
