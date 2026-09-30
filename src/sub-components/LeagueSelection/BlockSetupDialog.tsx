@@ -1,6 +1,7 @@
 import {
   Loader2,
-  Plus
+  Plus,
+  Layers
 } from 'lucide-react';
 import type React from 'react';
 import {
@@ -23,6 +24,10 @@ interface BlockSetupDialogProps {
   selectedLeagueId: string | number | null;
   blockCount: string;
   setBlockCount: (value: string) => void;
+  gamesPerWeek: string;
+  setGamesPerWeek: (value: string) => void;
+  startingLane: string;
+  setStartingLane: (value: string) => void;
   creatingBlocks: boolean;
   setCreatingBlocks: (value: boolean) => void;
   setLeagueBlockStatus: React.Dispatch<React.SetStateAction<Record<string | number, boolean>>>;
@@ -36,30 +41,69 @@ export default function BlockSetupDialog({
   selectedLeagueId,
   blockCount,
   setBlockCount,
+  gamesPerWeek,
+  setGamesPerWeek,
+  startingLane,
+  setStartingLane,
   creatingBlocks,
   setCreatingBlocks,
   setLeagueBlockStatus,
   setListOfLeaguesByUser
 }: BlockSetupDialogProps) {
-  const parsedBlockCount = parseInt(
+  const parsedBlockCount = Number.parseInt(
     blockCount,
     10
   );
 
+  const parsedGamesPerWeek = Number.parseInt(
+    gamesPerWeek,
+    10
+  );
+
+  const parsedStartingLane = Number.parseInt(
+    startingLane,
+    10
+  );
+
   const isValidBlockCount =
-    Boolean(blockCount) &&
+    Number.isInteger(
+      parsedBlockCount
+    ) &&
     parsedBlockCount >= 1 &&
     parsedBlockCount <= 10;
 
-  const createBlocks = () => {
+  const isValidGamesPerWeek =
+    Number.isInteger(
+      parsedGamesPerWeek
+    ) &&
+    parsedGamesPerWeek >= 1;
+
+  const isValidStartingLane =
+    Number.isInteger(
+      parsedStartingLane
+    ) &&
+    parsedStartingLane >= 1;
+
+  const isValid =
+    isValidBlockCount &&
+    isValidGamesPerWeek &&
+    isValidStartingLane;
+
+  const createSetup = () => {
     return handleBlockSetup(
       creatingBlocks,
       setCreatingBlocks,
       selectedLeagueId,
       blockCount,
+      gamesPerWeek,
+      startingLane,
       setLeagueBlockStatus,
       onOpenChange,
-      (updatedAt) => {
+      (
+        updatedAt,
+        savedGamesPerWeek,
+        savedStartingLane
+      ) => {
         if (
           !updatedAt ||
           selectedLeagueId === null
@@ -73,6 +117,8 @@ export default function BlockSetupDialog({
               league.id === selectedLeagueId
                 ? {
                     ...league,
+                    games_per_week: savedGamesPerWeek,
+                    starting_lane: savedStartingLane,
                     updated_at: updatedAt
                   }
                 : league
@@ -94,20 +140,26 @@ export default function BlockSetupDialog({
         }
       >
         <DialogHeader>
-          <DialogTitle className="gradient-text">
-            Set Up Blocks
+          <DialogTitle className="flex items-center gap-2">
+            <Layers className="h-5 w-5 text-primary" />
+
+            <span className="gradient-text">
+              League Setup
+            </span>
           </DialogTitle>
 
           <DialogDescription>
+            Configure the basic settings for{' '}
             <span className="font-medium text-foreground">
               {selectedLeagueName}
-            </span>{' '}
-            has no block data yet.
-            How many blocks would you like to create?
+            </span>
+            .
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="space-y-5 py-2">
+
+          {/* Blocks */}
           <div className="space-y-2">
             <Label htmlFor="blockCount">
               Number of Blocks
@@ -120,25 +172,87 @@ export default function BlockSetupDialog({
               max="10"
               value={blockCount}
               onChange={(event) =>
-                setBlockCount(event.target.value)
+                setBlockCount(
+                  event.target.value
+                )
               }
-              placeholder="Enter number of blocks (1–10)"
+              placeholder="e.g. 2"
               className="bg-input border-border/50"
             />
 
             <p className="text-sm text-muted-foreground">
-              Typical leagues use 2 blocks.
-              You can create up to 10 blocks.
+              Number of blocks in this league.
+              Maximum 10.
+            </p>
+          </div>
+
+          {/* Games Per Week */}
+          <div className="space-y-2">
+            <Label htmlFor="gamesPerWeek">
+              Games per Week
+            </Label>
+
+            <Input
+              id="gamesPerWeek"
+              type="number"
+              min="1"
+              value={gamesPerWeek}
+              onChange={(event) =>
+                setGamesPerWeek(
+                  event.target.value
+                )
+              }
+              placeholder="e.g. 3"
+              className="bg-input border-border/50"
+            />
+
+            <p className="text-sm text-muted-foreground">
+              How many games each team plays
+              every week.
+            </p>
+          </div>
+
+          {/* Starting Lane */}
+          <div className="space-y-2">
+            <Label htmlFor="startingLane">
+              Starting Lane
+            </Label>
+
+            <Input
+              id="startingLane"
+              type="number"
+              min="1"
+              value={startingLane}
+              onChange={(event) =>
+                setStartingLane(
+                  event.target.value
+                )
+              }
+              placeholder="e.g. 1"
+              className="bg-input border-border/50"
+            />
+
+            <p className="text-sm text-muted-foreground">
+              The first lane number used by this league.
             </p>
           </div>
         </div>
 
         <DialogFooter>
           <Button
-            onClick={() => void createBlocks()}
+            variant="outline"
+            onClick={() =>
+              onOpenChange(false)
+            }
+            disabled={creatingBlocks}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => void createSetup()}
             disabled={
               creatingBlocks ||
-              !isValidBlockCount
+              !isValid
             }
             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md shadow-purple-500/30"
           >
@@ -150,7 +264,7 @@ export default function BlockSetupDialog({
             ) : (
               <>
                 <Plus className="h-4 w-4" />
-                Create Blocks
+                Create League Setup
               </>
             )}
           </Button>

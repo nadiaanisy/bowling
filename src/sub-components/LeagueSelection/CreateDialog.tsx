@@ -35,7 +35,7 @@ export default function CreateDialog({
   creatingLeague,
   setCreatingLeague,
   userId,
-  setListOfLeaguesByUser
+  setListOfLeaguesByUser,
 }: CreateDialogProps) {
   const createLeague = () => {
     return handleCreateLeague(
@@ -45,7 +45,7 @@ export default function CreateDialog({
       userId,
       setListOfLeaguesByUser,
       setNewLeagueName,
-      onOpenChange
+      onOpenChange,
     );
   };
 
@@ -70,8 +70,7 @@ export default function CreateDialog({
           </DialogTitle>
 
           <DialogDescription>
-            Give your league a name. You can set up teams,
-            players, and blocks after creating it.
+            Give your league a name. You will configure the league setup next.
           </DialogDescription>
         </DialogHeader>
 
