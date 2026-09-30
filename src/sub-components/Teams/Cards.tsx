@@ -17,7 +17,7 @@ import {
   handleOpenAddPlayerDialog,
   handleOpenEditTeamDialog,
   toggleTeamSelection
-} from '../../utils/functions';
+} from '../../utils/functions/teams';
 import {
   Card,
   CardContent,

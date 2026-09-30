@@ -1,17 +1,17 @@
-import type React from 'react';
 import {
   useMemo,
   useEffect
 } from 'react';
+import type React from 'react';
 import {
   handleCreateTeam,
   handleUpdateTeam,
   handleDeleteTeams,
   hasTeamChanges,
   toggleSelectAllTeams
-} from '../utils/functions';
-import Grid from '../sub-components/Teams/Grid';
+} from '../utils/functions/teams';
 import { useCustomHook } from '../utils/hooks';
+import Grid from '../sub-components/Teams/Grid';
 import Header from '../sub-components/Teams/Header';
 import { Cards } from '../sub-components/Teams/Cards';
 import { getTeamsWithMembersByLeague } from '../utils/api/get';

@@ -11,7 +11,7 @@ import {
 import { Cards } from './Cards';
 import { Button } from '../../components/button';
 import { Skeleton } from '../../components/skeleton';
-import { setAllTeamsExpanded } from '../../utils/functions';
+import { setAllTeamsExpanded } from '../../utils/functions/teams';
 
 interface GridProps {
   teams: React.ComponentProps<typeof Cards>['teams'];
