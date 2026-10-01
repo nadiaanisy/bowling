@@ -33,6 +33,7 @@ export default function LeagueSelection({
     blockCount,
     gamesPerWeek,
     startingLane,
+    totalLanes,
     newLeagueName,
     selectedLeagueName,
     isLoadingLeagueDetails,
@@ -64,6 +65,7 @@ export default function LeagueSelection({
     setStartingLane,
     setNewLeagueName,
     setListOfLeaguesByUser,
+    setTotalLanes
   } = useCustomHook();
 
   const leagueIds = leagues
@@ -201,6 +203,8 @@ export default function LeagueSelection({
         setGamesPerWeek={setGamesPerWeek}
         startingLane={startingLane}
         setStartingLane={setStartingLane}
+        totalLanes={totalLanes}
+        setTotalLanes={setTotalLanes}
         creatingBlocks={creatingBlocks}
         setCreatingBlocks={setCreatingBlocks}
         setLeagueBlockStatus={setLeagueBlockStatus}

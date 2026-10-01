@@ -28,6 +28,8 @@ interface BlockSetupDialogProps {
   setGamesPerWeek: (value: string) => void;
   startingLane: string;
   setStartingLane: (value: string) => void;
+  totalLanes: string;
+  setTotalLanes: (value: string) => void;
   creatingBlocks: boolean;
   setCreatingBlocks: (value: boolean) => void;
   setLeagueBlockStatus: React.Dispatch<React.SetStateAction<Record<string | number, boolean>>>;
@@ -45,6 +47,8 @@ export default function BlockSetupDialog({
   setGamesPerWeek,
   startingLane,
   setStartingLane,
+  totalLanes,
+  setTotalLanes,
   creatingBlocks,
   setCreatingBlocks,
   setLeagueBlockStatus,
@@ -62,6 +66,11 @@ export default function BlockSetupDialog({
 
   const parsedStartingLane = Number.parseInt(
     startingLane,
+    10
+  );
+
+  const parsedTotalLanes = Number.parseInt(
+    totalLanes,
     10
   );
 
@@ -84,10 +93,17 @@ export default function BlockSetupDialog({
     ) &&
     parsedStartingLane >= 1;
 
+  const isValidTotalLanes =
+    Number.isInteger(
+      parsedTotalLanes
+    ) &&
+    parsedTotalLanes >= 1;
+
   const isValid =
     isValidBlockCount &&
     isValidGamesPerWeek &&
-    isValidStartingLane;
+    isValidStartingLane &&
+    isValidTotalLanes;
 
   const createSetup = () => {
     return handleBlockSetup(
@@ -97,12 +113,14 @@ export default function BlockSetupDialog({
       blockCount,
       gamesPerWeek,
       startingLane,
+      totalLanes,
       setLeagueBlockStatus,
       onOpenChange,
       (
         updatedAt,
         savedGamesPerWeek,
-        savedStartingLane
+        savedStartingLane,
+        savedTotalLanes,
       ) => {
         if (
           !updatedAt ||
@@ -119,6 +137,7 @@ export default function BlockSetupDialog({
                     ...league,
                     games_per_week: savedGamesPerWeek,
                     starting_lane: savedStartingLane,
+                    total_lanes: savedTotalLanes,
                     updated_at: updatedAt
                   }
                 : league
@@ -209,6 +228,29 @@ export default function BlockSetupDialog({
             <p className="text-sm text-muted-foreground">
               How many games each team plays
               every week.
+            </p>
+          </div>
+
+          {/* Total Lanes */}
+          <div className="space-y-2">
+            <Label htmlFor="totalLanes">
+              Total Lanes
+            </Label>
+
+            <Input
+              id="totalLanes"
+              type="number"
+              min="1"
+              value={totalLanes}
+              onChange={(event) =>
+                setTotalLanes(event.target.value)
+              }
+              placeholder="e.g. 10"
+              className="bg-input border-border/50"
+            />
+
+            <p className="text-sm text-muted-foreground">
+              The total number of lanes available for this league at the centre.
             </p>
           </div>
 
