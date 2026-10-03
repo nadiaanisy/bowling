@@ -5,7 +5,6 @@ import {
 import {
   getAllMatchesGroupedByMatchAndBlock,
   getBlocksByLeague,
-  getLanesByLeague,
   getTeamsByLeague,
 } from '../utils/api/get';
 import {
@@ -22,6 +21,7 @@ import { Schedule } from '../sub-components/Timetable/Schedule';
 export default function Timetable() {
   const {
     selectedLeague,
+    listOfLeaguesByUser,
     blocksData,
     setBlocksData,
     blockNumber,
@@ -78,12 +78,10 @@ export default function Timetable() {
         const [
           blocks,
           allTeams,
-          lanesData,
           matchesData,
         ] = await Promise.all([
           getBlocksByLeague(selectedLeague),
           getTeamsByLeague(selectedLeague),
-          getLanesByLeague(selectedLeague),
           getAllMatchesGroupedByMatchAndBlock(
             selectedLeague ?? ''
           ),
@@ -93,7 +91,47 @@ export default function Timetable() {
 
         setBlocksData(blocks);
         setTimetableTeams(allTeams);
-        setLanes(lanesData);
+
+        const selectedLeagueData =
+          listOfLeaguesByUser.find(
+            (league) =>
+              String(league.id) ===
+              String(selectedLeague)
+          );
+
+        const startingLane = Number(
+          selectedLeagueData?.starting_lane
+        );
+
+        const totalLanes = Number(
+          selectedLeagueData?.total_lanes
+        );
+
+        const generatedLanes =
+          Number.isInteger(startingLane) &&
+          startingLane > 0 &&
+          Number.isInteger(totalLanes) &&
+          totalLanes >= startingLane
+            ? Array.from(
+                {
+                  length: Math.floor(
+                    (totalLanes - startingLane + 1) / 2
+                  ),
+                },
+                (_, index) => {
+                  const lane1 =
+                    startingLane + index * 2;
+                  const lane2 = lane1 + 1;
+
+                  return {
+                    id: `${lane1}-${lane2}`,
+                    lane: `Lane ${lane1} - Lane ${lane2}`,
+                  };
+                }
+              )
+            : [];
+
+        setLanes(generatedLanes);
         setMatches(matchesData);
       } catch (err) {
         if (isCurrent) {
@@ -117,6 +155,7 @@ export default function Timetable() {
     };
   }, [
     selectedLeague,
+    listOfLeaguesByUser,
     timetableReloadKey,
     setBlocksData,
     setTimetableTeams,

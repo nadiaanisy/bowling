@@ -17,7 +17,7 @@ import {
 } from '../../components/alert-dialog';
 import { Button } from '../../components/button';
 import type { MatchData } from '../../utils/interfaces';
-import { handleDeleteMatch } from '../../utils/functions';
+import { handleDeleteMatch } from '../../utils/functions/timetable';
 
 interface RowProps {
   match: MatchData;

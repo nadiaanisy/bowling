@@ -37,7 +37,7 @@ import {
 import { Trash2 } from 'lucide-react';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
-import { handleBulkDeleteMatches } from '../../utils/functions';
+import { handleBulkDeleteMatches } from '../../utils/functions/timetable';
 
 type BlockData = {
   id: string | number;

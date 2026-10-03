@@ -9,14 +9,15 @@ import {
   Select,
   SelectContent,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '../../components/select';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
 import { Button } from '../../components/button';
-import { handleAddMatch } from '../../utils/functions';
 import type { LeagueTeam } from '../../utils/interfaces';
+import { handleAddMatch } from '../../utils/functions/timetable';
 
 type BlockData = {
   id: string | number;
@@ -168,8 +169,8 @@ export function AddMatch({
                 id="week"
                 type="number"
                 min="1"
-                max="31"
-                placeholder="1-31"
+                max="100"
+                placeholder="1-100"
                 value={week}
                 onChange={(event) =>
                   handleWeekChange(
@@ -187,7 +188,17 @@ export function AddMatch({
 
               <Select
                 value={team1}
-                onValueChange={setTeam1}
+                onValueChange={(value) => {
+                  if (usedTeams.includes(value)) {
+                    return;
+                  }
+            
+                  if (value === team2) {
+                    return;
+                  }
+            
+                  setTeam1(value);
+                }}
                 disabled={!week}
               >
                 <SelectTrigger id="team1">
@@ -195,23 +206,26 @@ export function AddMatch({
                 </SelectTrigger>
 
                 <SelectContent>
-                  {timetableTeams.map(
-                    (team) => (
+                  {timetableTeams.map((team) => {
+                    const teamId = team.id.toString();
+
+                    const isUsed = usedTeams.includes(teamId);
+                    const isTeam2 = teamId === team2;
+
+                    return (
                       <SelectItem
                         key={team.id}
-                        value={team.id.toString()}
-                        disabled={
-                          team.id.toString() ===
-                            team2 ||
-                          usedTeams.includes(
-                            team.id.toString()
-                          )
+                        value={teamId}
+                        className={
+                          isUsed || isTeam2
+                            ? 'opacity-50'
+                            : undefined
                         }
                       >
                         {team.name}
                       </SelectItem>
-                    )
-                  )}
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -224,33 +238,44 @@ export function AddMatch({
 
               <Select
                 value={team2}
-                onValueChange={setTeam2}
-                disabled={
-                  !week || !team1
-                }
+                onValueChange={(value) => {
+                  if (usedTeams.includes(value)) {
+                    return;
+                  }
+
+                  if (value === team1) {
+                    return;
+                  }
+
+                  setTeam2(value);
+                }}
+                disabled={!week || !team1}
               >
                 <SelectTrigger id="team2">
                   <SelectValue placeholder="Select team" />
                 </SelectTrigger>
 
                 <SelectContent>
-                  {timetableTeams.map(
-                    (team) => (
+                  {timetableTeams.map((team) => {
+                    const teamId = team.id.toString();
+
+                    const isUsed = usedTeams.includes(teamId);
+                    const isTeam1 = teamId === team1;
+
+                    return (
                       <SelectItem
                         key={team.id}
-                        value={team.id.toString()}
-                        disabled={
-                          team.id.toString() ===
-                            team1 ||
-                          usedTeams.includes(
-                            team.id.toString()
-                          )
+                        value={teamId}
+                        className={
+                          isUsed || isTeam1
+                            ? 'opacity-50'
+                            : undefined
                         }
                       >
                         {team.name}
                       </SelectItem>
-                    )
-                  )}
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
@@ -283,7 +308,7 @@ export function AddMatch({
                         key={lane.id}
                         value={lane.id.toString()}
                         disabled={usedLanes.includes(
-                          lane.lane
+                          lane.id.toString()
                         )}
                       >
                         {lane.lane}
