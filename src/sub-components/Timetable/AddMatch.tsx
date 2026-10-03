@@ -79,9 +79,7 @@ export function AddMatch({
     setSelectedLane('');
   };
 
-  const handleWeekChange = (
-    value: string
-  ) => {
+  const handleWeekChange = (value: string) => {
     setWeek(value);
 
     // Week changes invalidate
@@ -94,13 +92,9 @@ export function AddMatch({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          Add Match to Schedule
-        </CardTitle>
+        <CardTitle>Add Match to Schedule</CardTitle>
 
-        <CardDescription>
-          Schedule a match between two teams
-        </CardDescription>
+        <CardDescription>Schedule a match between two teams</CardDescription>
       </CardHeader>
 
       <CardContent>
@@ -119,51 +113,37 @@ export function AddMatch({
               () => {
                 resetForm();
                 void retryTimetable();
-              }
+              },
             )
           }
           className="space-y-4"
         >
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-
             {/* BLOCK */}
             <div className="space-y-2">
-              <Label htmlFor="block">
-                Block
-              </Label>
+              <Label htmlFor="block">Block</Label>
 
               <Select
                 value={blockNumber.toString()}
-                onValueChange={(value) =>
-                  setBlockNumber(
-                    parseInt(value)
-                  )
-                }
+                onValueChange={(value) => setBlockNumber(parseInt(value))}
               >
                 <SelectTrigger id="block">
                   <SelectValue placeholder="Select block" />
                 </SelectTrigger>
 
                 <SelectContent>
-                  {blocksData.map(
-                    (block) => (
-                      <SelectItem
-                        key={block.id}
-                        value={block.id.toString()}
-                      >
-                        Block {block.number}
-                      </SelectItem>
-                    )
-                  )}
+                  {blocksData.map((block) => (
+                    <SelectItem key={block.id} value={block.id.toString()}>
+                      Block {block.number}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
             {/* WEEK */}
             <div className="space-y-2">
-              <Label htmlFor="week">
-                Week Number
-              </Label>
+              <Label htmlFor="week">Week Number</Label>
 
               <Input
                 id="week"
@@ -172,19 +152,13 @@ export function AddMatch({
                 max="100"
                 placeholder="1-100"
                 value={week}
-                onChange={(event) =>
-                  handleWeekChange(
-                    event.target.value
-                  )
-                }
+                onChange={(event) => handleWeekChange(event.target.value)}
               />
             </div>
 
             {/* TEAM 1 */}
             <div className="space-y-2">
-              <Label htmlFor="team1">
-                Team 1
-              </Label>
+              <Label htmlFor="team1">Team 1</Label>
 
               <Select
                 value={team1}
@@ -192,11 +166,11 @@ export function AddMatch({
                   if (usedTeams.includes(value)) {
                     return;
                   }
-            
+
                   if (value === team2) {
                     return;
                   }
-            
+
                   setTeam1(value);
                 }}
                 disabled={!week}
@@ -216,11 +190,7 @@ export function AddMatch({
                       <SelectItem
                         key={team.id}
                         value={teamId}
-                        className={
-                          isUsed || isTeam2
-                            ? 'opacity-50'
-                            : undefined
-                        }
+                        className={isUsed || isTeam2 ? 'opacity-50' : undefined}
                       >
                         {team.name}
                       </SelectItem>
@@ -232,9 +202,7 @@ export function AddMatch({
 
             {/* TEAM 2 */}
             <div className="space-y-2">
-              <Label htmlFor="team2">
-                Team 2
-              </Label>
+              <Label htmlFor="team2">Team 2</Label>
 
               <Select
                 value={team2}
@@ -266,11 +234,7 @@ export function AddMatch({
                       <SelectItem
                         key={team.id}
                         value={teamId}
-                        className={
-                          isUsed || isTeam1
-                            ? 'opacity-50'
-                            : undefined
-                        }
+                        className={isUsed || isTeam1 ? 'opacity-50' : undefined}
                       >
                         {team.name}
                       </SelectItem>
@@ -282,60 +246,40 @@ export function AddMatch({
 
             {/* LANE */}
             <div className="space-y-2">
-              <Label htmlFor="lane">
-                Lane
-              </Label>
+              <Label htmlFor="lane">Lane</Label>
 
               <Select
                 value={selectedLane}
-                onValueChange={
-                  setSelectedLane
-                }
-                disabled={
-                  !week ||
-                  !team1 ||
-                  !team2
-                }
+                onValueChange={setSelectedLane}
+                disabled={!week || !team1 || !team2}
               >
                 <SelectTrigger id="lane">
                   <SelectValue placeholder="Select lane" />
                 </SelectTrigger>
 
                 <SelectContent>
-                  {lanes.map(
-                    (lane) => (
-                      <SelectItem
-                        key={lane.id}
-                        value={lane.id.toString()}
-                        disabled={usedLanes.includes(
-                          lane.id.toString()
-                        )}
-                      >
-                        {lane.lane}
-                      </SelectItem>
-                    )
-                  )}
+                  {lanes.map((lane) => (
+                    <SelectItem
+                      key={lane.id}
+                      value={lane.id.toString()}
+                      disabled={usedLanes.includes(lane.id.toString())}
+                    >
+                      {lane.lane}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-
           </div>
 
           {/* ACTIONS */}
           <div className="flex gap-2">
-
             <Button
               type="button"
               variant="outline"
               onClick={resetForm}
               disabled={
-                creatingMatch ||
-                (
-                  !week &&
-                  !team1 &&
-                  !team2 &&
-                  !selectedLane
-                )
+                creatingMatch || (!week && !team1 && !team2 && !selectedLane)
               }
             >
               Reset
@@ -344,18 +288,11 @@ export function AddMatch({
             <Button
               type="submit"
               disabled={
-                creatingMatch ||
-                !week ||
-                !team1 ||
-                !team2 ||
-                !selectedLane
+                creatingMatch || !week || !team1 || !team2 || !selectedLane
               }
             >
-              {creatingMatch
-                ? 'Adding...'
-                : 'Add Match'}
+              {creatingMatch ? 'Adding...' : 'Add Match'}
             </Button>
-
           </div>
         </form>
       </CardContent>

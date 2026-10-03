@@ -1,9 +1,6 @@
 import { Row } from './Row';
 import { useMemo } from 'react';
-import type {
-  MatchData,
-  MatchesByBlock,
-} from '../../utils/interfaces';
+import type { MatchData, MatchesByBlock } from '../../utils/interfaces';
 import {
   Card,
   CardContent,
@@ -56,13 +53,7 @@ interface ScheduleProps {
   setSelectedMatchIds: (
     value:
       | Array<string | number>
-      | ((
-          current: Array<
-            string | number
-          >
-        ) => Array<
-          string | number
-        >)
+      | ((current: Array<string | number>) => Array<string | number>),
   ) => void;
   deletingMatch: boolean;
   setDeletingMatch: (value: boolean) => void;
@@ -87,26 +78,19 @@ export function Schedule({
   bulkDeleteDialogOpen,
   setBulkDeleteDialogOpen,
 }: ScheduleProps) {
+  const getFilteredMatches = (blockId: string | number): MatchData[] => {
+    const blockKey = `block${blockId}`;
 
-  const getFilteredMatches = (
-    blockId: string | number
-  ): MatchData[] => {
-    const blockKey =
-      `block${blockId}`;
-
-    const blockMatches =
-      matches?.[blockKey] || [];
+    const blockMatches = matches?.[blockKey] || [];
 
     return blockMatches
       .filter((match) => {
-
         /*
          * WEEK
          */
         if (
           filterWeek !== 'all' &&
-          match.week_number !==
-            parseInt(filterWeek)
+          match.week_number !== parseInt(filterWeek)
         ) {
           return false;
         }
@@ -116,10 +100,8 @@ export function Schedule({
          */
         if (
           filterTeam !== 'all' &&
-          match.team1?.id?.toString() !==
-            filterTeam &&
-          match.team2?.id?.toString() !==
-            filterTeam
+          match.team1?.id?.toString() !== filterTeam &&
+          match.team2?.id?.toString() !== filterTeam
         ) {
           return false;
         }
@@ -127,218 +109,120 @@ export function Schedule({
         /*
          * STATUS
          */
-        const isCompleted =
-          match.status ===
-          'completed';
+        const isCompleted = match.status === 'completed';
 
-        if (
-          filterStatus ===
-            'completed' &&
-          !isCompleted
-        ) {
+        if (filterStatus === 'completed' && !isCompleted) {
           return false;
         }
 
-        if (
-          filterStatus ===
-            'pending' &&
-          isCompleted
-        ) {
+        if (filterStatus === 'pending' && isCompleted) {
           return false;
         }
 
         return true;
       })
-      .sort(
-        (a, b) =>
-          a.week_number -
-          b.week_number
-      );
+      .sort((a, b) => a.week_number - b.week_number);
   };
 
-  const toggleMatchSelection = (
-    matchId: string | number
-  ) => {
-    setSelectedMatchIds(
-      (current) => {
-        const id =
-          String(matchId);
+  const toggleMatchSelection = (matchId: string | number) => {
+    setSelectedMatchIds((current) => {
+      const id = String(matchId);
 
-        const alreadySelected =
-          current.some(
-            (selectedId) =>
-              String(selectedId) ===
-              id
-          );
+      const alreadySelected = current.some(
+        (selectedId) => String(selectedId) === id,
+      );
 
-        if (alreadySelected) {
-          return current.filter(
-            (selectedId) =>
-              String(selectedId) !==
-              id
-          );
-        }
-
-        return [
-          ...current,
-          matchId,
-        ];
+      if (alreadySelected) {
+        return current.filter((selectedId) => String(selectedId) !== id);
       }
-    );
+
+      return [...current, matchId];
+    });
   };
 
   const toggleSelectAllMatches = (
     visibleMatches: MatchData[],
-    checked: boolean
+    checked: boolean,
   ) => {
     if (!checked) {
-      setSelectedMatchIds(
-        (current) => {
-          const visibleIds =
-            new Set(
-              visibleMatches.map(
-                (match) =>
-                  String(
-                    match.match_id
-                  )
-              )
-            );
+      setSelectedMatchIds((current) => {
+        const visibleIds = new Set(
+          visibleMatches.map((match) => String(match.match_id)),
+        );
 
-          return current.filter(
-            (id) =>
-              !visibleIds.has(
-                String(id)
-              )
-          );
-        }
-      );
+        return current.filter((id) => !visibleIds.has(String(id)));
+      });
 
       return;
     }
 
-    setSelectedMatchIds(
-      (current) => {
-        const merged = [
-          ...current,
-          ...visibleMatches.map(
-            (match) =>
-              match.match_id
-          ),
-        ];
+    setSelectedMatchIds((current) => {
+      const merged = [
+        ...current,
+        ...visibleMatches.map((match) => match.match_id),
+      ];
 
-        return Array.from(
-          new Map(
-            merged.map(
-              (id) => [
-                String(id),
-                id,
-              ]
-            )
-          ).values()
-        );
-      }
-    );
+      return Array.from(new Map(merged.map((id) => [String(id), id])).values());
+    });
   };
 
-  const confirmBulkDelete =
-    async () => {
-      if (
-        selectedMatchIds.length ===
-        0
-      ) {
-        return;
-      }
+  const confirmBulkDelete = async () => {
+    if (selectedMatchIds.length === 0) {
+      return;
+    }
 
-      await handleBulkDeleteMatches(
-        deletingMatch,
-        setDeletingMatch,
-        selectedMatchIds,
-        async () => {
-          setSelectedMatchIds([]);
+    await handleBulkDeleteMatches(
+      deletingMatch,
+      setDeletingMatch,
+      selectedMatchIds,
+      async () => {
+        setSelectedMatchIds([]);
 
-          setBulkDeleteDialogOpen(
-            false
-          );
+        setBulkDeleteDialogOpen(false);
 
-          await retryTimetable();
-        }
-      );
-    };
+        await retryTimetable();
+      },
+    );
+  };
 
   return (
     <>
       <Tabs
         value={`block${blockNumber}`}
         onValueChange={(value) =>
-          setBlockNumber(
-            parseInt(
-              value.replace(
-                'block',
-                ''
-              )
-            )
-          )
+          setBlockNumber(parseInt(value.replace('block', '')))
         }
       >
         {/* BLOCK TABS */}
         <TabsList>
-          {blocksData.map(
-            (block) => (
-              <TabsTrigger
-                key={block.id}
-                value={`block${block.id}`}
-              >
-                Block {block.number}
-              </TabsTrigger>
-            )
-          )}
+          {blocksData.map((block) => (
+            <TabsTrigger key={block.id} value={`block${block.id}`}>
+              Block {block.number}
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         {/* EACH BLOCK */}
-        {blocksData.map(
-          (block) => (
-            <TabsContent
-              key={block.id}
-              value={`block${block.id}`}
-              className="space-y-4"
-            >
-              <BlockSchedule
-                block={block}
-                filteredMatches={
-                  getFilteredMatches(
-                    block.id
-                  )
-                }
-                totalMatches={
-                  matches?.[
-                    `block${block.id}`
-                  ]?.length ?? 0
-                }
-                selectedMatchIds={
-                  selectedMatchIds
-                }
-                deletingMatch={
-                  deletingMatch
-                }
-                toggleMatchSelection={
-                  toggleMatchSelection
-                }
-                toggleSelectAllMatches={
-                  toggleSelectAllMatches
-                }
-                setDeletingMatch={
-                  setDeletingMatch
-                }
-                retryTimetable={
-                  retryTimetable
-                }
-                setBulkDeleteDialogOpen={
-                  setBulkDeleteDialogOpen
-                }
-              />
-            </TabsContent>
-          )
-        )}
+        {blocksData.map((block) => (
+          <TabsContent
+            key={block.id}
+            value={`block${block.id}`}
+            className="space-y-4"
+          >
+            <BlockSchedule
+              block={block}
+              filteredMatches={getFilteredMatches(block.id)}
+              totalMatches={matches?.[`block${block.id}`]?.length ?? 0}
+              selectedMatchIds={selectedMatchIds}
+              deletingMatch={deletingMatch}
+              toggleMatchSelection={toggleMatchSelection}
+              toggleSelectAllMatches={toggleSelectAllMatches}
+              setDeletingMatch={setDeletingMatch}
+              retryTimetable={retryTimetable}
+              setBulkDeleteDialogOpen={setBulkDeleteDialogOpen}
+            />
+          </TabsContent>
+        ))}
       </Tabs>
 
       {/* BULK DELETE DIALOG */}
@@ -346,46 +230,31 @@ export function Schedule({
         open={bulkDeleteDialogOpen}
         onOpenChange={(open) => {
           if (!deletingMatch) {
-            setBulkDeleteDialogOpen(
-              open
-            );
+            setBulkDeleteDialogOpen(open);
           }
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              Delete selected matches?
-            </AlertDialogTitle>
+            <AlertDialogTitle>Delete selected matches?</AlertDialogTitle>
 
             <AlertDialogDescription>
               This will permanently delete{' '}
-              <strong>
-                {selectedMatchIds.length}
-              </strong>{' '}
-              selected match
-              {selectedMatchIds.length ===
-              1
-                ? ''
-                : 'es'}{' '}
-              from the schedule.
+              <strong>{selectedMatchIds.length}</strong> selected match
+              {selectedMatchIds.length === 1 ? '' : 'es'} from the schedule.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
           <AlertDialogFooter>
-            <AlertDialogCancel
-              disabled={deletingMatch}
-            >
+            <AlertDialogCancel disabled={deletingMatch}>
               Cancel
             </AlertDialogCancel>
 
             <AlertDialogAction
               variant="destructive"
               disabled={deletingMatch}
-              onClick={async (
-                event
-              ) => {
+              onClick={async (event) => {
                 event.preventDefault();
 
                 await confirmBulkDelete();
@@ -393,13 +262,8 @@ export function Schedule({
             >
               {deletingMatch
                 ? 'Deleting...'
-                : `Delete ${
-                    selectedMatchIds.length
-                  } Match${
-                    selectedMatchIds.length ===
-                    1
-                      ? ''
-                      : 'es'
+                : `Delete ${selectedMatchIds.length} Match${
+                    selectedMatchIds.length === 1 ? '' : 'es'
                   }`}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -422,30 +286,19 @@ interface BlockScheduleProps {
 
   totalMatches: number;
 
-  selectedMatchIds: Array<
-    string | number
-  >;
+  selectedMatchIds: Array<string | number>;
 
   deletingMatch: boolean;
 
-  toggleMatchSelection: (
-    matchId: string | number
-  ) => void;
+  toggleMatchSelection: (matchId: string | number) => void;
 
-  toggleSelectAllMatches: (
-    matches: MatchData[],
-    checked: boolean
-  ) => void;
+  toggleSelectAllMatches: (matches: MatchData[], checked: boolean) => void;
 
-  setDeletingMatch: (
-    value: boolean
-  ) => void;
+  setDeletingMatch: (value: boolean) => void;
 
   retryTimetable: () => Promise<void>;
 
-  setBulkDeleteDialogOpen: (
-    value: boolean
-  ) => void;
+  setBulkDeleteDialogOpen: (value: boolean) => void;
 }
 
 function BlockSchedule({
@@ -467,60 +320,39 @@ function BlockSchedule({
 }: BlockScheduleProps) {
   const allVisibleSelected =
     filteredMatches.length > 0 &&
-    filteredMatches.every(
-      (match) =>
-        selectedMatchIds.some(
-          (id) =>
-            String(id) ===
-            String(
-              match.match_id
-            )
-        )
+    filteredMatches.every((match) =>
+      selectedMatchIds.some((id) => String(id) === String(match.match_id)),
     );
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>
-          Block {block.number} Schedule
-        </CardTitle>
+        <CardTitle>Block {block.number} Schedule</CardTitle>
 
-        <CardDescription>
-          All weeks for this block
-        </CardDescription>
+        <CardDescription>All weeks for this block</CardDescription>
 
         {/* BULK ACTIONS */}
-        {selectedMatchIds.length >
-          0 && (
+        {selectedMatchIds.length > 0 && (
           <div className="flex items-center justify-end gap-2 mb-4">
-
             <Badge variant="secondary">
-              {selectedMatchIds.length}{' '}
-              selected
+              {selectedMatchIds.length} selected
             </Badge>
 
             <Button
               variant="destructive"
               size="sm"
               disabled={deletingMatch}
-              onClick={() =>
-                setBulkDeleteDialogOpen(
-                  true
-                )
-              }
+              onClick={() => setBulkDeleteDialogOpen(true)}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-
               Delete Selected
             </Button>
-
           </div>
         )}
       </CardHeader>
 
       <CardContent>
-        {filteredMatches.length ===
-        0 ? (
+        {filteredMatches.length === 0 ? (
           <p className="text-center text-muted-foreground py-8">
             {totalMatches > 0
               ? 'No matches found for current filters'
@@ -530,83 +362,50 @@ function BlockSchedule({
           <Table>
             <TableHeader>
               <TableRow>
-
                 {/* SELECT ALL */}
                 <TableHead className="w-10">
                   <input
                     type="checkbox"
-                    checked={
-                      allVisibleSelected
-                    }
+                    checked={allVisibleSelected}
                     onChange={(event) =>
                       toggleSelectAllMatches(
                         filteredMatches,
-                        event.target
-                          .checked
+                        event.target.checked,
                       )
                     }
-                    disabled={
-                      deletingMatch
-                    }
+                    disabled={deletingMatch}
                     aria-label="Select all matches"
                   />
                 </TableHead>
 
-                <TableHead>
-                  Week
-                </TableHead>
+                <TableHead>Week</TableHead>
 
-                <TableHead>
-                  Lane
-                </TableHead>
+                <TableHead>Lane</TableHead>
 
-                <TableHead>
-                  Team 1
-                </TableHead>
+                <TableHead>Team 1</TableHead>
 
-                <TableHead>
-                  Team 2
-                </TableHead>
+                <TableHead>Team 2</TableHead>
 
-                <TableHead>
-                  Status
-                </TableHead>
+                <TableHead>Status</TableHead>
 
-                <TableHead>
-                  Action
-                </TableHead>
-
+                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
 
             <TableBody>
-              {filteredMatches.map(
-                (match) => (
-                  <Row
-                    key={match.match_id}
-                    match={match}
-                    selected={selectedMatchIds.some(
-                      (id) =>
-                        String(id) ===
-                        String(
-                          match.match_id
-                        )
-                    )}
-                    onToggleSelect={
-                      toggleMatchSelection
-                    }
-                    deletingMatch={
-                      deletingMatch
-                    }
-                    setDeletingMatch={
-                      setDeletingMatch
-                    }
-                    retryTimetable={
-                      retryTimetable
-                    }
-                  />
-                )
-              )}
+              {filteredMatches.map((match) => (
+                <Row
+                  key={match.match_id}
+                  match={match}
+                  selected={selectedMatchIds.some(
+                    (id) => String(id) === String(match.match_id),
+                  )}
+                  onToggleSelect={toggleMatchSelection}
+                  deletingMatch={deletingMatch}
+                  setDeletingMatch={setDeletingMatch}
+                  retryTimetable={retryTimetable}
+                />
+              ))}
             </TableBody>
           </Table>
         )}

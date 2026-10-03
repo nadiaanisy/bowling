@@ -47,7 +47,6 @@ export function Filters({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-
           <div>
             <CardTitle className="flex items-center gap-2">
               <Filter className="h-5 w-5" />
@@ -61,134 +60,81 @@ export function Filters({
 
           {activeFiltersCount > 0 && (
             <div className="flex items-center gap-2">
-
               <Badge variant="secondary">
                 {activeFiltersCount} filter
-                {activeFiltersCount > 1
-                  ? 's'
-                  : ''}{' '}
-                active
+                {activeFiltersCount > 1 ? 's' : ''} active
               </Badge>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetFilters}
-              >
+              <Button variant="outline" size="sm" onClick={resetFilters}>
                 Clear Filters
               </Button>
-
             </div>
           )}
-
         </div>
       </CardHeader>
 
       <CardContent>
         <div className="grid gap-4 md:grid-cols-3">
-
           {/* WEEK */}
           <div className="space-y-2">
-            <Label htmlFor="filterWeek">
-              Week
-            </Label>
+            <Label htmlFor="filterWeek">Week</Label>
 
-            <Select
-              value={filterWeek}
-              onValueChange={
-                setFilterWeek
-              }
-            >
+            <Select value={filterWeek} onValueChange={setFilterWeek}>
               <SelectTrigger id="filterWeek">
                 <SelectValue />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="all">
-                  All Weeks
-                </SelectItem>
+                <SelectItem value="all">All Weeks</SelectItem>
 
-                {allWeeks.map(
-                  (weekNumber) => (
-                    <SelectItem
-                      key={weekNumber}
-                      value={weekNumber.toString()}
-                    >
-                      Week {weekNumber}
-                    </SelectItem>
-                  )
-                )}
+                {allWeeks.map((weekNumber) => (
+                  <SelectItem key={weekNumber} value={weekNumber.toString()}>
+                    Week {weekNumber}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           {/* TEAM */}
           <div className="space-y-2">
-            <Label htmlFor="filterTeam">
-              Team
-            </Label>
+            <Label htmlFor="filterTeam">Team</Label>
 
-            <Select
-              value={filterTeam}
-              onValueChange={
-                setFilterTeam
-              }
-            >
+            <Select value={filterTeam} onValueChange={setFilterTeam}>
               <SelectTrigger id="filterTeam">
                 <SelectValue />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="all">
-                  All Teams
-                </SelectItem>
+                <SelectItem value="all">All Teams</SelectItem>
 
-                {timetableTeams.map(
-                  (team) => (
-                    <SelectItem
-                      key={team.id}
-                      value={team.id.toString()}
-                    >
-                      {team.name}
-                    </SelectItem>
-                  )
-                )}
+                {timetableTeams.map((team) => (
+                  <SelectItem key={team.id} value={team.id.toString()}>
+                    {team.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           {/* STATUS */}
           <div className="space-y-2">
-            <Label htmlFor="filterStatus">
-              Status
-            </Label>
+            <Label htmlFor="filterStatus">Status</Label>
 
-            <Select
-              value={filterStatus}
-              onValueChange={
-                setFilterStatus
-              }
-            >
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger id="filterStatus">
                 <SelectValue />
               </SelectTrigger>
 
               <SelectContent>
-                <SelectItem value="all">
-                  All Statuses
-                </SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
 
-                <SelectItem value="completed">
-                  Completed
-                </SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
 
-                <SelectItem value="pending">
-                  Pending
-                </SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
         </div>
       </CardContent>
     </Card>

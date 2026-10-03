@@ -1,7 +1,4 @@
-import {
-  TableCell,
-  TableRow,
-} from '../../components/table';
+import { TableCell, TableRow } from '../../components/table';
 import { useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import {
@@ -36,14 +33,9 @@ export function Row({
   setDeletingMatch,
   retryTimetable,
 }: RowProps) {
-  const [
-    deleteDialogOpen,
-    setDeleteDialogOpen,
-  ] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  const handleDelete = async (
-    event: React.MouseEvent
-  ) => {
+  const handleDelete = async (event: React.MouseEvent) => {
     event.preventDefault();
 
     await handleDeleteMatch(
@@ -53,59 +45,41 @@ export function Row({
       async () => {
         setDeleteDialogOpen(false);
         await retryTimetable();
-      }
+      },
     );
   };
 
   return (
-    <TableRow
-      key={match.match_id}
-    >
+    <TableRow key={match.match_id}>
       {/* SELECT */}
       <TableCell className="w-10">
         <input
           type="checkbox"
           checked={selected}
-          onChange={() =>
-            onToggleSelect(
-              match.match_id
-            )
-          }
+          onChange={() => onToggleSelect(match.match_id)}
           disabled={deletingMatch}
           aria-label={`Select match ${match.match_id}`}
         />
       </TableCell>
 
       {/* WEEK */}
-      <TableCell>
-        Week {match.week_number}
-      </TableCell>
+      <TableCell>Week {match.week_number}</TableCell>
 
       {/* LANE */}
-      <TableCell>
-        {match.lane}
-      </TableCell>
+      <TableCell>{match.lane}</TableCell>
 
       {/* TEAM 1 */}
-      <TableCell>
-        {match.team1.name}
-      </TableCell>
+      <TableCell>{match.team1.name}</TableCell>
 
       {/* TEAM 2 */}
-      <TableCell>
-        {match.team2.name}
-      </TableCell>
+      <TableCell>{match.team2.name}</TableCell>
 
       {/* STATUS */}
       <TableCell>
         {match.status === 'completed' ? (
-          <span className="text-green-600">
-            Completed
-          </span>
+          <span className="text-green-600">Completed</span>
         ) : (
-          <span className="text-muted-foreground">
-            Pending
-          </span>
+          <span className="text-muted-foreground">Pending</span>
         )}
       </TableCell>
 
@@ -115,9 +89,7 @@ export function Row({
           open={deleteDialogOpen}
           onOpenChange={(open) => {
             if (!deletingMatch) {
-              setDeleteDialogOpen(
-                open
-              );
+              setDeleteDialogOpen(open);
             }
           }}
         >
@@ -126,11 +98,7 @@ export function Row({
               variant="ghost"
               size="icon"
               disabled={deletingMatch}
-              onClick={() =>
-                setDeleteDialogOpen(
-                  true
-                )
-              }
+              onClick={() => setDeleteDialogOpen(true)}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -138,21 +106,16 @@ export function Row({
 
           <AlertDialogContent>
             <AlertDialogHeader>
-              <AlertDialogTitle>
-                Are you absolutely sure?
-              </AlertDialogTitle>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
 
               <AlertDialogDescription>
-                This action cannot be undone.
-                This will permanently delete
-                the match from the schedule.
+                This action cannot be undone. This will permanently delete the
+                match from the schedule.
               </AlertDialogDescription>
             </AlertDialogHeader>
 
             <AlertDialogFooter>
-              <AlertDialogCancel
-                disabled={deletingMatch}
-              >
+              <AlertDialogCancel disabled={deletingMatch}>
                 Cancel
               </AlertDialogCancel>
 
@@ -161,9 +124,7 @@ export function Row({
                 disabled={deletingMatch}
                 onClick={handleDelete}
               >
-                {deletingMatch
-                  ? 'Deleting...'
-                  : 'Delete'}
+                {deletingMatch ? 'Deleting...' : 'Delete'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -1,19 +1,13 @@
-import {
-  useEffect,
-  useMemo,
-} from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   getAllMatchesGroupedByMatchAndBlock,
   getBlocksByLeague,
   getTeamsByLeague,
 } from '../utils/api/get';
-import {
-  Card,
-  CardContent,
-} from '../components/card';
+import { Card, CardContent } from '../components/card';
 import { Button } from '../components/button';
-import { useCustomHook,} from '../utils/hooks';
-import { Skeleton,} from '../components/skeleton';
+import { useCustomHook } from '../utils/hooks';
+import { Skeleton } from '../components/skeleton';
 import { Filters } from '../sub-components/Timetable/Filters';
 import { AddMatch } from '../sub-components/Timetable/AddMatch';
 import { Schedule } from '../sub-components/Timetable/Schedule';
@@ -75,16 +69,10 @@ export default function Timetable() {
       setTimetableLoadError(null);
 
       try {
-        const [
-          blocks,
-          allTeams,
-          matchesData,
-        ] = await Promise.all([
+        const [blocks, allTeams, matchesData] = await Promise.all([
           getBlocksByLeague(selectedLeague),
           getTeamsByLeague(selectedLeague),
-          getAllMatchesGroupedByMatchAndBlock(
-            selectedLeague ?? ''
-          ),
+          getAllMatchesGroupedByMatchAndBlock(selectedLeague ?? ''),
         ]);
 
         if (!isCurrent) return;
@@ -92,20 +80,13 @@ export default function Timetable() {
         setBlocksData(blocks);
         setTimetableTeams(allTeams);
 
-        const selectedLeagueData =
-          listOfLeaguesByUser.find(
-            (league) =>
-              String(league.id) ===
-              String(selectedLeague)
-          );
-
-        const startingLane = Number(
-          selectedLeagueData?.starting_lane
+        const selectedLeagueData = listOfLeaguesByUser.find(
+          (league) => String(league.id) === String(selectedLeague),
         );
 
-        const totalLanes = Number(
-          selectedLeagueData?.total_lanes
-        );
+        const startingLane = Number(selectedLeagueData?.starting_lane);
+
+        const totalLanes = Number(selectedLeagueData?.total_lanes);
 
         const generatedLanes =
           Number.isInteger(startingLane) &&
@@ -114,20 +95,17 @@ export default function Timetable() {
           totalLanes >= startingLane
             ? Array.from(
                 {
-                  length: Math.floor(
-                    (totalLanes - startingLane + 1) / 2
-                  ),
+                  length: Math.floor((totalLanes - startingLane + 1) / 2),
                 },
                 (_, index) => {
-                  const lane1 =
-                    startingLane + index * 2;
+                  const lane1 = startingLane + index * 2;
                   const lane2 = lane1 + 1;
 
                   return {
                     id: `${lane1}-${lane2}`,
                     lane: `Lane ${lane1} - Lane ${lane2}`,
                   };
-                }
+                },
               )
             : [];
 
@@ -138,7 +116,7 @@ export default function Timetable() {
           setTimetableLoadError(
             err instanceof Error
               ? err.message
-              : 'Unable to load the timetable.'
+              : 'Unable to load the timetable.',
           );
         }
       } finally {
@@ -168,20 +146,10 @@ export default function Timetable() {
   useEffect(() => {
     if (blocksData.length === 0) return;
 
-    if (
-      !blocksData.some(
-        (block) => block.id === blockNumber
-      )
-    ) {
-      setBlockNumber(
-        Number(blocksData[0].id)
-      );
+    if (!blocksData.some((block) => block.id === blockNumber)) {
+      setBlockNumber(Number(blocksData[0].id));
     }
-  }, [
-    blocksData,
-    blockNumber,
-    setBlockNumber,
-  ]);
+  }, [blocksData, blockNumber, setBlockNumber]);
 
   useEffect(() => {
     if (!matches || !blockNumber || !week) {
@@ -192,63 +160,37 @@ export default function Timetable() {
 
     const blockKey = `block${blockNumber}`;
 
-    const blockMatches =
-      matches[blockKey] || [];
+    const blockMatches = matches[blockKey] || [];
 
     const filtered = blockMatches.filter(
+      (match) => match.week_number === parseInt(week),
+    );
+
+    const usedLanesForWeek = filtered.map((match) => match.lane);
+
+    const usedTeamsForWeek = filtered.flatMap(
       (match) =>
-        match.week_number ===
-        parseInt(week)
+        [match.team1?.id?.toString(), match.team2?.id?.toString()].filter(
+          Boolean,
+        ) as string[],
     );
 
-    const usedLanesForWeek =
-      filtered.map(
-        (match) => match.lane
-      );
+    setUsedLanes(usedLanesForWeek);
 
-    const usedTeamsForWeek =
-      filtered.flatMap((match) =>
-        [
-          match.team1?.id?.toString(),
-          match.team2?.id?.toString(),
-        ].filter(Boolean) as string[]
-      );
-
-    setUsedLanes(
-      usedLanesForWeek
-    );
-
-    setUsedTeams(
-      usedTeamsForWeek
-    );
-  }, [
-    matches,
-    blockNumber,
-    week,
-    setUsedLanes,
-    setUsedTeams,
-  ]);
+    setUsedTeams(usedTeamsForWeek);
+  }, [matches, blockNumber, week, setUsedLanes, setUsedTeams]);
 
   useEffect(() => {
-    if (
-      team1 &&
-      usedTeams.includes(team1)
-    ) {
-      setTeam1("");
+    if (team1 && usedTeams.includes(team1)) {
+      setTeam1('');
     }
 
-    if (
-      team2 &&
-      usedTeams.includes(team2)
-    ) {
-      setTeam2("");
+    if (team2 && usedTeams.includes(team2)) {
+      setTeam2('');
     }
 
-    if (
-      selectedLane &&
-      usedLanes.includes(selectedLane)
-    ) {
-      setSelectedLane("");
+    if (selectedLane && usedLanes.includes(selectedLane)) {
+      setSelectedLane('');
     }
   }, [
     usedTeams,
@@ -264,23 +206,15 @@ export default function Timetable() {
   const allWeeks = useMemo(() => {
     const weeks = new Set<number>();
 
-    Object.values(matches).forEach(
-      (blockMatches) => {
-        blockMatches?.forEach(
-          (match) => {
-            if (match.week_number) {
-              weeks.add(
-                match.week_number
-              );
-            }
-          }
-        );
-      }
-    );
+    Object.values(matches).forEach((blockMatches) => {
+      blockMatches?.forEach((match) => {
+        if (match.week_number) {
+          weeks.add(match.week_number);
+        }
+      });
+    });
 
-    return Array.from(weeks).sort(
-      (a, b) => a - b
-    );
+    return Array.from(weeks).sort((a, b) => a - b);
   }, [matches]);
 
   const activeFiltersCount = useMemo(() => {
@@ -299,11 +233,7 @@ export default function Timetable() {
     }
 
     return count;
-  }, [
-    filterWeek,
-    filterTeam,
-    filterStatus,
-  ]);
+  }, [filterWeek, filterTeam, filterStatus]);
 
   const resetFilters = () => {
     setFilterWeek('all');
@@ -313,12 +243,9 @@ export default function Timetable() {
 
   return (
     <div className="p-4">
-
       {/* PAGE HEADER */}
       <div>
-        <h1>
-          Timetable / Schedule
-        </h1>
+        <h1>Timetable / Schedule</h1>
 
         <p className="text-muted-foreground">
           Manage match schedules for each block
@@ -329,10 +256,7 @@ export default function Timetable() {
       {timetableLoadError && (
         <Card className="mt-5 border-destructive/40">
           <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
-            <p
-              className="text-sm text-destructive"
-              role="alert"
-            >
+            <p className="text-sm text-destructive" role="alert">
               {timetableLoadError}
             </p>
 
@@ -341,9 +265,7 @@ export default function Timetable() {
               onClick={retryTimetable}
               disabled={isLoadingTimetable}
             >
-              {isLoadingTimetable
-                ? 'Retrying...'
-                : 'Retry'}
+              {isLoadingTimetable ? 'Retrying...' : 'Retry'}
             </Button>
           </CardContent>
         </Card>
@@ -387,9 +309,7 @@ export default function Timetable() {
           setFilterTeam={setFilterTeam}
           filterStatus={filterStatus}
           setFilterStatus={setFilterStatus}
-          activeFiltersCount={
-            activeFiltersCount
-          }
+          activeFiltersCount={activeFiltersCount}
           resetFilters={resetFilters}
         />
       </div>
@@ -417,22 +337,14 @@ export default function Timetable() {
             filterTeam={filterTeam}
             filterStatus={filterStatus}
             selectedMatchIds={selectedMatchIds}
-            setSelectedMatchIds={
-              setSelectedMatchIds
-            }
+            setSelectedMatchIds={setSelectedMatchIds}
             deletingMatch={deletingMatch}
-            setDeletingMatch={
-              setDeletingMatch
-            }
+            setDeletingMatch={setDeletingMatch}
             retryTimetable={async () => {
               retryTimetable();
             }}
-            bulkDeleteDialogOpen={
-              bulkDeleteDialogOpen
-            }
-            setBulkDeleteDialogOpen={
-              setBulkDeleteDialogOpen
-            }
+            bulkDeleteDialogOpen={bulkDeleteDialogOpen}
+            setBulkDeleteDialogOpen={setBulkDeleteDialogOpen}
           />
         </div>
       )}
