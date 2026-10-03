@@ -1,16 +1,11 @@
-import {
-  ArrowRight,
-  Trophy
-} from 'lucide-react';
+import { ArrowRight, Trophy } from 'lucide-react';
 import { Button } from '../../components/button';
 
 interface HeaderProps {
   onGetStarted: () => void;
 }
 
-export default function Header({
-  onGetStarted,
-}: HeaderProps) {
+export default function Header({ onGetStarted }: HeaderProps) {
   return (
     <header className="relative z-10 border-b border-border/50 glass">
       <div className="container mx-auto px-4 py-4">
@@ -31,11 +26,7 @@ export default function Header({
             </div>
           </div>
 
-          <Button
-            onClick={onGetStarted}
-            variant="outline"
-            className="gap-2"
-          >
+          <Button onClick={onGetStarted} variant="outline" className="gap-2">
             Get Started
             <ArrowRight className="h-4 w-4" />
           </Button>

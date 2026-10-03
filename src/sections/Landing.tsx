@@ -12,12 +12,8 @@ interface LandingProps {
 }
 
 export default function Landing({ onGetStarted }: LandingProps) {
-  const {
-    hoveredFeature,
-    setHoveredFeature,
-    showLearnMore,
-    setShowLearnMore,
-  } = useCustomHook();
+  const { hoveredFeature, setHoveredFeature, showLearnMore, setShowLearnMore } =
+    useCustomHook();
 
   if (showLearnMore) {
     return (

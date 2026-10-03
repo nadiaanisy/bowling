@@ -1,10 +1,4 @@
-import {
-  ArrowRight,
-  Award,
-  Sparkles,
-  TrendingUp,
-  Zap,
-} from 'lucide-react';
+import { ArrowRight, Award, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { stats } from '../../utils/constants';
 import { Badge } from '../../components/badge';
@@ -16,10 +10,7 @@ interface HeroProps {
   onLearnMore: () => void;
 }
 
-export default function Hero({
-  onGetStarted,
-  onLearnMore,
-}: HeroProps) {
+export default function Hero({ onGetStarted, onLearnMore }: HeroProps) {
   return (
     <section className="relative z-10 container mx-auto px-4 py-20">
       <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -37,15 +28,13 @@ export default function Hero({
           <div className="space-y-4">
             <h1 className="text-5xl md:text-6xl font-bold leading-tight">
               Master Your
-              <span className="block gradient-text">
-                Bowling League
-              </span>
+              <span className="block gradient-text">Bowling League</span>
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-lg">
-              The ultimate management system for bowling leagues. Track
-              players, analyze performance, and forecast matches with
-              intelligent AI recommendations.
+              The ultimate management system for bowling leagues. Track players,
+              analyze performance, and forecast matches with intelligent AI
+              recommendations.
             </p>
           </div>
 

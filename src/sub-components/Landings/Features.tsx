@@ -1,12 +1,5 @@
-import {
-  ArrowRight,
-  BookOpen,
-  Sparkles
-} from 'lucide-react';
-import {
-  Card,
-  CardContent
-} from '../../components/card';
+import { ArrowRight, BookOpen, Sparkles } from 'lucide-react';
+import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
@@ -38,15 +31,12 @@ export default function Features({
 
         <h2 className="text-4xl font-bold mb-4">
           Everything You Need to
-          <span className="gradient-text">
-            {' '}Dominate the Lanes
-          </span>
+          <span className="gradient-text"> Dominate the Lanes</span>
         </h2>
 
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          From amateur leagues to professional tournaments, our
-          comprehensive suite of tools helps you manage every aspect of
-          your bowling league.
+          From amateur leagues to professional tournaments, our comprehensive
+          suite of tools helps you manage every aspect of your bowling league.
         </p>
       </motion.div>
 
@@ -86,13 +76,9 @@ export default function Features({
                     )}
                   </div>
 
-                  <h3 className="text-xl font-bold">
-                    {feature.title}
-                  </h3>
+                  <h3 className="text-xl font-bold">{feature.title}</h3>
 
-                  <p className="text-muted-foreground">
-                    {feature.description}
-                  </p>
+                  <p className="text-muted-foreground">{feature.description}</p>
                 </CardContent>
               </Card>
             </motion.div>

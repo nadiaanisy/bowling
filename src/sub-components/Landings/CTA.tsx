@@ -1,12 +1,5 @@
-import {
-  ArrowRight,
-  Trophy,
-  Zap
-} from 'lucide-react';
-import {
-  Card,
-  CardContent
-} from '../../components/card';
+import { ArrowRight, Trophy, Zap } from 'lucide-react';
+import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { Button } from '../../components/button';
 
@@ -14,9 +7,7 @@ interface CTAProps {
   onGetStarted: () => void;
 }
 
-export default function CTA({
-  onGetStarted,
-}: CTAProps) {
+export default function CTA({ onGetStarted }: CTAProps) {
   return (
     <section className="relative z-10 container mx-auto px-4 py-20">
       <motion.div
@@ -38,9 +29,8 @@ export default function CTA({
               </h2>
 
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Join the revolution in bowling league management. Get
-                started in seconds and experience the future of league
-                organization.
+                Join the revolution in bowling league management. Get started in
+                seconds and experience the future of league organization.
               </p>
 
               <div className="flex flex-wrap gap-4 justify-center pt-4">

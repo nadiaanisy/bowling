@@ -1,9 +1,4 @@
-import {
-  ArrowRight,
-  Award,
-  CheckCircle2,
-  Zap
-} from 'lucide-react';
+import { ArrowRight, Award, CheckCircle2, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
@@ -22,9 +17,7 @@ const benefits = [
   'Easy score entry and validation',
 ];
 
-export default function WhyChooseUs({
-  onGetStarted,
-}: WhyChooseUsProps) {
+export default function WhyChooseUs({ onGetStarted }: WhyChooseUsProps) {
   return (
     <section className="relative z-10 container mx-auto px-4 py-20">
       <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -56,15 +49,13 @@ export default function WhyChooseUs({
 
           <h2 className="text-4xl font-bold">
             Built for Bowlers,
-            <span className="block gradient-text">
-              By Bowling Enthusiasts
-            </span>
+            <span className="block gradient-text">By Bowling Enthusiasts</span>
           </h2>
 
           <p className="text-lg text-muted-foreground">
-            We understand the unique challenges of managing a bowling
-            league. That's why we've created a system that's both powerful
-            and intuitive.
+            We understand the unique challenges of managing a bowling league.
+            That's why we've created a system that's both powerful and
+            intuitive.
           </p>
 
           <div className="space-y-4">
@@ -78,9 +69,7 @@ export default function WhyChooseUs({
                 className="flex items-center gap-3"
               >
                 <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                <span className="text-muted-foreground">
-                  {item}
-                </span>
+                <span className="text-muted-foreground">{item}</span>
               </motion.div>
             ))}
           </div>
