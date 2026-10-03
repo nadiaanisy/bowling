@@ -1,13 +1,6 @@
 import type React from 'react';
-import {
-  Maximize2,
-  Minimize2
-} from 'lucide-react';
-import {
-  Card,
-  CardContent,
-  CardHeader
-} from '../../components/card';
+import { Maximize2, Minimize2 } from 'lucide-react';
+import { Card, CardContent, CardHeader } from '../../components/card';
 import { Cards } from './Cards';
 import { Button } from '../../components/button';
 import { Skeleton } from '../../components/skeleton';
@@ -21,7 +14,7 @@ interface GridProps {
   retryTeams: () => void;
   expandedTeams: React.ComponentProps<typeof Cards>['expandedTeams'];
   setExpandedTeams: React.ComponentProps<typeof Cards>['setExpandedTeams'];
-  teamCardProps: Omit<React.ComponentProps<typeof Cards>,'team'>;
+  teamCardProps: Omit<React.ComponentProps<typeof Cards>, 'team'>;
   canExpandAll: boolean;
   canCollapseAll: boolean;
 }
@@ -36,16 +29,13 @@ export default function Grid({
   setExpandedTeams,
   teamCardProps,
   canExpandAll,
-  canCollapseAll
+  canCollapseAll,
 }: GridProps) {
   if (teamsLoadError) {
     return (
       <Card className="mx-auto w-full max-w-3xl border-destructive/40">
         <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
-          <p
-            className="text-sm text-destructive"
-            role="alert"
-          >
+          <p className="text-sm text-destructive" role="alert">
             {teamsLoadError}
           </p>
 
@@ -119,11 +109,7 @@ export default function Grid({
           className="gap-2"
           disabled={!canExpandAll}
           onClick={() =>
-            setAllTeamsExpanded(
-              filteredTeams,
-              true,
-              setExpandedTeams
-            )
+            setAllTeamsExpanded(filteredTeams, true, setExpandedTeams)
           }
         >
           <Maximize2 className="h-4 w-4" />
@@ -137,11 +123,7 @@ export default function Grid({
           className="gap-2"
           disabled={!canCollapseAll}
           onClick={() =>
-            setAllTeamsExpanded(
-              filteredTeams,
-              false,
-              setExpandedTeams
-            )
+            setAllTeamsExpanded(filteredTeams, false, setExpandedTeams)
           }
         >
           <Minimize2 className="h-4 w-4" />
@@ -155,10 +137,7 @@ export default function Grid({
             key={team.id}
             className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.667rem)] xl:w-[calc(25%-0.75rem)]"
           >
-            <Cards
-              {...teamCardProps}
-              team={team}
-            />
+            <Cards {...teamCardProps} team={team} />
           </div>
         ))}
       </div>

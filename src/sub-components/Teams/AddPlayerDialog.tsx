@@ -1,28 +1,25 @@
 import type { FormEvent } from 'react';
-import {
-  UserPlus,
-  Users
-} from 'lucide-react';
+import { UserPlus, Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from '../../components/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '../../components/select';
 import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger
+  TabsTrigger,
 } from '../../components/tabs';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
@@ -60,7 +57,7 @@ export function AddPlayerDialog({
   setMultiplePlayerNames,
   creatingPlayer,
   onSubmitSingle,
-  onSubmitMultiple
+  onSubmitMultiple,
 }: AddPlayerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,20 +67,32 @@ export function AddPlayerDialog({
       >
         <DialogHeader>
           <DialogTitle>Add Player(s) to {teamName}</DialogTitle>
-          <DialogDescription>Choose to add a single player or multiple players at once</DialogDescription>
+          <DialogDescription>
+            Choose to add a single player or multiple players at once
+          </DialogDescription>
         </DialogHeader>
 
         <div className="mb-4 space-y-2">
           <Label htmlFor="player-type">Player type</Label>
-          <Select value={playerType} onValueChange={(value) => setPlayerType(value as 'regular' | 'substitute')}>
-            <SelectTrigger id="player-type"><SelectValue /></SelectTrigger>
+          <Select
+            value={playerType}
+            onValueChange={(value) =>
+              setPlayerType(value as 'regular' | 'substitute')
+            }
+          >
+            <SelectTrigger id="player-type">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
               <SelectItem value="regular">Regular</SelectItem>
               <SelectItem value="substitute">Substitute</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <Tabs value={addMode} onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}>
+        <Tabs
+          value={addMode}
+          onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}
+        >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="single">
               <UserPlus className="h-4 w-4 mr-2" />
@@ -109,7 +118,10 @@ export function AddPlayerDialog({
                 </div>
               </div>
               <DialogFooter className="mt-4">
-                <Button type="submit" disabled={creatingPlayer || !newPlayerName.trim()}>
+                <Button
+                  type="submit"
+                  disabled={creatingPlayer || !newPlayerName.trim()}
+                >
                   {creatingPlayer ? 'Adding...' : 'Add Player'}
                 </Button>
               </DialogFooter>
@@ -120,7 +132,9 @@ export function AddPlayerDialog({
             <form onSubmit={onSubmitMultiple}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="multiplePlayerNames">Player Names (one per line)</Label>
+                  <Label htmlFor="multiplePlayerNames">
+                    Player Names (one per line)
+                  </Label>
                   <Textarea
                     id="multiplePlayerNames"
                     placeholder="John Doe&#10;Jane Smith&#10;Mike Johnson"
@@ -135,7 +149,10 @@ export function AddPlayerDialog({
                 </div>
               </div>
               <DialogFooter className="mt-4">
-                <Button type="submit" disabled={creatingPlayer || !multiplePlayerNames.trim()}>
+                <Button
+                  type="submit"
+                  disabled={creatingPlayer || !multiplePlayerNames.trim()}
+                >
                   {creatingPlayer ? 'Adding...' : 'Add Players'}
                 </Button>
               </DialogFooter>

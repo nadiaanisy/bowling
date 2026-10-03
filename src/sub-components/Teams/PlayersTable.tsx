@@ -1,8 +1,4 @@
-import type {
-  Dispatch,
-  ReactNode,
-  SetStateAction
-} from 'react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import {
   deleteSelectedPlayersForTeam,
   handleBulkTransferPlayers,
@@ -12,18 +8,18 @@ import {
   handleUpdatePlayer,
   hasPlayerChanges,
   selectAllPlayersForTeam,
-  togglePlayerSelection
+  togglePlayerSelection,
 } from '../../utils/functions/teams';
 import type {
   LeagueMember,
-  LeagueTeamWithMembers
+  LeagueTeamWithMembers,
 } from '../../utils/interfaces';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '../../components/select';
 import {
   Table,
@@ -31,7 +27,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from '../../components/table';
 import { Trash2 } from 'lucide-react';
 import { Button } from '../../components/button';
@@ -51,9 +47,13 @@ interface PlayersTableProps {
   updatingPlayer: boolean;
   setUpdatingPlayer: (updating: boolean) => void;
   selectedPlayers: Record<string, Array<string | number>>;
-  setSelectedPlayers: Dispatch<SetStateAction<Record<string, Array<string | number>>>>;
+  setSelectedPlayers: Dispatch<
+    SetStateAction<Record<string, Array<string | number>>>
+  >;
   setBulkDeleteMode: Dispatch<SetStateAction<Record<string, boolean>>>;
-  setPendingDeleteType: (type: 'team' | 'teams' | 'player' | 'players' | null) => void;
+  setPendingDeleteType: (
+    type: 'team' | 'teams' | 'player' | 'players' | null,
+  ) => void;
   setConfirmMessage: (message: ReactNode) => void;
   setConfirmAction: Dispatch<SetStateAction<() => void | Promise<void>>>;
   setConfirmOpen: (open: boolean) => void;
@@ -68,7 +68,9 @@ interface PlayersTableProps {
   editingPlayerNotes: string;
   setEditingPlayerNotes: (notes: string) => void;
   bulkPlayerTypeValue: Record<string, 'regular' | 'substitute'>;
-  setBulkPlayerTypeValue: Dispatch<SetStateAction<Record<string, 'regular' | 'substitute'>>>;
+  setBulkPlayerTypeValue: Dispatch<
+    SetStateAction<Record<string, 'regular' | 'substitute'>>
+  >;
   bulkTransferTeamId: Record<string, string>;
   setBulkTransferTeamId: Dispatch<SetStateAction<Record<string, string>>>;
   bulkUpdatingPlayers: boolean;
@@ -112,7 +114,7 @@ export function PlayersTable({
   setBulkTransferTeamId,
   bulkUpdatingPlayers,
   setBulkUpdatingPlayers,
-  exitBulkMode
+  exitBulkMode,
 }: PlayersTableProps) {
   return (
     <>
@@ -131,7 +133,10 @@ export function PlayersTable({
                   onChange={(event) => {
                     setSelectedPlayers((currentSelection) => ({
                       ...currentSelection,
-                      [String(team.id)]: selectAllPlayersForTeam(team, event.target.checked)
+                      [String(team.id)]: selectAllPlayersForTeam(
+                        team,
+                        event.target.checked,
+                      ),
                     }));
                   }}
                 />
@@ -161,8 +166,18 @@ export function PlayersTable({
                   <input
                     type="checkbox"
                     aria-label={`Select ${player.name}`}
-                    checked={selectedIds.some((id) => String(id) === String(player.id))}
-                    onChange={() => setSelectedPlayers(togglePlayerSelection(team.id, player.id, selectedPlayers))}
+                    checked={selectedIds.some(
+                      (id) => String(id) === String(player.id),
+                    )}
+                    onChange={() =>
+                      setSelectedPlayers(
+                        togglePlayerSelection(
+                          team.id,
+                          player.id,
+                          selectedPlayers,
+                        ),
+                      )
+                    }
                     disabled={deletingPlayer}
                   />
                 </TableCell>
@@ -177,14 +192,16 @@ export function PlayersTable({
                   onOpenChange={(open) => {
                     if (!open && !updatingPlayer) setEditingPlayerId(null);
                   }}
-                  onTriggerClick={() => handleOpenEditPlayerDialog(
-                    player,
-                    setEditingPlayerId,
-                    setEditingPlayerName,
-                    setEditingPlayerStatus,
-                    setEditingPlayerType,
-                    setEditingPlayerNotes
-                  )}
+                  onTriggerClick={() =>
+                    handleOpenEditPlayerDialog(
+                      player,
+                      setEditingPlayerId,
+                      setEditingPlayerName,
+                      setEditingPlayerStatus,
+                      setEditingPlayerType,
+                      setEditingPlayerNotes,
+                    )
+                  }
                   editingPlayerName={editingPlayerName}
                   setEditingPlayerName={setEditingPlayerName}
                   editingPlayerStatus={editingPlayerStatus}
@@ -199,7 +216,7 @@ export function PlayersTable({
                     editingPlayerName,
                     editingPlayerType,
                     editingPlayerStatus,
-                    editingPlayerNotes
+                    editingPlayerNotes,
                   )}
                   onCancel={() => setEditingPlayerId(null)}
                   onSubmit={(event) => {
@@ -221,7 +238,7 @@ export function PlayersTable({
                       player.status,
                       player.notes,
                       setTeams,
-                      () => setEditingPlayerId(null)
+                      () => setEditingPlayerId(null),
                     );
                   }}
                 />
@@ -246,11 +263,12 @@ export function PlayersTable({
                       () => {
                         setSelectedPlayers((current) => ({
                           ...current,
-                          [String(team.id)]: (current[String(team.id)] ?? [])
-                            .filter((id) => String(id) !== String(player.id))
+                          [String(team.id)]: (
+                            current[String(team.id)] ?? []
+                          ).filter((id) => String(id) !== String(player.id)),
                         }));
-                      }
-                    )
+                      },
+                    );
                   }}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -282,7 +300,7 @@ export function PlayersTable({
                   setConfirmAction,
                   setConfirmOpen,
                   setBulkDeleteMode,
-                  setSelectedPlayers
+                  setSelectedPlayers,
                 );
               }}
             >
@@ -294,13 +312,18 @@ export function PlayersTable({
             <>
               <Select
                 value={bulkPlayerTypeValue[String(team.id)] ?? 'regular'}
-                onValueChange={(value) => setBulkPlayerTypeValue((current) => ({
-                  ...current,
-                  [String(team.id)]: value as 'regular' | 'substitute'
-                }))}
+                onValueChange={(value) =>
+                  setBulkPlayerTypeValue((current) => ({
+                    ...current,
+                    [String(team.id)]: value as 'regular' | 'substitute',
+                  }))
+                }
                 disabled={bulkUpdatingPlayers}
               >
-                <SelectTrigger className="h-9 w-[140px]" aria-label="Set selected players' type">
+                <SelectTrigger
+                  className="h-9 w-[140px]"
+                  aria-label="Set selected players' type"
+                >
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -313,35 +336,51 @@ export function PlayersTable({
                 variant="outline"
                 size="sm"
                 disabled={bulkUpdatingPlayers}
-                onClick={() => void handleBulkUpdatePlayerType(
-                  bulkUpdatingPlayers,
-                  setBulkUpdatingPlayers,
-                  team,
-                  selectedPlayers,
-                  bulkPlayerTypeValue[String(team.id)] ?? 'regular',
-                  selectedLeague,
-                  setTeams,
-                  () => setSelectedPlayers((current) => ({ ...current, [String(team.id)]: [] }))
-                )}
+                onClick={() =>
+                  void handleBulkUpdatePlayerType(
+                    bulkUpdatingPlayers,
+                    setBulkUpdatingPlayers,
+                    team,
+                    selectedPlayers,
+                    bulkPlayerTypeValue[String(team.id)] ?? 'regular',
+                    selectedLeague,
+                    setTeams,
+                    () =>
+                      setSelectedPlayers((current) => ({
+                        ...current,
+                        [String(team.id)]: [],
+                      })),
+                  )
+                }
               >
                 Set type
               </Button>
               <Select
                 value={bulkTransferTeamId[String(team.id)] ?? ''}
-                onValueChange={(value) => setBulkTransferTeamId((current) => ({
-                  ...current,
-                  [String(team.id)]: value
-                }))}
+                onValueChange={(value) =>
+                  setBulkTransferTeamId((current) => ({
+                    ...current,
+                    [String(team.id)]: value,
+                  }))
+                }
                 disabled={bulkUpdatingPlayers}
               >
-                <SelectTrigger className="h-9 w-[160px]" aria-label="Transfer selected players to team">
+                <SelectTrigger
+                  className="h-9 w-[160px]"
+                  aria-label="Transfer selected players to team"
+                >
                   <SelectValue placeholder="Transfer to team" />
                 </SelectTrigger>
                 <SelectContent>
                   {teams
-                    .filter((candidate) => String(candidate.id) !== String(team.id))
+                    .filter(
+                      (candidate) => String(candidate.id) !== String(team.id),
+                    )
                     .map((candidate) => (
-                      <SelectItem key={candidate.id} value={String(candidate.id)}>
+                      <SelectItem
+                        key={candidate.id}
+                        value={String(candidate.id)}
+                      >
                         {candidate.name}
                       </SelectItem>
                     ))}
@@ -351,24 +390,33 @@ export function PlayersTable({
                 type="button"
                 variant="outline"
                 size="sm"
-                disabled={bulkUpdatingPlayers || !bulkTransferTeamId[String(team.id)]}
-                onClick={() => void handleBulkTransferPlayers(
-                  bulkUpdatingPlayers,
-                  setBulkUpdatingPlayers,
-                  team,
-                  selectedPlayers,
-                  bulkTransferTeamId[String(team.id)] ?? '',
-                  teams,
-                  selectedLeague,
-                  setTeams,
-                  exitBulkMode
-                )}
+                disabled={
+                  bulkUpdatingPlayers || !bulkTransferTeamId[String(team.id)]
+                }
+                onClick={() =>
+                  void handleBulkTransferPlayers(
+                    bulkUpdatingPlayers,
+                    setBulkUpdatingPlayers,
+                    team,
+                    selectedPlayers,
+                    bulkTransferTeamId[String(team.id)] ?? '',
+                    teams,
+                    selectedLeague,
+                    setTeams,
+                    exitBulkMode,
+                  )
+                }
               >
                 Transfer selected
               </Button>
             </>
           )}
-          <Button type="button" variant="outline" size="sm" onClick={exitBulkMode}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={exitBulkMode}
+          >
             Done
           </Button>
         </div>

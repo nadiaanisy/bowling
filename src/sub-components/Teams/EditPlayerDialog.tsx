@@ -5,14 +5,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger
+  DialogTrigger,
 } from '../../components/dialog';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from '../../components/select';
 import { Pencil } from 'lucide-react';
 import type { FormEvent } from 'react';
@@ -57,7 +57,7 @@ export function EditPlayerDialog({
   updatingPlayer,
   hasChanges,
   onSubmit,
-  onCancel
+  onCancel,
 }: EditPlayerDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -75,7 +75,9 @@ export function EditPlayerDialog({
       <DialogContent onPointerDownOutside={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Edit player</DialogTitle>
-          <DialogDescription>Update this player's name, status, or notes.</DialogDescription>
+          <DialogDescription>
+            Update this player's name, status, or notes.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -107,10 +109,14 @@ export function EditPlayerDialog({
             <Label htmlFor={`edit-player-type-${player.id}`}>Type</Label>
             <Select
               value={editingPlayerType}
-              onValueChange={(value) => setEditingPlayerType(value as 'regular' | 'substitute')}
+              onValueChange={(value) =>
+                setEditingPlayerType(value as 'regular' | 'substitute')
+              }
               disabled={updatingPlayer}
             >
-              <SelectTrigger id={`edit-player-type-${player.id}`}><SelectValue /></SelectTrigger>
+              <SelectTrigger id={`edit-player-type-${player.id}`}>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="regular">Regular</SelectItem>
                 <SelectItem value="substitute">Substitute</SelectItem>
@@ -128,10 +134,20 @@ export function EditPlayerDialog({
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={updatingPlayer}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={updatingPlayer}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={updatingPlayer || !editingPlayerName.trim() || !hasChanges}>
+            <Button
+              type="submit"
+              disabled={
+                updatingPlayer || !editingPlayerName.trim() || !hasChanges
+              }
+            >
               {updatingPlayer ? 'Saving...' : 'Save changes'}
             </Button>
           </DialogFooter>

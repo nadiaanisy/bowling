@@ -6,7 +6,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
+  AlertDialogTitle,
 } from '../../components/alert-dialog';
 import type { ReactNode } from 'react';
 
@@ -25,17 +25,18 @@ export function ConfirmDeleteDialog({
   pendingDeleteType,
   confirmMessage,
   isDeleting,
-  onConfirm
+  onConfirm,
 }: ConfirmDeleteDialogProps) {
-  const title = pendingDeleteType === 'team'
-    ? 'Delete team?'
-    : pendingDeleteType === 'teams'
-    ? 'Delete selected teams?'
-    : pendingDeleteType === 'players'
-    ? 'Delete selected players?'
-    : pendingDeleteType === 'player'
-    ? 'Delete player?'
-    : 'Confirm deletion';
+  const title =
+    pendingDeleteType === 'team'
+      ? 'Delete team?'
+      : pendingDeleteType === 'teams'
+        ? 'Delete selected teams?'
+        : pendingDeleteType === 'players'
+          ? 'Delete selected players?'
+          : pendingDeleteType === 'player'
+            ? 'Delete player?'
+            : 'Confirm deletion';
 
   return (
     <AlertDialog

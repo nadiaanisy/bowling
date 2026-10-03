@@ -28,15 +28,13 @@ export default function Header({
   onDeleteSelected,
   onCancelBulkDelete,
   onStartBulkDelete,
-  teamsCount
+  teamsCount,
 }: HeaderProps) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div>
         <h1>Teams Management</h1>
-        <p className="text-muted-foreground">
-          Manage teams and their players
-        </p>
+        <p className="text-muted-foreground">Manage teams and their players</p>
       </div>
 
       <div className="flex items-center gap-2">
@@ -49,9 +47,7 @@ export default function Header({
           className="gap-2"
         >
           <RefreshCw
-            className={`h-4 w-4 ${
-              isLoadingTeams ? 'animate-spin' : ''
-            }`}
+            className={`h-4 w-4 ${isLoadingTeams ? 'animate-spin' : ''}`}
           />
           Refresh
         </Button>
@@ -62,15 +58,11 @@ export default function Header({
               <input
                 type="checkbox"
                 aria-label="Select all visible teams"
-                checked={
-                  filteredTeamsCount > 0 &&
-                  allVisibleTeamsSelected
-                }
+                checked={filteredTeamsCount > 0 && allVisibleTeamsSelected}
                 onChange={(event) => {
                   onToggleSelectAll(event.target.checked);
                 }}
               />
-
               Select all
             </label>
 
@@ -82,10 +74,7 @@ export default function Header({
               type="button"
               variant="destructive"
               size="sm"
-              disabled={
-                selectedTeamsCount === 0 ||
-                deletingTeam
-              }
+              disabled={selectedTeamsCount === 0 || deletingTeam}
               onClick={onDeleteSelected}
             >
               Delete selected

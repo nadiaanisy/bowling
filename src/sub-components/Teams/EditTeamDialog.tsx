@@ -5,7 +5,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from '../../components/dialog';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
@@ -35,14 +35,16 @@ export function EditTeamDialog({
   updatingTeam,
   hasChanges,
   onSubmit,
-  onCancel
+  onCancel,
 }: EditTeamDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onPointerDownOutside={(event) => event.preventDefault()}>
         <DialogHeader>
           <DialogTitle>Edit team</DialogTitle>
-          <DialogDescription>Update the team name for this league.</DialogDescription>
+          <DialogDescription>
+            Update the team name for this league.
+          </DialogDescription>
         </DialogHeader>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
@@ -65,10 +67,18 @@ export function EditTeamDialog({
             />
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={updatingTeam}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={updatingTeam}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={updatingTeam || !editingTeamName.trim() || !hasChanges}>
+            <Button
+              type="submit"
+              disabled={updatingTeam || !editingTeamName.trim() || !hasChanges}
+            >
               {updatingTeam ? 'Saving...' : 'Save changes'}
             </Button>
           </DialogFooter>

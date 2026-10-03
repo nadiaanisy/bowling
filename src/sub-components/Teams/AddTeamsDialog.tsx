@@ -1,8 +1,5 @@
 import type React from 'react';
-import {
-  Loader2,
-  Users
-} from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 
 import {
   Dialog,
@@ -10,7 +7,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from '../../components/dialog';
 
 import { Button } from '../../components/button';
@@ -23,9 +20,7 @@ interface AddTeamsDialogProps {
   setTeamNames: (value: string) => void;
   creatingTeams: boolean;
   existingTeams: Array<{ name: string }>;
-  onSubmit: (
-    event: React.FormEvent<HTMLFormElement>
-  ) => void;
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
 export function AddTeamsDialog({
@@ -35,26 +30,23 @@ export function AddTeamsDialog({
   setTeamNames,
   creatingTeams,
   existingTeams,
-  onSubmit
+  onSubmit,
 }: AddTeamsDialogProps) {
   const parsedNames = Array.from(
     new Set(
       teamNames
         .split(/\r?\n/)
         .map((name) => name.trim())
-        .filter(Boolean)
-    )
+        .filter(Boolean),
+    ),
   );
 
   const existingNames = new Set(
-    existingTeams.map((team) =>
-      team.name.trim().toLowerCase()
-    )
+    existingTeams.map((team) => team.name.trim().toLowerCase()),
   );
 
-  const duplicateExistingNames = parsedNames.filter(
-    (name) =>
-      existingNames.has(name.toLowerCase())
+  const duplicateExistingNames = parsedNames.filter((name) =>
+    existingNames.has(name.toLowerCase()),
   );
 
   const canSubmit =
@@ -83,20 +75,15 @@ export function AddTeamsDialog({
           </DialogTitle>
 
           <DialogDescription>
-            Enter one team name per line. Blank lines will
-            be ignored and duplicate names will be removed.
+            Enter one team name per line. Blank lines will be ignored and
+            duplicate names will be removed.
           </DialogDescription>
         </DialogHeader>
 
-        <form
-          onSubmit={onSubmit}
-          className="space-y-4"
-        >
+        <form onSubmit={onSubmit} className="space-y-4">
           <Textarea
             value={teamNames}
-            onChange={(event) =>
-              setTeamNames(event.target.value)
-            }
+            onChange={(event) => setTeamNames(event.target.value)}
             placeholder={`Team A
 Team B
 Team C
@@ -108,22 +95,15 @@ Team D`}
 
           <div className="space-y-2 text-sm">
             <p className="text-muted-foreground">
-              {parsedNames.length}{' '}
-              {parsedNames.length === 1
-                ? 'team'
-                : 'teams'}{' '}
+              {parsedNames.length} {parsedNames.length === 1 ? 'team' : 'teams'}{' '}
               ready to add.
             </p>
 
             {duplicateExistingNames.length > 0 && (
               <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
-                <p className="font-medium">
-                  These teams already exist:
-                </p>
+                <p className="font-medium">These teams already exist:</p>
 
-                <p className="mt-1">
-                  {duplicateExistingNames.join(', ')}
-                </p>
+                <p className="mt-1">{duplicateExistingNames.join(', ')}</p>
               </div>
             )}
           </div>
@@ -132,31 +112,19 @@ Team D`}
             <Button
               type="button"
               variant="outline"
-              onClick={() =>
-                onOpenChange(false)
-              }
+              onClick={() => onOpenChange(false)}
               disabled={creatingTeams}
             >
               Cancel
             </Button>
 
-            <Button
-              type="submit"
-              disabled={!canSubmit}
-              className="gap-2"
-            >
-              {creatingTeams && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
+            <Button type="submit" disabled={!canSubmit} className="gap-2">
+              {creatingTeams && <Loader2 className="h-4 w-4 animate-spin" />}
 
               {creatingTeams
                 ? 'Adding Teams...'
-                : `Add ${
-                    parsedNames.length || ''
-                  } ${
-                    parsedNames.length === 1
-                      ? 'Team'
-                      : 'Teams'
+                : `Add ${parsedNames.length || ''} ${
+                    parsedNames.length === 1 ? 'Team' : 'Teams'
                   }`}
             </Button>
           </DialogFooter>

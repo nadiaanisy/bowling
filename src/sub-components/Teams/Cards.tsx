@@ -1,12 +1,5 @@
-import type {
-  Dispatch,
-  ReactNode,
-  SetStateAction
-} from 'react';
-import {
-  ChevronDown,
-  ChevronUp
-} from 'lucide-react';
+import type { Dispatch, ReactNode, SetStateAction } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
   getSelectedPlayersForTeam,
   getVisibleMembers,
@@ -16,19 +9,19 @@ import {
   handleDeleteTeam,
   handleOpenAddPlayerDialog,
   handleOpenEditTeamDialog,
-  toggleTeamSelection
+  toggleTeamSelection,
 } from '../../utils/functions/teams';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from '../../components/card';
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger
+  CollapsibleTrigger,
 } from '../../components/collapsible';
 import { ActionsMenu } from './ActionsMenu';
 import { PlayersTable } from './PlayersTable';
@@ -52,7 +45,9 @@ export interface CardsProps {
   setUpdatingPlayer: (updating: boolean) => void;
   openTeamMenu: string | null;
   setOpenTeamMenu: Dispatch<SetStateAction<string | null>>;
-  setPendingDeleteType: (type: 'team' | 'teams' | 'player' | 'players' | null) => void;
+  setPendingDeleteType: (
+    type: 'team' | 'teams' | 'player' | 'players' | null,
+  ) => void;
   setConfirmMessage: (message: ReactNode) => void;
   setConfirmAction: Dispatch<SetStateAction<() => void | Promise<void>>>;
   setConfirmOpen: (open: boolean) => void;
@@ -78,7 +73,9 @@ export interface CardsProps {
   bulkDeleteMode: Record<string, boolean>;
   setBulkDeleteMode: Dispatch<SetStateAction<Record<string, boolean>>>;
   selectedPlayers: Record<string, Array<string | number>>;
-  setSelectedPlayers: Dispatch<SetStateAction<Record<string, Array<string | number>>>>;
+  setSelectedPlayers: Dispatch<
+    SetStateAction<Record<string, Array<string | number>>>
+  >;
   editingPlayerId: string | number | null;
   setEditingPlayerId: (id: string | number | null) => void;
   editingPlayerName: string;
@@ -90,7 +87,9 @@ export interface CardsProps {
   editingPlayerNotes: string;
   setEditingPlayerNotes: (notes: string) => void;
   bulkPlayerTypeValue: Record<string, 'regular' | 'substitute'>;
-  setBulkPlayerTypeValue: Dispatch<SetStateAction<Record<string, 'regular' | 'substitute'>>>;
+  setBulkPlayerTypeValue: Dispatch<
+    SetStateAction<Record<string, 'regular' | 'substitute'>>
+  >;
   bulkTransferTeamId: Record<string, string>;
   setBulkTransferTeamId: Dispatch<SetStateAction<Record<string, string>>>;
   bulkUpdatingPlayers: boolean;
@@ -156,7 +155,7 @@ export function Cards({
   bulkTransferTeamId,
   setBulkTransferTeamId,
   bulkUpdatingPlayers,
-  setBulkUpdatingPlayers
+  setBulkUpdatingPlayers,
 }: CardsProps) {
   const visibleMembers = getVisibleMembers(team, searchQuery);
   const isBulkMode = bulkDeleteMode[String(team.id)];
@@ -169,9 +168,11 @@ export function Cards({
     setBulkTransferTeamId((current) => ({ ...current, [String(team.id)]: '' }));
   };
 
-  const headerLabel = searchQuery.trim() && !team.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
-    ? `${visibleMembers.length} of ${team.members.length} ${team.members.length === 1 ? 'player' : 'players'} match`
-    : `${team.members.length} ${team.members.length === 1 ? 'Player' : 'Players'}`;
+  const headerLabel =
+    searchQuery.trim() &&
+    !team.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
+      ? `${visibleMembers.length} of ${team.members.length} ${team.members.length === 1 ? 'player' : 'players'} match`
+      : `${team.members.length} ${team.members.length === 1 ? 'Player' : 'Players'}`;
 
   return (
     <Card className="relative">
@@ -183,15 +184,19 @@ export function Cards({
                 <input
                   type="checkbox"
                   aria-label={`Select team ${team.name}`}
-                  checked={selectedTeams.some((id) => String(id) === String(team.id))}
-                  onChange={() => setSelectedTeams((current) => toggleTeamSelection(team.id, current))}
+                  checked={selectedTeams.some(
+                    (id) => String(id) === String(team.id),
+                  )}
+                  onChange={() =>
+                    setSelectedTeams((current) =>
+                      toggleTeamSelection(team.id, current),
+                    )
+                  }
                 />
               )}
               <CardTitle>{team.name}</CardTitle>
             </div>
-            <CardDescription>
-              {team.members.length} players
-            </CardDescription>
+            <CardDescription>{team.members.length} players</CardDescription>
           </div>
           <div className="flex gap-2">
             <ActionsMenu
@@ -200,27 +205,33 @@ export function Cards({
               deletingTeam={deletingTeam}
               deletingPlayer={deletingPlayer}
               open={openTeamMenu === String(team.id)}
-              onToggle={() => setOpenTeamMenu((current) =>
-                current === String(team.id) ? null : String(team.id)
-              )}
-              onAddPlayer={() => handleOpenAddPlayerDialog(
-                team.id,
-                setSelectedTeam,
-                setDialogOpen,
-                setAddMode,
-                setOpenTeamMenu
-              )}
-              onEditTeam={() => handleOpenEditTeamDialog(
-                team,
-                setEditingTeamId,
-                setEditingTeamName,
-                setEditingTeamNotes,
-                setOpenTeamMenu
-              )}
+              onToggle={() =>
+                setOpenTeamMenu((current) =>
+                  current === String(team.id) ? null : String(team.id),
+                )
+              }
+              onAddPlayer={() =>
+                handleOpenAddPlayerDialog(
+                  team.id,
+                  setSelectedTeam,
+                  setDialogOpen,
+                  setAddMode,
+                  setOpenTeamMenu,
+                )
+              }
+              onEditTeam={() =>
+                handleOpenEditTeamDialog(
+                  team,
+                  setEditingTeamId,
+                  setEditingTeamName,
+                  setEditingTeamNotes,
+                  setOpenTeamMenu,
+                )
+              }
               onBulkDelete={() => {
                 setBulkDeleteMode((current) => ({
                   ...current,
-                  [String(team.id)]: true
+                  [String(team.id)]: true,
                 }));
                 setOpenTeamMenu(null);
               }}
@@ -236,22 +247,24 @@ export function Cards({
                   setTeams,
                   setConfirmMessage,
                   setConfirmAction,
-                  setConfirmOpen
+                  setConfirmOpen,
                 );
               }}
             />
             <AddPlayerDialog
               teamName={team.name}
               open={dialogOpen && selectedTeam === team.id}
-              onOpenChange={(open) => handleAddPlayerDialogOpenChange(
-                open,
-                team.id,
-                setDialogOpen,
-                setSelectedTeam,
-                setAddMode,
-                setNewPlayerName,
-                setMultiplePlayerNames
-              )}
+              onOpenChange={(open) =>
+                handleAddPlayerDialogOpenChange(
+                  open,
+                  team.id,
+                  setDialogOpen,
+                  setSelectedTeam,
+                  setAddMode,
+                  setNewPlayerName,
+                  setMultiplePlayerNames,
+                )
+              }
               playerType={playerType}
               setPlayerType={setPlayerType}
               addMode={addMode}
@@ -278,7 +291,7 @@ export function Cards({
                   (name) => {
                     setNewPlayerName(name);
                     if (!name) setDialogOpen(false);
-                  }
+                  },
                 );
               }}
               onSubmitMultiple={(event) => {
@@ -298,7 +311,7 @@ export function Cards({
                   (names) => {
                     setMultiplePlayerNames(names);
                     if (!names) setDialogOpen(false);
-                  }
+                  },
                 );
               }}
             />
@@ -308,12 +321,14 @@ export function Cards({
       {team.members.length > 0 && (
         <Collapsible
           open={expandedTeams[team.id] ?? false}
-          onOpenChange={(open) => setExpandedTeams(prev => ({ ...prev, [team.id]: open }))}
+          onOpenChange={(open) =>
+            setExpandedTeams((prev) => ({ ...prev, [team.id]: open }))
+          }
         >
           <div className="border-t border-border px-6 py-3 bg-muted/30">
             <CollapsibleTrigger className="flex items-center justify-between w-full hover:opacity-70 transition-opacity">
               <span className="text-sm">{headerLabel}</span>
-              {expandedTeams[team.id] ?? false ? (
+              {(expandedTeams[team.id] ?? false) ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
                 <ChevronDown className="h-4 w-4" />

@@ -1,7 +1,4 @@
-import {
-  useMemo,
-  useEffect
-} from 'react';
+import { useMemo, useEffect } from 'react';
 import type React from 'react';
 import {
   handleCreateTeam,
@@ -9,7 +6,7 @@ import {
   handleUpdateTeam,
   handleDeleteTeams,
   hasTeamChanges,
-  toggleSelectAllTeams
+  toggleSelectAllTeams,
 } from '../utils/functions/teams';
 import { useCustomHook } from '../utils/hooks';
 import Grid from '../sub-components/Teams/Grid';
@@ -113,13 +110,10 @@ export default function Teams() {
   const filteredTeams = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    const sortedTeams = [...teams].sort(
-      (firstTeam, secondTeam) =>
-        firstTeam.name.localeCompare(
-          secondTeam.name,
-          undefined,
-          { sensitivity: 'base' }
-        )
+    const sortedTeams = [...teams].sort((firstTeam, secondTeam) =>
+      firstTeam.name.localeCompare(secondTeam.name, undefined, {
+        sensitivity: 'base',
+      }),
     );
 
     if (!query) return sortedTeams;
@@ -128,27 +122,25 @@ export default function Teams() {
       (team) =>
         team.name.toLowerCase().includes(query) ||
         team.members.some((member) =>
-          member.name.toLowerCase().includes(query)
-        )
+          member.name.toLowerCase().includes(query),
+        ),
     );
   }, [searchQuery, teams]);
 
   const selectedTeamRecords = teams.filter((team) =>
-    selectedTeams.some(
-      (id) => String(id) === String(team.id)
-    )
+    selectedTeams.some((id) => String(id) === String(team.id)),
   );
 
   const teamsWithPlayers = filteredTeams.filter(
-    (team) => team.members.length > 0
+    (team) => team.members.length > 0,
   );
 
   const canExpandAll = teamsWithPlayers.some(
-    (team) => !(expandedTeams[team.id] ?? false)
+    (team) => !(expandedTeams[team.id] ?? false),
   );
 
   const canCollapseAll = teamsWithPlayers.some(
-    (team) => expandedTeams[team.id] ?? false
+    (team) => expandedTeams[team.id] ?? false,
   );
 
   useEffect(() => {
@@ -159,10 +151,7 @@ export default function Teams() {
       setTeamsLoadError(null);
 
       try {
-        const teamList =
-          await getTeamsWithMembersByLeague(
-            selectedLeague
-          );
+        const teamList = await getTeamsWithMembersByLeague(selectedLeague);
 
         if (isCurrent) {
           setTeams(teamList);
@@ -172,9 +161,7 @@ export default function Teams() {
           setTeams([]);
 
           setTeamsLoadError(
-            err instanceof Error
-              ? err.message
-              : 'Unable to load teams.'
+            err instanceof Error ? err.message : 'Unable to load teams.',
           );
         }
       } finally {
@@ -194,21 +181,16 @@ export default function Teams() {
     teamsReloadKey,
     setTeams,
     setIsLoadingTeams,
-    setTeamsLoadError
+    setTeamsLoadError,
   ]);
 
   const allVisibleTeamsSelected =
     filteredTeams.length > 0 &&
     filteredTeams.every((team) =>
-      selectedTeams.some(
-        (id) => String(id) === String(team.id)
-      )
+      selectedTeams.some((id) => String(id) === String(team.id)),
     );
 
-  const teamCardProps: Omit<
-    React.ComponentProps<typeof Cards>,
-    'team'
-  > = {
+  const teamCardProps: Omit<React.ComponentProps<typeof Cards>, 'team'> = {
     teams,
     searchQuery,
     selectedLeague,
@@ -266,7 +248,7 @@ export default function Teams() {
     bulkTransferTeamId,
     setBulkTransferTeamId,
     bulkUpdatingPlayers,
-    setBulkUpdatingPlayers
+    setBulkUpdatingPlayers,
   };
 
   return (
@@ -278,16 +260,10 @@ export default function Teams() {
         filteredTeamsCount={filteredTeams.length}
         selectedTeamsCount={selectedTeams.length}
         deletingTeam={deletingTeam}
-        allVisibleTeamsSelected={
-          allVisibleTeamsSelected
-        }
+        allVisibleTeamsSelected={allVisibleTeamsSelected}
         onToggleSelectAll={(checked) => {
           setSelectedTeams((current) =>
-            toggleSelectAllTeams(
-              checked,
-              filteredTeams,
-              current
-            )
+            toggleSelectAllTeams(checked, filteredTeams, current),
           );
         }}
         onDeleteSelected={() => {
@@ -305,16 +281,14 @@ export default function Teams() {
             () => {
               setSelectedTeams([]);
               setBulkTeamDeleteMode(false);
-            }
+            },
           );
         }}
         onCancelBulkDelete={() => {
           setSelectedTeams([]);
           setBulkTeamDeleteMode(false);
         }}
-        onStartBulkDelete={() =>
-          setBulkTeamDeleteMode(true)
-        }
+        onStartBulkDelete={() => setBulkTeamDeleteMode(true)}
         teamsCount={teams.length}
       />
 
@@ -330,7 +304,7 @@ export default function Teams() {
             selectedLeague,
             teams,
             setTeams,
-            setNewTeamName
+            setNewTeamName,
           );
         }}
         onOpenBulkCreate={() => {
@@ -370,7 +344,7 @@ export default function Teams() {
             setMultipleTeamNames,
             () => {
               setBulkTeamDialogOpen(false);
-            }
+            },
           );
         }}
       />
@@ -401,15 +375,11 @@ export default function Teams() {
         setEditingTeamNotes={setEditingTeamNotes}
         updatingTeam={updatingTeam}
         hasChanges={hasTeamChanges(
-          teams.find(
-            (team) => team.id === editingTeamId
-          ),
+          teams.find((team) => team.id === editingTeamId),
           editingTeamName,
-          editingTeamNotes
+          editingTeamNotes,
         )}
-        onCancel={() =>
-          setEditingTeamId(null)
-        }
+        onCancel={() => setEditingTeamId(null)}
         onSubmit={(event) => {
           event.preventDefault();
 
@@ -424,7 +394,7 @@ export default function Teams() {
             editingTeamNotes,
             teams,
             setTeams,
-            () => setEditingTeamId(null)
+            () => setEditingTeamId(null),
           );
         }}
       />
@@ -432,10 +402,7 @@ export default function Teams() {
       <ConfirmDeleteDialog
         open={confirmOpen}
         onOpenChange={(open) => {
-          if (
-            !open &&
-            (deletingTeam || deletingPlayer)
-          ) {
+          if (!open && (deletingTeam || deletingPlayer)) {
             return;
           }
 
@@ -447,9 +414,7 @@ export default function Teams() {
         }}
         pendingDeleteType={pendingDeleteType}
         confirmMessage={confirmMessage}
-        isDeleting={
-          deletingTeam || deletingPlayer
-        }
+        isDeleting={deletingTeam || deletingPlayer}
         onConfirm={async () => {
           setDeletingTeam(true);
 

@@ -1,14 +1,10 @@
-import {
-  Loader2,
-  Search,
-  X
-} from 'lucide-react';
+import { Loader2, Search, X } from 'lucide-react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
+  CardTitle,
 } from '../../components/card';
 import { Input } from '../../components/input';
 import { Button } from '../../components/button';
@@ -32,7 +28,7 @@ export default function ManagementCard({
   onOpenBulkCreate,
   searchQuery,
   setSearchQuery,
-  filteredTeamsCount
+  filteredTeamsCount,
 }: ManagementCardProps) {
   return (
     <Card className="mx-auto w-full max-w-3xl">
@@ -56,27 +52,18 @@ export default function ManagementCard({
             <Input
               placeholder="Team name"
               value={newTeamName}
-              onChange={(event) =>
-                setNewTeamName(event.target.value)
-              }
+              onChange={(event) => setNewTeamName(event.target.value)}
               disabled={creatingTeam}
             />
 
             <Button
               type="submit"
-              disabled={
-                creatingTeam ||
-                !newTeamName.trim()
-              }
+              disabled={creatingTeam || !newTeamName.trim()}
               className="gap-2"
             >
-              {creatingTeam && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
+              {creatingTeam && <Loader2 className="h-4 w-4 animate-spin" />}
 
-              {creatingTeam
-                ? 'Adding...'
-                : 'Add Team'}
+              {creatingTeam ? 'Adding...' : 'Add Team'}
             </Button>
           </form>
 
@@ -96,9 +83,7 @@ export default function ManagementCard({
           <Input
             placeholder="Search teams or players..."
             value={searchQuery}
-            onChange={(event) =>
-              setSearchQuery(event.target.value)
-            }
+            onChange={(event) => setSearchQuery(event.target.value)}
             className="pl-10"
           />
 
@@ -115,8 +100,7 @@ export default function ManagementCard({
         </div>
 
         <p className="mt-2 text-xs text-muted-foreground">
-          {filteredTeamsCount}{' '}
-          {filteredTeamsCount === 1 ? 'team' : 'teams'}
+          {filteredTeamsCount} {filteredTeamsCount === 1 ? 'team' : 'teams'}
         </p>
       </CardContent>
     </Card>
