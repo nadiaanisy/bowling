@@ -8,9 +8,7 @@ export default function Footer() {
           <div className="flex items-center gap-3">
             <Trophy className="h-6 w-6 text-primary" />
 
-            <span className="font-bold gradient-text">
-              Strike Manager
-            </span>
+            <span className="font-bold gradient-text">Strike Manager</span>
           </div>
 
           <p className="text-sm text-muted-foreground">

@@ -18,9 +18,7 @@ export default function Features() {
             viewport={{ once: true, margin: '-80px' }}
             transition={{ duration: 0.6 }}
             className={`grid lg:grid-cols-2 gap-12 items-center ${
-              isEven
-                ? ''
-                : 'lg:[&>*:first-child]:order-2'
+              isEven ? '' : 'lg:[&>*:first-child]:order-2'
             }`}
           >
             {/* Text side */}
@@ -36,9 +34,7 @@ export default function Features() {
                   {feature.subtitle}
                 </p>
 
-                <h2 className="text-3xl font-bold">
-                  {feature.title}
-                </h2>
+                <h2 className="text-3xl font-bold">{feature.title}</h2>
               </div>
 
               <p className="text-lg text-muted-foreground leading-relaxed">
@@ -57,9 +53,7 @@ export default function Features() {
                   >
                     <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
 
-                    <span className="text-muted-foreground">
-                      {bullet}
-                    </span>
+                    <span className="text-muted-foreground">{bullet}</span>
                   </motion.li>
                 ))}
               </ul>

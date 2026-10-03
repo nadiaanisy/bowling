@@ -1,10 +1,4 @@
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Trophy,
-  Zap,
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Trophy, Zap } from 'lucide-react';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
 
@@ -13,10 +7,7 @@ interface HeaderProps {
   onGetStarted: () => void;
 }
 
-export default function Header({
-  onBack,
-  onGetStarted,
-}: HeaderProps) {
+export default function Header({ onBack, onGetStarted }: HeaderProps) {
   return (
     <header className="relative z-10 border-b border-border/50 glass sticky top-0">
       <div className="container mx-auto px-4 py-4">

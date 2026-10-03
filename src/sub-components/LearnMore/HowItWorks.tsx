@@ -1,7 +1,4 @@
-import {
-  Card,
-  CardContent
-} from '../../components/card';
+import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { RefreshCw } from 'lucide-react';
 import { Badge } from '../../components/badge';
@@ -23,14 +20,12 @@ export default function HowItWorks() {
 
         <h2 className="text-4xl font-bold mb-4">
           Up and Running in
-          <span className="gradient-text">
-            {' '}Five Steps
-          </span>
+          <span className="gradient-text"> Five Steps</span>
         </h2>
 
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          From first login to full league management — the workflow is
-          designed to get out of your way.
+          From first login to full league management — the workflow is designed
+          to get out of your way.
         </p>
       </motion.div>
 
@@ -61,9 +56,7 @@ export default function HowItWorks() {
                     <Icon className="h-6 w-6 text-primary" />
                   </div>
 
-                  <h3 className="font-bold">
-                    {step.title}
-                  </h3>
+                  <h3 className="font-bold">{step.title}</h3>
 
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {step.description}

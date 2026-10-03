@@ -13,14 +13,8 @@ interface LearnMoreProps {
   onGetStarted: () => void;
 }
 
-export default function LearnMore({
-  onBack,
-  onGetStarted,
-}: LearnMoreProps) {
-  const {
-    openFaq,
-    setOpenFaq,
-  } = useCustomHook();
+export default function LearnMore({ onBack, onGetStarted }: LearnMoreProps) {
+  const { openFaq, setOpenFaq } = useCustomHook();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-purple-950/20 overflow-hidden">
@@ -39,10 +33,7 @@ export default function LearnMore({
         />
       </div>
 
-      <Header
-        onBack={onBack}
-        onGetStarted={onGetStarted}
-      />
+      <Header onBack={onBack} onGetStarted={onGetStarted} />
 
       <Hero />
 
@@ -52,15 +43,9 @@ export default function LearnMore({
 
       <Capabilities />
 
-      <FAQ
-        openFaq={openFaq}
-        setOpenFaq={setOpenFaq}
-      />
+      <FAQ openFaq={openFaq} setOpenFaq={setOpenFaq} />
 
-      <CTA
-        onBack={onBack}
-        onGetStarted={onGetStarted}
-      />
+      <CTA onBack={onBack} onGetStarted={onGetStarted} />
 
       <Footer />
     </div>

@@ -18,15 +18,13 @@ export default function Hero() {
 
         <h1 className="text-5xl md:text-6xl font-bold leading-tight">
           Everything Strike Manager
-          <span className="block gradient-text">
-            Can Do for You
-          </span>
+          <span className="block gradient-text">Can Do for You</span>
         </h1>
 
         <p className="text-xl text-muted-foreground">
           A deep dive into every feature — from score entry to AI-powered
-          forecasting. Built for league secretaries who want less
-          spreadsheet work and more time bowling.
+          forecasting. Built for league secretaries who want less spreadsheet
+          work and more time bowling.
         </p>
       </motion.div>
     </section>

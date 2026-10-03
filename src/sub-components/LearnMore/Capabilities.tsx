@@ -9,10 +9,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
-import {
-  Card,
-  CardContent
-} from '../../components/card';
+import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
 import { capabilities } from '../../utils/constants';
@@ -33,9 +30,7 @@ export default function Capabilities() {
 
         <h2 className="text-4xl font-bold">
           Built for Scale,
-          <span className="gradient-text">
-            {' '}Designed for Simplicity
-          </span>
+          <span className="gradient-text"> Designed for Simplicity</span>
         </h2>
       </motion.div>
 
@@ -64,9 +59,7 @@ export default function Capabilities() {
                   </div>
 
                   <div>
-                    <div className="font-semibold text-sm">
-                      {stat.label}
-                    </div>
+                    <div className="font-semibold text-sm">{stat.label}</div>
 
                     <div className="text-xs text-muted-foreground">
                       {stat.sublabel}

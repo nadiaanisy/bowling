@@ -1,13 +1,5 @@
-import {
-  ArrowLeft,
-  ArrowRight,
-  Trophy,
-  Zap
-} from 'lucide-react';
-import {
-  Card,
-  CardContent
-} from '../../components/card';
+import { ArrowLeft, ArrowRight, Trophy, Zap } from 'lucide-react';
+import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { Button } from '../../components/button';
 
@@ -16,10 +8,7 @@ interface CTAProps {
   onGetStarted: () => void;
 }
 
-export default function CTA({
-  onBack,
-  onGetStarted,
-}: CTAProps) {
+export default function CTA({ onBack, onGetStarted }: CTAProps) {
   return (
     <section className="relative z-10 container mx-auto px-4 py-20">
       <motion.div
@@ -41,8 +30,8 @@ export default function CTA({
               </h2>
 
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                You now know what Strike Manager can do. Log in and take
-                control of your league today.
+                You now know what Strike Manager can do. Log in and take control
+                of your league today.
               </p>
 
               <div className="flex flex-wrap gap-4 justify-center pt-2">

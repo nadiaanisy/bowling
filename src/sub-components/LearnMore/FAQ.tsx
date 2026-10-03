@@ -1,12 +1,5 @@
-import {
-  ChevronDown,
-  ChevronUp,
-  Sparkles
-} from 'lucide-react';
-import {
-  Card,
-  CardContent
-} from '../../components/card';
+import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
+import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { faqs } from '../../utils/constants';
 import { Badge } from '../../components/badge';
@@ -16,10 +9,7 @@ interface FAQProps {
   setOpenFaq: (value: number | null) => void;
 }
 
-export default function FAQ({
-  openFaq,
-  setOpenFaq,
-}: FAQProps) {
+export default function FAQ({ openFaq, setOpenFaq }: FAQProps) {
   return (
     <section className="relative z-10 container mx-auto px-4 py-20 max-w-3xl">
       <motion.div
@@ -35,9 +25,7 @@ export default function FAQ({
 
         <h2 className="text-4xl font-bold">
           Common
-          <span className="gradient-text">
-            {' '}Questions
-          </span>
+          <span className="gradient-text"> Questions</span>
         </h2>
       </motion.div>
 
@@ -52,15 +40,11 @@ export default function FAQ({
           >
             <Card
               className="glass border-border/50 cursor-pointer transition-all duration-200 hover:border-primary/30"
-              onClick={() =>
-                setOpenFaq(openFaq === index ? null : index)
-              }
+              onClick={() => setOpenFaq(openFaq === index ? null : index)}
             >
               <CardContent className="p-5">
                 <div className="flex items-center justify-between gap-4">
-                  <h3 className="font-semibold">
-                    {faq.question}
-                  </h3>
+                  <h3 className="font-semibold">{faq.question}</h3>
 
                   {openFaq === index ? (
                     <ChevronUp className="h-4 w-4 text-primary flex-shrink-0" />
