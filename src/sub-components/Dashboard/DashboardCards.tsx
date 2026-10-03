@@ -3,8 +3,8 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from '../../components/card'
+  CardTitle,
+} from '../../components/card';
 import { motion } from 'motion/react';
 import { Skeleton } from '../../components/skeleton';
 import type { DashboardData } from '../../utils/interfaces';
@@ -51,9 +51,11 @@ export function DashboardSummaryCard({
 
         <CardContent>
           <div className="text-sm text-muted-foreground">
-          {value === 0 && (
-            <p className="text-xs font-normal text-muted-foreground">No data</p>
-          )}
+            {value === 0 && (
+              <p className="text-xs font-normal text-muted-foreground">
+                No data
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -80,9 +82,7 @@ export function DashboardBlockProgress({
           >
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>
-                  Block {index + 1} Progress
-                </CardDescription>
+                <CardDescription>Block {index + 1} Progress</CardDescription>
                 <Skeleton className="h-10 w-28" />
               </CardHeader>
               <CardContent>
@@ -113,17 +113,14 @@ export function DashboardBlockProgress({
             ? Math.floor(completed / matchesPerWeek)
             : 0;
 
-        const weeksLeft = Math.max(
-          totalWeeks - completedWeeks,
-          0
-        );
+        const weeksLeft = Math.max(totalWeeks - completedWeeks, 0);
 
         const status =
           totalWeeks === 0
-            ? "No data"
+            ? 'No data'
             : completedWeeks >= totalWeeks
-              ? "Completed"
-              : `${weeksLeft} ${weeksLeft === 1 ? "week" : "weeks"} remaining`;
+              ? 'Completed'
+              : `${weeksLeft} ${weeksLeft === 1 ? 'week' : 'weeks'} remaining`;
 
         return (
           <motion.div
@@ -137,9 +134,7 @@ export function DashboardBlockProgress({
           >
             <Card>
               <CardHeader className="pb-3">
-                <CardDescription>
-                  Block {index + 1} Progress
-                </CardDescription>
+                <CardDescription>Block {index + 1} Progress</CardDescription>
 
                 <CardTitle className="text-4xl">
                   {`${completedWeeks}/${totalWeeks} weeks`}
@@ -147,9 +142,7 @@ export function DashboardBlockProgress({
               </CardHeader>
 
               <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  {status}
-                </div>
+                <div className="text-sm text-muted-foreground">{status}</div>
               </CardContent>
             </Card>
           </motion.div>
@@ -224,30 +217,23 @@ export function DashboardBlockSummary({
         let previousWeeks = 0;
 
         for (let i = 0; i < index; i++) {
-          const previousBlock =
-            dashboardData?.blocks?.[i + 1];
+          const previousBlock = dashboardData?.blocks?.[i + 1];
 
           const previousTotal = previousBlock?.total ?? 0;
 
           if (previousTotal > 0 && matchesPerWeek > 0) {
-            previousWeeks += Math.ceil(
-              previousTotal / matchesPerWeek
-            );
+            previousWeeks += Math.ceil(previousTotal / matchesPerWeek);
           }
         }
 
-        const startWeek =
-          blockWeeks > 0 ? previousWeeks + 1 : 0;
+        const startWeek = blockWeeks > 0 ? previousWeeks + 1 : 0;
 
-        const endWeek =
-          blockWeeks > 0
-            ? previousWeeks + blockWeeks
-            : 0;
+        const endWeek = blockWeeks > 0 ? previousWeeks + blockWeeks : 0;
 
         const weekRange =
           blockWeeks > 0
             ? `Weeks ${startWeek}-${endWeek}`
-            : "No weeks scheduled";
+            : 'No weeks scheduled';
 
         return (
           <motion.div
@@ -260,31 +246,23 @@ export function DashboardBlockSummary({
               <CardHeader>
                 <CardTitle>Block {index + 1}</CardTitle>
                 <CardDescription>
-                  {total
-                    ? `${weekRange}`
-                    : "No matches found"}
+                  {total ? `${weekRange}` : 'No matches found'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm">
-                      Matches Scheduled:
-                    </span>
+                    <span className="text-sm">Matches Scheduled:</span>
                     <span className="text-sm">{total}</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-sm">
-                      Matches Completed:
-                    </span>
+                    <span className="text-sm">Matches Completed:</span>
                     <span className="text-sm">{completed}</span>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-sm">
-                      Matches Pending:
-                    </span>
+                    <span className="text-sm">Matches Pending:</span>
                     <span className="text-sm">{pending}</span>
                   </div>
                 </div>

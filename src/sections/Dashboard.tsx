@@ -1,11 +1,8 @@
 import {
   getBlockCountByLeague,
-  getDashboardDataByLeagueId
+  getDashboardDataByLeagueId,
 } from '../utils/api/get';
-import {
-  Card,
-  CardContent
-} from '../components/card';
+import { Card, CardContent } from '../components/card';
 import { useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '../components/button';
@@ -13,7 +10,7 @@ import { useCustomHook } from '../utils/hooks';
 import {
   DashboardBlockProgress,
   DashboardBlockSummary,
-  DashboardSummaryCard
+  DashboardSummaryCard,
 } from '../sub-components/Dashboard/DashboardCards';
 import { DEFAULT_MATCHES_PER_WEEK } from '../utils/constants';
 
@@ -33,7 +30,8 @@ export default function Dashboard() {
   } = useCustomHook();
 
   const totalBlocks = dashboardData?.total_blocks ?? 0;
-  const matchesPerWeek = dashboardData?.average_matches_per_week || DEFAULT_MATCHES_PER_WEEK;
+  const matchesPerWeek =
+    dashboardData?.average_matches_per_week || DEFAULT_MATCHES_PER_WEEK;
   const totalTeams = dashboardData?.total_teams ?? 0;
   const totalPlayers = dashboardData?.total_players ?? 0;
 
@@ -49,7 +47,7 @@ export default function Dashboard() {
       try {
         const [blockCount, data] = await Promise.all([
           getBlockCountByLeague(selectedLeague),
-          getDashboardDataByLeagueId(selectedLeague)
+          getDashboardDataByLeagueId(selectedLeague),
         ]);
 
         if (!isCurrent) return;
@@ -62,7 +60,7 @@ export default function Dashboard() {
 
         setDashboardData(null);
         setDashboardLoadError(
-          err instanceof Error ? err.message : 'Unable to load dashboard data.'
+          err instanceof Error ? err.message : 'Unable to load dashboard data.',
         );
       } finally {
         if (isCurrent) setIsLoadingSkeleton(false);
@@ -80,7 +78,7 @@ export default function Dashboard() {
     setDashboardData,
     setDashboardLoadError,
     setIsLoadingSkeleton,
-    setLoadingBlockCount
+    setLoadingBlockCount,
   ]);
 
   return (
@@ -88,7 +86,9 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1>Dashboard</h1>
-          <p className="text-muted-foreground">Overview of your bowling league</p>
+          <p className="text-muted-foreground">
+            Overview of your bowling league
+          </p>
         </div>
         <Button
           variant="outline"
@@ -96,7 +96,9 @@ export default function Dashboard() {
           disabled={isLoadingSkeleton}
           className="gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${isLoadingSkeleton ? 'animate-spin' : ''}`} />
+          <RefreshCw
+            className={`h-4 w-4 ${isLoadingSkeleton ? 'animate-spin' : ''}`}
+          />
           Refresh
         </Button>
       </div>
@@ -104,7 +106,9 @@ export default function Dashboard() {
       {dashboardLoadError && (
         <Card className="border-destructive/40">
           <CardContent className="flex flex-col items-center gap-4 py-8 text-center">
-            <p className="text-sm text-destructive" role="alert">{dashboardLoadError}</p>
+            <p className="text-sm text-destructive" role="alert">
+              {dashboardLoadError}
+            </p>
             <Button
               variant="outline"
               onClick={retryDashboard}
