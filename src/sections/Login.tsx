@@ -5,7 +5,7 @@ import {
   User,
   Eye,
   EyeOff,
-  Loader2
+  Loader2,
 } from 'lucide-react';
 import {
   Card,
@@ -15,10 +15,7 @@ import {
   CardTitle,
 } from '../components/card';
 import { toast } from 'sonner';
-import {
-  handleLoginSubmit,
-  handleSignupSubmit
-} from '../utils/functions/user';
+import { handleLoginSubmit, handleSignupSubmit } from '../utils/functions/user';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Input } from '../components/input';
@@ -28,7 +25,7 @@ import {
   getPasswordStrength,
   getPasswordValidationError,
   getSignupNameValidationError,
-  getUsernameValidationError
+  getUsernameValidationError,
 } from '../utils/functions/validation-error';
 import { Button } from '../components/button';
 import { useCustomHook } from '../utils/hooks';
@@ -68,17 +65,19 @@ export default function Login({ onBack }: LoginProps) {
     signupName.trim() &&
     Username.trim().length >= 3 &&
     Password.length >= 6 &&
-    Password === confirmPassword
+    Password === confirmPassword,
   );
 
   const isLoginValid = Boolean(
-    Username.trim().length >= 3 &&
-    Password.length >= 6
+    Username.trim().length >= 3 && Password.length >= 6,
   );
 
   useEffect(() => {
     if (sessionExpired) {
-      toast.error('Your session expired. Please sign in again.', errorToastStyle);
+      toast.error(
+        'Your session expired. Please sign in again.',
+        errorToastStyle,
+      );
     }
   }, [sessionExpired]);
 
@@ -87,7 +86,11 @@ export default function Login({ onBack }: LoginProps) {
       {/* Back to landing button */}
       {onBack && (
         <div className="absolute top-4 left-4 z-20">
-          <Button variant="ghost" onClick={onBack} className="gap-2 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="gap-2 text-muted-foreground hover:text-foreground"
+          >
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Button>
@@ -96,7 +99,10 @@ export default function Login({ onBack }: LoginProps) {
       {/* Animated background elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }} />
+        <div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-float"
+          style={{ animationDelay: '1s' }}
+        />
       </div>
 
       <motion.div
@@ -110,7 +116,7 @@ export default function Login({ onBack }: LoginProps) {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
               className="mx-auto"
             >
               <div className="relative inline-block">
@@ -121,9 +127,13 @@ export default function Login({ onBack }: LoginProps) {
               </div>
             </motion.div>
             <div>
-              <CardTitle className="text-3xl gradient-text">Strike Manager</CardTitle>
+              <CardTitle className="text-3xl gradient-text">
+                Strike Manager
+              </CardTitle>
               <CardDescription className="mt-2">
-                {signupMode ? 'Create an account to manage your league' : 'Enter your credentials to access the system'}
+                {signupMode
+                  ? 'Create an account to manage your league'
+                  : 'Enter your credentials to access the system'}
               </CardDescription>
             </div>
           </CardHeader>
@@ -149,7 +159,7 @@ export default function Login({ onBack }: LoginProps) {
                         setConfirmPassword('');
                         setConfirmPasswordError('');
                         setFieldErrors({ username: '', password: '' });
-                      }
+                      },
                     )
                   : handleLoginSubmit(
                       e,
@@ -157,7 +167,7 @@ export default function Login({ onBack }: LoginProps) {
                       Username,
                       Password,
                       setLoading,
-                      setFieldErrors
+                      setFieldErrors,
                     )
               }
               className="space-y-4"
@@ -166,7 +176,10 @@ export default function Login({ onBack }: LoginProps) {
               <div className="space-y-2">
                 {signupMode && (
                   <>
-                    <Label htmlFor="signup-name" className="flex items-center gap-2">
+                    <Label
+                      htmlFor="signup-name"
+                      className="flex items-center gap-2"
+                    >
                       <User className="h-4 w-4" />
                       Name
                     </Label>
@@ -184,7 +197,11 @@ export default function Login({ onBack }: LoginProps) {
                       disabled={Loading}
                       className="bg-input-background border-border/50"
                     />
-                    {signupNameError && <p className="text-sm text-destructive">{signupNameError}</p>}
+                    {signupNameError && (
+                      <p className="text-sm text-destructive">
+                        {signupNameError}
+                      </p>
+                    )}
                   </>
                 )}
                 <Label htmlFor="username" className="flex items-center gap-2">
@@ -201,16 +218,22 @@ export default function Login({ onBack }: LoginProps) {
                     setUsername(value);
                     setFieldErrors((currentErrors) => ({
                       ...currentErrors,
-                      username: getUsernameValidationError(value)
+                      username: getUsernameValidationError(value),
                     }));
                   }}
                   autoComplete="username"
                   aria-invalid={Boolean(fieldErrors.username)}
-                  aria-describedby={fieldErrors.username ? 'username-error' : undefined}
+                  aria-describedby={
+                    fieldErrors.username ? 'username-error' : undefined
+                  }
                   disabled={Loading}
                   className="bg-input-background border-border/50"
                 />
-                {fieldErrors.username && <p id="username-error" className="text-sm text-destructive">{fieldErrors.username}</p>}
+                {fieldErrors.username && (
+                  <p id="username-error" className="text-sm text-destructive">
+                    {fieldErrors.username}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -229,38 +252,63 @@ export default function Login({ onBack }: LoginProps) {
                       setPassword(value);
                       setFieldErrors((currentErrors) => ({
                         ...currentErrors,
-                        password: getPasswordValidationError(value)
+                        password: getPasswordValidationError(value),
                       }));
                       if (signupMode) {
-                        setConfirmPasswordError(getConfirmPasswordValidationError(value, confirmPassword));
+                        setConfirmPasswordError(
+                          getConfirmPasswordValidationError(
+                            value,
+                            confirmPassword,
+                          ),
+                        );
                       }
                     }}
-                    autoComplete={signupMode ? 'new-password' : 'current-password'}
+                    autoComplete={
+                      signupMode ? 'new-password' : 'current-password'
+                    }
                     aria-invalid={Boolean(fieldErrors.password)}
-                    aria-describedby={fieldErrors.password ? 'password-error' : undefined}
+                    aria-describedby={
+                      fieldErrors.password ? 'password-error' : undefined
+                    }
                     disabled={Loading}
                     className="bg-input-background border-border/50 pr-11"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((visible) => !visible)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showPassword ? 'Hide password' : 'Show password'
+                    }
                     className="absolute inset-y-0 right-2 flex items-center rounded-md p-2 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     disabled={Loading}
                   >
-                    {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" /> }
+                    {showPassword ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
-                {fieldErrors.password && <p id="password-error" className="text-sm text-destructive">{fieldErrors.password}</p>}
+                {fieldErrors.password && (
+                  <p id="password-error" className="text-sm text-destructive">
+                    {fieldErrors.password}
+                  </p>
+                )}
                 {signupMode && Password && (
                   <p className="text-xs text-muted-foreground">
-                    Password strength: <span className="font-medium">{getPasswordStrength(Password)}</span>
+                    Password strength:{' '}
+                    <span className="font-medium">
+                      {getPasswordStrength(Password)}
+                    </span>
                   </p>
                 )}
               </div>
               {signupMode && (
                 <div className="space-y-2">
-                  <Label htmlFor="confirm-password" className="flex items-center gap-2">
+                  <Label
+                    htmlFor="confirm-password"
+                    className="flex items-center gap-2"
+                  >
                     <Lock className="h-4 w-4" />
                     Confirm password
                   </Label>
@@ -272,22 +320,46 @@ export default function Login({ onBack }: LoginProps) {
                     onChange={(event) => {
                       const value = event.target.value;
                       setConfirmPassword(value);
-                      setConfirmPasswordError(getConfirmPasswordValidationError(Password, value));
+                      setConfirmPasswordError(
+                        getConfirmPasswordValidationError(Password, value),
+                      );
                     }}
                     autoComplete="new-password"
                     aria-invalid={Boolean(confirmPasswordError)}
-                    aria-describedby={confirmPasswordError ? 'confirm-password-error' : undefined}
+                    aria-describedby={
+                      confirmPasswordError
+                        ? 'confirm-password-error'
+                        : undefined
+                    }
                     disabled={Loading}
                   />
-                  {confirmPasswordError && <p id="confirm-password-error" className="text-sm text-destructive">{confirmPasswordError}</p>}
+                  {confirmPasswordError && (
+                    <p
+                      id="confirm-password-error"
+                      className="text-sm text-destructive"
+                    >
+                      {confirmPasswordError}
+                    </p>
+                  )}
                 </div>
               )}
-              <Button 
-                type="submit" 
-                disabled={Loading || (signupMode ? !isSignupValid : !isLoginValid)}
+              <Button
+                type="submit"
+                disabled={
+                  Loading || (signupMode ? !isSignupValid : !isLoginValid)
+                }
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-lg shadow-purple-500/50"
               >
-                {Loading ? <><Loader2 className="h-4 w-4 animate-spin" />{signupMode ? 'Creating account...' : 'Logging in...'}</> : signupMode ? 'Create account' : 'Login'}
+                {Loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {signupMode ? 'Creating account...' : 'Logging in...'}
+                  </>
+                ) : signupMode ? (
+                  'Create account'
+                ) : (
+                  'Login'
+                )}
               </Button>
               <Button
                 type="button"
@@ -306,7 +378,9 @@ export default function Login({ onBack }: LoginProps) {
                   setShowPassword(false);
                 }}
               >
-                {signupMode ? 'Already have an account? Log in' : 'Need an account? Sign up'}
+                {signupMode
+                  ? 'Already have an account? Log in'
+                  : 'Need an account? Sign up'}
               </Button>
             </form>
           </CardContent>
