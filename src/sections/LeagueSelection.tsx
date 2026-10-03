@@ -1,7 +1,4 @@
-import {
-  checkIfLeagueHasBlocks,
-  getTeamCountByLeague
-} from '../utils/api/get';
+import { checkIfLeagueHasBlocks, getTeamCountByLeague } from '../utils/api/get';
 import { useEffect } from 'react';
 import { useCustomHook } from '../utils/hooks';
 import List from '../sub-components/LeagueSelection/List';
@@ -19,7 +16,7 @@ interface LeagueSelectionProps {
 export default function LeagueSelection({
   onBackToLanding,
   onLogout,
-  onLeagueOpened
+  onLeagueOpened,
 }: LeagueSelectionProps) {
   const {
     listOfLeaguesByUser: leagues,
@@ -65,12 +62,10 @@ export default function LeagueSelection({
     setStartingLane,
     setNewLeagueName,
     setListOfLeaguesByUser,
-    setTotalLanes
+    setTotalLanes,
   } = useCustomHook();
 
-  const leagueIds = leagues
-    .map((league) => String(league.id))
-    .join(',');
+  const leagueIds = leagues.map((league) => String(league.id)).join(',');
 
   useEffect(() => {
     void retryLoadLeagues();
@@ -85,35 +80,29 @@ export default function LeagueSelection({
       leagues.map(async (league) => {
         const [hasBlocks, teamCount] = await Promise.all([
           checkIfLeagueHasBlocks(league.id),
-          getTeamCountByLeague(league.id)
+          getTeamCountByLeague(league.id),
         ]);
 
         return {
           id: league.id,
           hasBlocks,
-          teamCount
+          teamCount,
         };
-      })
+      }),
     )
       .then((details) => {
         if (!isCurrent) return;
 
         setLeagueBlockStatus(
           Object.fromEntries(
-            details.map(({ id, hasBlocks }) => [
-              id,
-              hasBlocks
-            ])
-          )
+            details.map(({ id, hasBlocks }) => [id, hasBlocks]),
+          ),
         );
 
         setTeamCounts(
           Object.fromEntries(
-            details.map(({ id, teamCount }) => [
-              id,
-              teamCount
-            ])
-          )
+            details.map(({ id, teamCount }) => [id, teamCount]),
+          ),
         );
 
         setIsLoadingLeagueDetails(false);

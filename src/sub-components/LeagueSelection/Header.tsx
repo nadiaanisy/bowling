@@ -1,7 +1,4 @@
-import {
-  Trophy,
-  LogOut
-} from 'lucide-react';
+import { Trophy, LogOut } from 'lucide-react';
 import { Button } from '../../components/button';
 
 interface HeaderProps {
@@ -9,15 +6,11 @@ interface HeaderProps {
   onLogout: () => void;
 }
 
-export default function Header({
-  onBackToLanding,
-  onLogout
-}: HeaderProps) {
+export default function Header({ onBackToLanding, onLogout }: HeaderProps) {
   return (
     <header className="relative z-10 border-b border-border/50 glass">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-
           <button
             type="button"
             onClick={onBackToLanding}
@@ -48,7 +41,6 @@ export default function Header({
             <LogOut className="h-4 w-4" />
             Logout
           </Button>
-
         </div>
       </div>
     </header>

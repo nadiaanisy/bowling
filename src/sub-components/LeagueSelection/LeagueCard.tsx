@@ -5,12 +5,9 @@ import {
   Layers,
   Sparkles,
   Trash2,
-  Users
+  Users,
 } from 'lucide-react';
-import {
-  Card,
-  CardContent
-} from '../../components/card';
+import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
@@ -33,7 +30,7 @@ export function LeagueCard({
   index,
   onOpen,
   onSetupBlocks,
-  onDelete
+  onDelete,
 }: LeagueCardProps) {
   return (
     <motion.div
@@ -45,10 +42,14 @@ export function LeagueCard({
         <CardContent className="p-5">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
-              <div className={`flex-shrink-0 p-3 rounded-xl ${hasBlocks ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20' : 'bg-muted/50 border border-border/50'}`}>
-                {hasBlocks
-                  ? <Database className="h-6 w-6 text-primary" />
-                  : <DatabaseZap className="h-6 w-6 text-muted-foreground" />}
+              <div
+                className={`flex-shrink-0 p-3 rounded-xl ${hasBlocks ? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20' : 'bg-muted/50 border border-border/50'}`}
+              >
+                {hasBlocks ? (
+                  <Database className="h-6 w-6 text-primary" />
+                ) : (
+                  <DatabaseZap className="h-6 w-6 text-muted-foreground" />
+                )}
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -67,7 +68,8 @@ export function LeagueCard({
                 {hasBlocks ? (
                   <div className="flex items-center gap-1 mt-0.5 text-xs text-muted-foreground">
                     <Users className="h-3 w-3" />
-                    {teamCount} {teamCount === 1 ? 'team' : 'teams'} · Click to continue
+                    {teamCount} {teamCount === 1 ? 'team' : 'teams'} · Click to
+                    continue
                   </div>
                 ) : (
                   <p className="text-xs text-muted-foreground mt-0.5">

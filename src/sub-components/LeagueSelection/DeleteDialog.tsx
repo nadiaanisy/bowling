@@ -8,7 +8,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
+  AlertDialogTitle,
 } from '../../components/alert-dialog';
 
 interface DeleteDialogProps {
@@ -26,11 +26,9 @@ export default function DeleteDialog({
   confirmMessage,
   confirmAction,
   deletingLeague,
-  setDeletingLeague
+  setDeletingLeague,
 }: DeleteDialogProps) {
-  const handleDelete = async (
-    event: React.MouseEvent
-  ) => {
+  const handleDelete = async (event: React.MouseEvent) => {
     event.preventDefault();
 
     if (deletingLeague) return;
@@ -46,26 +44,16 @@ export default function DeleteDialog({
   };
 
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="glass border-border/50">
-
         <AlertDialogHeader>
-          <AlertDialogTitle>
-            Delete league?
-          </AlertDialogTitle>
+          <AlertDialogTitle>Delete league?</AlertDialogTitle>
 
-          <AlertDialogDescription>
-            {confirmMessage}
-          </AlertDialogDescription>
+          <AlertDialogDescription>{confirmMessage}</AlertDialogDescription>
         </AlertDialogHeader>
 
         <AlertDialogFooter>
-          <AlertDialogCancel
-            disabled={deletingLeague}
-          >
+          <AlertDialogCancel disabled={deletingLeague}>
             Cancel
           </AlertDialogCancel>
 
@@ -84,7 +72,6 @@ export default function DeleteDialog({
             )}
           </AlertDialogAction>
         </AlertDialogFooter>
-
       </AlertDialogContent>
     </AlertDialog>
   );

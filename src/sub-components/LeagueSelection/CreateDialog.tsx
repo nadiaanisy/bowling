@@ -1,15 +1,11 @@
-import {
-  Loader2,
-  Plus,
-  Layers
-} from 'lucide-react';
+import { Loader2, Plus, Layers } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from '../../components/dialog';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
@@ -50,23 +46,16 @@ export default function CreateDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="glass border-border/50"
-        onPointerDownOutside={(event) =>
-          event.preventDefault()
-        }
+        onPointerDownOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Layers className="h-5 w-5 text-primary" />
 
-            <span className="gradient-text">
-              Create a New League
-            </span>
+            <span className="gradient-text">Create a New League</span>
           </DialogTitle>
 
           <DialogDescription>
@@ -76,16 +65,12 @@ export default function CreateDialog({
 
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="leagueName">
-              League Name
-            </Label>
+            <Label htmlFor="leagueName">League Name</Label>
 
             <Input
               id="leagueName"
               value={newLeagueName}
-              onChange={(event) =>
-                setNewLeagueName(event.target.value)
-              }
+              onChange={(event) => setNewLeagueName(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
                   void createLeague();
@@ -111,10 +96,7 @@ export default function CreateDialog({
 
           <Button
             onClick={() => void createLeague()}
-            disabled={
-              creatingLeague ||
-              !newLeagueName.trim()
-            }
+            disabled={creatingLeague || !newLeagueName.trim()}
             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md shadow-purple-500/30"
           >
             {creatingLeague ? (

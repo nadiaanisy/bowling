@@ -1,8 +1,4 @@
-import {
-  Loader2,
-  Plus,
-  Layers
-} from 'lucide-react';
+import { Loader2, Plus, Layers } from 'lucide-react';
 import type React from 'react';
 import {
   Dialog,
@@ -10,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter
+  DialogFooter,
 } from '../../components/dialog';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
@@ -32,7 +28,9 @@ interface BlockSetupDialogProps {
   setTotalLanes: (value: string) => void;
   creatingBlocks: boolean;
   setCreatingBlocks: (value: boolean) => void;
-  setLeagueBlockStatus: React.Dispatch<React.SetStateAction<Record<string | number, boolean>>>;
+  setLeagueBlockStatus: React.Dispatch<
+    React.SetStateAction<Record<string | number, boolean>>
+  >;
   setListOfLeaguesByUser: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
@@ -52,52 +50,29 @@ export default function BlockSetupDialog({
   creatingBlocks,
   setCreatingBlocks,
   setLeagueBlockStatus,
-  setListOfLeaguesByUser
+  setListOfLeaguesByUser,
 }: BlockSetupDialogProps) {
-  const parsedBlockCount = Number.parseInt(
-    blockCount,
-    10
-  );
+  const parsedBlockCount = Number.parseInt(blockCount, 10);
 
-  const parsedGamesPerWeek = Number.parseInt(
-    gamesPerWeek,
-    10
-  );
+  const parsedGamesPerWeek = Number.parseInt(gamesPerWeek, 10);
 
-  const parsedStartingLane = Number.parseInt(
-    startingLane,
-    10
-  );
+  const parsedStartingLane = Number.parseInt(startingLane, 10);
 
-  const parsedTotalLanes = Number.parseInt(
-    totalLanes,
-    10
-  );
+  const parsedTotalLanes = Number.parseInt(totalLanes, 10);
 
   const isValidBlockCount =
-    Number.isInteger(
-      parsedBlockCount
-    ) &&
+    Number.isInteger(parsedBlockCount) &&
     parsedBlockCount >= 1 &&
     parsedBlockCount <= 10;
 
   const isValidGamesPerWeek =
-    Number.isInteger(
-      parsedGamesPerWeek
-    ) &&
-    parsedGamesPerWeek >= 1;
+    Number.isInteger(parsedGamesPerWeek) && parsedGamesPerWeek >= 1;
 
   const isValidStartingLane =
-    Number.isInteger(
-      parsedStartingLane
-    ) &&
-    parsedStartingLane >= 1;
+    Number.isInteger(parsedStartingLane) && parsedStartingLane >= 1;
 
   const isValidTotalLanes =
-    Number.isInteger(
-      parsedTotalLanes
-    ) &&
-    parsedTotalLanes >= 1;
+    Number.isInteger(parsedTotalLanes) && parsedTotalLanes >= 1;
 
   const isValid =
     isValidBlockCount &&
@@ -116,55 +91,39 @@ export default function BlockSetupDialog({
       totalLanes,
       setLeagueBlockStatus,
       onOpenChange,
-      (
-        updatedAt,
-        savedGamesPerWeek,
-        savedStartingLane,
-        savedTotalLanes,
-      ) => {
-        if (
-          !updatedAt ||
-          selectedLeagueId === null
-        ) {
+      (updatedAt, savedGamesPerWeek, savedStartingLane, savedTotalLanes) => {
+        if (!updatedAt || selectedLeagueId === null) {
           return;
         }
 
-        setListOfLeaguesByUser(
-          (currentLeagues) =>
-            currentLeagues.map((league) =>
-              league.id === selectedLeagueId
-                ? {
-                    ...league,
-                    games_per_week: savedGamesPerWeek,
-                    starting_lane: savedStartingLane,
-                    total_lanes: savedTotalLanes,
-                    updated_at: updatedAt
-                  }
-                : league
-            )
+        setListOfLeaguesByUser((currentLeagues) =>
+          currentLeagues.map((league) =>
+            league.id === selectedLeagueId
+              ? {
+                  ...league,
+                  games_per_week: savedGamesPerWeek,
+                  starting_lane: savedStartingLane,
+                  total_lanes: savedTotalLanes,
+                  updated_at: updatedAt,
+                }
+              : league,
+          ),
         );
-      }
+      },
     );
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="glass border-border/50"
-        onPointerDownOutside={(event) =>
-          event.preventDefault()
-        }
+        onPointerDownOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Layers className="h-5 w-5 text-primary" />
 
-            <span className="gradient-text">
-              League Setup
-            </span>
+            <span className="gradient-text">League Setup</span>
           </DialogTitle>
 
           <DialogDescription>
@@ -177,12 +136,9 @@ export default function BlockSetupDialog({
         </DialogHeader>
 
         <div className="space-y-5 py-2">
-
           {/* Blocks */}
           <div className="space-y-2">
-            <Label htmlFor="blockCount">
-              Number of Blocks
-            </Label>
+            <Label htmlFor="blockCount">Number of Blocks</Label>
 
             <Input
               id="blockCount"
@@ -190,61 +146,45 @@ export default function BlockSetupDialog({
               min="1"
               max="10"
               value={blockCount}
-              onChange={(event) =>
-                setBlockCount(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setBlockCount(event.target.value)}
               placeholder="e.g. 2"
               className="bg-input border-border/50"
             />
 
             <p className="text-sm text-muted-foreground">
-              Number of blocks in this league.
-              Maximum 10.
+              Number of blocks in this league. Maximum 10.
             </p>
           </div>
 
           {/* Games Per Week */}
           <div className="space-y-2">
-            <Label htmlFor="gamesPerWeek">
-              Games per Week
-            </Label>
+            <Label htmlFor="gamesPerWeek">Games per Week</Label>
 
             <Input
               id="gamesPerWeek"
               type="number"
               min="1"
               value={gamesPerWeek}
-              onChange={(event) =>
-                setGamesPerWeek(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setGamesPerWeek(event.target.value)}
               placeholder="e.g. 3"
               className="bg-input border-border/50"
             />
 
             <p className="text-sm text-muted-foreground">
-              How many games each team plays
-              every week.
+              How many games each team plays every week.
             </p>
           </div>
 
           {/* Total Lanes */}
           <div className="space-y-2">
-            <Label htmlFor="totalLanes">
-              Total Lanes
-            </Label>
+            <Label htmlFor="totalLanes">Total Lanes</Label>
 
             <Input
               id="totalLanes"
               type="number"
               min="1"
               value={totalLanes}
-              onChange={(event) =>
-                setTotalLanes(event.target.value)
-              }
+              onChange={(event) => setTotalLanes(event.target.value)}
               placeholder="e.g. 10"
               className="bg-input border-border/50"
             />
@@ -256,20 +196,14 @@ export default function BlockSetupDialog({
 
           {/* Starting Lane */}
           <div className="space-y-2">
-            <Label htmlFor="startingLane">
-              Starting Lane
-            </Label>
+            <Label htmlFor="startingLane">Starting Lane</Label>
 
             <Input
               id="startingLane"
               type="number"
               min="1"
               value={startingLane}
-              onChange={(event) =>
-                setStartingLane(
-                  event.target.value
-                )
-              }
+              onChange={(event) => setStartingLane(event.target.value)}
               placeholder="e.g. 1"
               className="bg-input border-border/50"
             />
@@ -283,19 +217,14 @@ export default function BlockSetupDialog({
         <DialogFooter>
           <Button
             variant="outline"
-            onClick={() =>
-              onOpenChange(false)
-            }
+            onClick={() => onOpenChange(false)}
             disabled={creatingBlocks}
           >
             Cancel
           </Button>
           <Button
             onClick={() => void createSetup()}
-            disabled={
-              creatingBlocks ||
-              !isValid
-            }
+            disabled={creatingBlocks || !isValid}
             className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 shadow-md shadow-purple-500/30"
           >
             {creatingBlocks ? (
