@@ -32,8 +32,8 @@ type LaneData = {
 interface AddMatchProps {
   selectedLeague: string | null;
   blocksData: BlockData[];
-  blockNumber: number;
-  setBlockNumber: (value: number) => void;
+  blockNumber: number | null;
+  setBlockNumber: (value: number | null) => void;
   timetableTeams: LeagueTeam[];
   lanes: LaneData[];
   usedTeams: string[];
@@ -124,8 +124,8 @@ export function AddMatch({
               <Label htmlFor="block">Block</Label>
 
               <Select
-                value={blockNumber.toString()}
-                onValueChange={(value) => setBlockNumber(parseInt(value))}
+                value={blockNumber?.toString() ?? ''}
+                onValueChange={(value) => setBlockNumber(Number(value))}
               >
                 <SelectTrigger id="block">
                   <SelectValue placeholder="Select block" />

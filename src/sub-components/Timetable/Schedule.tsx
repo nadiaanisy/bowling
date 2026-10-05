@@ -43,8 +43,8 @@ type BlockData = {
 
 interface ScheduleProps {
   blocksData: BlockData[];
-  blockNumber: number;
-  setBlockNumber: (value: number) => void;
+  blockNumber: number | null;
+  setBlockNumber: (value: number | null) => void;
   matches: MatchesByBlock;
   filterWeek: string;
   filterTeam: string;
