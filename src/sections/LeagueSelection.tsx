@@ -44,6 +44,7 @@ export default function LeagueSelection({
     creatingBlocks,
     creatingLeague,
     deletingLeague,
+    playersPerGame,
     setShowBlockDialog,
     setIsLoadingLeagueDetails,
     setShowCreateLeagueDialog,
@@ -59,6 +60,7 @@ export default function LeagueSelection({
     setDeletingLeague,
     setBlockCount,
     setGamesPerWeek,
+    setPlayersPerGame,
     setStartingLane,
     setNewLeagueName,
     setListOfLeaguesByUser,
@@ -169,7 +171,13 @@ export default function LeagueSelection({
 
       <CreateDialog
         open={showCreateLeagueDialog}
-        onOpenChange={setShowCreateLeagueDialog}
+        onOpenChange={(open) => {
+          setShowCreateLeagueDialog(open);
+
+          if (!open) {
+            setNewLeagueName('');
+          }
+        }}
         newLeagueName={newLeagueName}
         setNewLeagueName={setNewLeagueName}
         creatingLeague={creatingLeague}
@@ -182,7 +190,18 @@ export default function LeagueSelection({
         open={showBlockDialog}
         onOpenChange={(open) => {
           if (!open && creatingBlocks) return;
+
           setShowBlockDialog(open);
+
+          if (!open) {
+            setBlockCount('');
+            setGamesPerWeek('');
+            setPlayersPerGame('');
+            setStartingLane('');
+            setTotalLanes('');
+            setSelectedLeagueId(null);
+            setSelectedLeagueName('');
+          }
         }}
         selectedLeagueName={selectedLeagueName}
         selectedLeagueId={selectedLeagueId}
@@ -190,6 +209,8 @@ export default function LeagueSelection({
         setBlockCount={setBlockCount}
         gamesPerWeek={gamesPerWeek}
         setGamesPerWeek={setGamesPerWeek}
+        playersPerGame={playersPerGame}
+        setPlayersPerGame={setPlayersPerGame}
         startingLane={startingLane}
         setStartingLane={setStartingLane}
         totalLanes={totalLanes}

@@ -11,7 +11,7 @@ import {
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
 import { Button } from '../../components/button';
-import { handleBlockSetup } from '../../utils/functions/league';
+import { handleLeagueSetup } from '../../utils/functions/league';
 
 interface BlockSetupDialogProps {
   open: boolean;
@@ -22,6 +22,8 @@ interface BlockSetupDialogProps {
   setBlockCount: (value: string) => void;
   gamesPerWeek: string;
   setGamesPerWeek: (value: string) => void;
+  playersPerGame: string;
+  setPlayersPerGame: (value: string) => void;
   startingLane: string;
   setStartingLane: (value: string) => void;
   totalLanes: string;
@@ -43,6 +45,8 @@ export default function BlockSetupDialog({
   setBlockCount,
   gamesPerWeek,
   setGamesPerWeek,
+  playersPerGame,
+  setPlayersPerGame,
   startingLane,
   setStartingLane,
   totalLanes,
@@ -56,6 +60,8 @@ export default function BlockSetupDialog({
 
   const parsedGamesPerWeek = Number.parseInt(gamesPerWeek, 10);
 
+  const parsedPlayersPerGame = Number.parseInt(playersPerGame, 10);
+
   const parsedStartingLane = Number.parseInt(startingLane, 10);
 
   const parsedTotalLanes = Number.parseInt(totalLanes, 10);
@@ -68,6 +74,9 @@ export default function BlockSetupDialog({
   const isValidGamesPerWeek =
     Number.isInteger(parsedGamesPerWeek) && parsedGamesPerWeek >= 1;
 
+  const isValidPlayersPerGame =
+    Number.isInteger(parsedPlayersPerGame) && parsedPlayersPerGame >= 1;
+
   const isValidStartingLane =
     Number.isInteger(parsedStartingLane) && parsedStartingLane >= 1;
 
@@ -77,21 +86,29 @@ export default function BlockSetupDialog({
   const isValid =
     isValidBlockCount &&
     isValidGamesPerWeek &&
+    isValidPlayersPerGame &&
     isValidStartingLane &&
     isValidTotalLanes;
 
   const createSetup = () => {
-    return handleBlockSetup(
+    return handleLeagueSetup(
       creatingBlocks,
       setCreatingBlocks,
       selectedLeagueId,
       blockCount,
       gamesPerWeek,
+      playersPerGame,
       startingLane,
       totalLanes,
       setLeagueBlockStatus,
       onOpenChange,
-      (updatedAt, savedGamesPerWeek, savedStartingLane, savedTotalLanes) => {
+      (
+        updatedAt,
+        savedGamesPerWeek,
+        savedPlayersPerGame,
+        savedStartingLane,
+        savedTotalLanes,
+      ) => {
         if (!updatedAt || selectedLeagueId === null) {
           return;
         }
@@ -102,6 +119,7 @@ export default function BlockSetupDialog({
               ? {
                   ...league,
                   games_per_week: savedGamesPerWeek,
+                  players_per_game: savedPlayersPerGame,
                   starting_lane: savedStartingLane,
                   total_lanes: savedTotalLanes,
                   updated_at: updatedAt,
@@ -135,10 +153,10 @@ export default function BlockSetupDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5 py-2">
+        <div className="grid grid-cols-1 gap-5 py-4 sm:grid-cols-2">
           {/* Blocks */}
           <div className="space-y-2">
-            <Label htmlFor="blockCount">Number of Blocks</Label>
+            <Label htmlFor="blockCount">No. of Blocks</Label>
 
             <Input
               id="blockCount"
@@ -152,7 +170,7 @@ export default function BlockSetupDialog({
             />
 
             <p className="text-sm text-muted-foreground">
-              Number of blocks in this league. Maximum 10.
+              No. of blocks in this league. Maximum 10.
             </p>
           </div>
 
@@ -172,6 +190,25 @@ export default function BlockSetupDialog({
 
             <p className="text-sm text-muted-foreground">
               How many games each team plays every week.
+            </p>
+          </div>
+
+          {/* Players Per Game */}
+          <div className="space-y-2">
+            <Label htmlFor="playersPerGame">Players per Game</Label>
+
+            <Input
+              id="playersPerGame"
+              type="number"
+              min="1"
+              value={playersPerGame}
+              onChange={(event) => setPlayersPerGame(event.target.value)}
+              placeholder="e.g. 3"
+              className="bg-input border-border/50"
+            />
+
+            <p className="text-sm text-muted-foreground">
+              Maximum number of players each team can use per game.
             </p>
           </div>
 
@@ -195,7 +232,7 @@ export default function BlockSetupDialog({
           </div>
 
           {/* Starting Lane */}
-          <div className="space-y-2">
+          <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="startingLane">Starting Lane</Label>
 
             <Input
