@@ -12,7 +12,7 @@ import {
   DashboardBlockSummary,
   DashboardSummaryCard,
 } from '../sub-components/Dashboard/DashboardCards';
-import { DEFAULT_MATCHES_PER_WEEK } from '../utils/constants';
+import { DEFAULT_MATCHES_PER_WEEK } from '../utils/constants/others';
 
 export default function Dashboard() {
   const {

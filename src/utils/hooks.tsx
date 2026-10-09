@@ -98,6 +98,13 @@ export const useCustomHook = () => {
   const [deletingLeague, setDeletingLeague] = useState(false);
   const [playersPerGame, setPlayersPerGame] = useState('');
 
+  // Dashboard.tsx state
+  const [loadingBlockCount, setLoadingBlockCount] = useState(0);
+  const [dashboardLoadError, setDashboardLoadError] = useState<string | null>(
+    null,
+  );
+  const [dashboardReloadKey, setDashboardReloadKey] = useState(0);
+
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -339,5 +346,14 @@ export const useCustomHook = () => {
     setDeletingLeague,
     playersPerGame,
     setPlayersPerGame,
+
+    /* Dashboard.tsx */
+    loadingBlockCount,
+    setLoadingBlockCount,
+    dashboardLoadError,
+    setDashboardLoadError,
+    dashboardReloadKey,
+    setDashboardReloadKey,
+    retryDashboard: () => setDashboardReloadKey((key) => key + 1),
   };
 };

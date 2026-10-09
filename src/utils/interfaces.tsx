@@ -71,38 +71,38 @@ export interface League {
   updated_at?: string;
 }
 
-// export type MatchesByBlock = Record<string, MatchData[]>;
+export type MatchesByBlock = Record<string, MatchData[]>;
 
-// export interface MatchData {
-//   block_id: string;
-//   week_number: number;
-//   lane: string;
-//   hasScore: boolean;
-//   team1: TeamData;
-//   team2: TeamData;
-//   match_id: number;
-//   status: 'completed' | 'pending';
-//   block1?: MatchData[];
-//   block2?: MatchData[];
-// }
+export interface MatchData {
+  block_id: string;
+  week_number: number;
+  lane: string;
+  hasScore: boolean;
+  team1: TeamData;
+  team2: TeamData;
+  match_id: number;
+  status: 'completed' | 'pending';
+  block1?: MatchData[];
+  block2?: MatchData[];
+}
 
-// export interface TeamData {
-//   id: number;
-//   name: string;
-//   totalHdc: number;
-//   scoreEntered: boolean;
-//   players: PlayerScoreDetails[];
-// }
+export interface TeamData {
+  id: number;
+  name: string;
+  totalHdc: number;
+  scoreEntered: boolean;
+  players: PlayerScoreDetails[];
+}
 
-// export interface PlayerScoreDetails {
-//   id: number;
-//   name: string;
-//   [key: `g${number}`]: number | undefined;
-//   scratch?: number;
-//   hdc?: number;
-//   totalWHdc?: number;
-//   avg?: number;
-// }
+export interface PlayerScoreDetails {
+  id: number;
+  name: string;
+  [key: `g${number}`]: number | undefined;
+  scratch?: number;
+  hdc?: number;
+  totalWHdc?: number;
+  avg?: number;
+}
 
 // export interface LeagueTeam {
 //   id: string | number;
