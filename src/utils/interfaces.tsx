@@ -37,13 +37,13 @@ export interface User {
   user_name?: string;
 }
 
-// export interface NewUser {
-//   id: string | number;
-//   user_name: string;
-//   name: string;
-//   created_at?: string;
-//   updated_at?: string;
-// }
+export interface NewUser {
+  id: string | number;
+  user_name: string;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export interface DashboardData {
   total_blocks: number;
@@ -104,31 +104,31 @@ export interface PlayerScoreDetails {
   avg?: number;
 }
 
-// export interface LeagueTeam {
-//   id: string | number;
-//   name: string;
-//   league_id: string | number;
-//   notes?: string | null;
-//   created_at?: string;
-//   updated_at?: string;
-// }
+export interface LeagueTeam {
+  id: string | number;
+  name: string;
+  league_id: string | number;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
 
-// export interface LeagueMember {
-//   id: string | number;
-//   name: string;
-//   team_id?: string | number;
-//   league_id?: string | number;
-//   type?: 'regular' | 'substitute';
-//   status?: string;
-//   position?: string | null;
-//   notes?: string | null;
-//   created_at?: string;
-//   updated_at?: string;
-// }
+export interface LeagueMember {
+  id: string | number;
+  name: string;
+  team_id?: string | number;
+  league_id?: string | number;
+  type?: 'regular' | 'substitute';
+  status?: string;
+  position?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
 
-// export interface LeagueTeamWithMembers extends LeagueTeam {
-//   members: LeagueMember[];
-// }
+export interface LeagueTeamWithMembers extends LeagueTeam {
+  members: LeagueMember[];
+}
 
 // export interface LeagueBlock {
 //   id: string | number;

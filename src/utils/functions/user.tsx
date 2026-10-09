@@ -6,7 +6,7 @@ import {
   getUsernameValidationError,
 } from './validation-error';
 import { toast } from 'sonner';
-import { addUser } from '../../../src2/utils/api/add';
+import { addUser } from '../api/add';
 import type { FormEvent } from 'react';
 
 /* Handles login form validation, authentication, and loading states. */

@@ -3,7 +3,39 @@ import { catchError } from '../functions/toasts';
 import { errorToastStyle } from '../functions/toast-styles';
 import { insertHelper } from '../supabase/supabaseHelper';
 import { table } from '../constants/db';
-import { League } from '../interfaces';
+import { League, NewUser } from '../interfaces';
+
+/* Creates a new user account and handles duplicate usernames and errors. */
+export const addUser = async (
+  name: string,
+  username: string,
+  password: string,
+): Promise<NewUser | null> => {
+  try {
+    const { data, error } = await insertHelper(table.user, {
+      name: name.trim(),
+      user_name: username.trim(),
+      password,
+    })
+      .select('id, name, user_name, created_at, updated_at')
+      .single();
+
+    if (error) {
+      toast.error(
+        error.code === '23505'
+          ? 'That username is already in use.'
+          : 'Error creating account: ' + error.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    return data as unknown as NewUser;
+  } catch (err) {
+    catchError('Error creating account: ', err);
+    return null;
+  }
+};
 
 /* Creates the specified number of blocks for a league. */
 export const addBlockForLeague = async (

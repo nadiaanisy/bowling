@@ -44,6 +44,8 @@ export const useCustomHook = () => {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null,
   );
+  const [CurrentPage, setCurrentPage] = useState('dashboard');
+  const [MobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Landing.tsx state
   const [ShowLanding, setShowLanding] = useState(true);
@@ -251,6 +253,10 @@ export const useCustomHook = () => {
     sessionExpired,
     setSessionExpired,
     retryLoadLeagues,
+    CurrentPage,
+    setCurrentPage,
+    MobileMenuOpen,
+    setMobileMenuOpen,
 
     isLoadingSkeleton,
     setIsLoadingSkeleton,
