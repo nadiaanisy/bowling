@@ -6,11 +6,11 @@ export const sql_query = {
 /* Defines database table names used throughout the application. */
 export const table = {
   user: 'user',
-  //   leagues: 'leagues',
-  //   blocks: 'blocks',
-  //   teams: 'teams',
-  //   players: 'players',
-  //   timetable: 'timetable',
-  //   weeklyScore: 'weekly_scores',
-  //   handicapSettings: 'handicap_settings'
+  leagues: 'leagues',
+  blocks: 'blocks',
+  teams: 'teams',
+  players: 'players',
+  timetable: 'timetable',
+  weeklyScore: 'weekly_scores',
+  handicapSettings: 'handicap_settings',
 };

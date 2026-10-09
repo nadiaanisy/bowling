@@ -15,10 +15,7 @@ import {
   CardTitle,
 } from '../components/card';
 import { toast } from 'sonner';
-import {
-  handleLoginSubmit,
-  handleSignupSubmit,
-} from '../../src/utils/functions/user';
+import { handleLoginSubmit, handleSignupSubmit } from '../utils/functions/user';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Input } from '../components/input';
@@ -31,7 +28,7 @@ import {
   getPasswordValidationError,
   getSignupNameValidationError,
   getUsernameValidationError,
-} from '../../src/utils/functions/validation-error';
+} from '../utils/functions/validation-error';
 import { errorToastStyle } from '../utils/functions/toast-styles';
 
 interface LoginProps {

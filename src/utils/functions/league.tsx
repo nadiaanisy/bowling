@@ -7,7 +7,7 @@ import { League } from '../interfaces';
 import { updateLeagueSetup } from '../api/update';
 import { deleteLeagueWithData } from '../api/delete';
 
-/* --- Handle Selection of League --- */
+/* Handles selecting a league and updating the selected league details. */
 export const handleLeagueSelect = (
   leagueId: string | number,
   leagueName: string,
@@ -24,7 +24,7 @@ export const handleLeagueSelect = (
   void selectLeague({ id: leagueId, hasBlocks });
 };
 
-/* --- League Setup --- */
+/* Validates league setup inputs, saves configuration, and creates blocks. */
 export const handleLeagueSetup = async (
   creatingBlocks: boolean,
   setCreatingBlocks: (creating: boolean) => void,
@@ -123,7 +123,7 @@ export const handleLeagueSetup = async (
   }
 };
 
-/* --- Create League --- */
+/* Validates input and creates a new league for the current user. */
 export const handleCreateLeague = async (
   creatingLeague: boolean,
   setCreatingLeague: (creating: boolean) => void,
@@ -170,7 +170,7 @@ export const handleCreateLeague = async (
   }
 };
 
-/* --- Open Existing League Setup --- */
+/* Opens the setup dialog for an existing league without blocks. */
 export const handleLeagueBlockSetup = (
   leagueId: string | number,
   leagueName: string,
@@ -190,7 +190,7 @@ export const handleLeagueBlockSetup = (
   if (!hasBlocks) setShowBlockDialog(true);
 };
 
-/* --- Delete League --- */
+/* Confirms league deletion and removes its data and related UI state. */
 export const handleDeleteLeague = (
   leagueId: string | number,
   leagueName: string,
