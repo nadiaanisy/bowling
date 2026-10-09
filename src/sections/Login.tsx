@@ -15,20 +15,23 @@ import {
   CardTitle,
 } from '../components/card';
 import { toast } from 'sonner';
-import { handleLoginSubmit, handleSignupSubmit } from '../utils/functions/user';
+import {
+  handleLoginSubmit,
+  handleSignupSubmit,
+} from '../../src/utils/functions/user';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Input } from '../components/input';
 import { Label } from '../components/label';
+import { Button } from '../components/button';
+import { useCustomHook } from '../utils/hooks';
 import {
   getConfirmPasswordValidationError,
   getPasswordStrength,
   getPasswordValidationError,
   getSignupNameValidationError,
   getUsernameValidationError,
-} from '../utils/functions/validation-error';
-import { Button } from '../components/button';
-import { useCustomHook } from '../utils/hooks';
+} from '../../src/utils/functions/validation-error';
 import { errorToastStyle } from '../utils/functions/toast-styles';
 
 interface LoginProps {

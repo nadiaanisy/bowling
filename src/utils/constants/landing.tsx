@@ -1,3 +1,6 @@
+import { Shield } from 'lucide-react';
+
+/* Defines the benefits displayed on the landing page. */
 export const benefits: [] = [
   // 'Automated handicap calculations',
   // 'Multi-block season tracking',
@@ -7,6 +10,7 @@ export const benefits: [] = [
   // 'Easy score entry and validation',
 ];
 
+/* Defines the main features displayed on the landing page. */
 export const features: {
   icon: any;
   title: string;
@@ -57,6 +61,7 @@ export const features: {
   //   // },
 ];
 
+/* Defines the statistics displayed on the landing page. */
 export const stats: {
   label: any;
   value: any;
@@ -67,6 +72,7 @@ export const stats: {
   //   // { label: 'Players Tracked', value: '∞' },
 ];
 
+/* Defines detailed descriptions and bullet points for each feature. */
 export const featureDetails: {
   icon: any;
   color: any;
@@ -180,19 +186,20 @@ export const featureDetails: {
   //   // },
 ];
 
+/* Defines the step-by-step process of using the application. */
 export const howItWorks: {
   step: string;
   icon: any;
   title: string;
   description: string;
 }[] = [
-  //   {
-  //     step: '01',
-  //     icon: Shield,
-  //     title: 'Sign In',
-  //     description:
-  //       'Access the system with your league password. A single secure entry point protects all your data.',
-  //   },
+  {
+    step: '01',
+    icon: Shield,
+    title: 'Log In',
+    description:
+      'Access the system with your account. A single secure entry point protects all your data.',
+  },
   //   // {
   //   //   step: '02',
   //   //   icon: BookOpen,
@@ -223,6 +230,7 @@ export const howItWorks: {
   //   // },
 ];
 
+/* Defines frequently asked questions and their answers. */
 export const faqs: {
   question: string;
   answer: string;
@@ -259,6 +267,7 @@ export const faqs: {
   //   // },
 ];
 
+/* Defines the key capabilities and highlights of the application. */
 export const capabilities: {
   value: string;
   label: string;
