@@ -103,7 +103,7 @@ export default function Hero({ onGetStarted, onLearnMore }: HeroProps) {
               transition={{ delay: 0.8 }}
               className="absolute bottom-6 left-6 glass rounded-xl p-4 backdrop-blur-xl"
             >
-              <div className="flex items-center gap-3">
+              {/* <div className="flex items-center gap-3">
                 <div className="bg-gradient-to-br from-purple-500 to-pink-500 p-3 rounded-lg">
                   <TrendingUp className="h-6 w-6 text-white" />
                 </div>
@@ -116,7 +116,7 @@ export default function Hero({ onGetStarted, onLearnMore }: HeroProps) {
                     +24 pins
                   </div>
                 </div>
-              </div>
+              </div> */}
             </motion.div>
           </div>
         </motion.div>

@@ -1,6 +1,6 @@
 import { checkIfLeagueHasBlocks, getTeamCountByLeague } from '../utils/api/get';
 import { useEffect } from 'react';
-import { useCustomHook } from '../utils/hooks';
+import { UseHook } from '../utils/hooks';
 import List from '../sub-components/LeagueSelection/List';
 import Header from '../sub-components/LeagueSelection/Header';
 import CreateDialog from '../sub-components/LeagueSelection/CreateDialog';
@@ -65,9 +65,9 @@ export default function LeagueSelection({
     setNewLeagueName,
     setListOfLeaguesByUser,
     setTotalLanes,
-  } = useCustomHook();
+  } = UseHook();
 
-  const leagueIds = leagues.map((league) => String(league.id)).join(',');
+  const leagueIds = leagues.map((league: any) => String(league.id)).join(',');
 
   useEffect(() => {
     void retryLoadLeagues();
@@ -79,7 +79,7 @@ export default function LeagueSelection({
     setIsLoadingLeagueDetails(leagues.length > 0);
 
     Promise.all(
-      leagues.map(async (league) => {
+      leagues.map(async (league: any) => {
         const [hasBlocks, teamCount] = await Promise.all([
           checkIfLeagueHasBlocks(league.id),
           getTeamCountByLeague(league.id),

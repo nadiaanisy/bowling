@@ -26,6 +26,12 @@ import type {
 
 const Context = createContext<any | undefined>(undefined);
 
+export function Provider({ children }: { children: ReactNode }) {
+  const value = useCustomHook();
+
+  return <Context.Provider value={value}>{children}</Context.Provider>;
+}
+
 export const UseHook = () => {
   const context = useContext(Context);
   if (!context) {

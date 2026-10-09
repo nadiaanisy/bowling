@@ -18,10 +18,10 @@ import { toast } from 'sonner';
 import { handleLoginSubmit, handleSignupSubmit } from '../utils/functions/user';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
+import { UseHook } from '../utils/hooks';
 import { Input } from '../components/input';
 import { Label } from '../components/label';
 import { Button } from '../components/button';
-import { useCustomHook } from '../utils/hooks';
 import {
   getConfirmPasswordValidationError,
   getPasswordStrength,
@@ -59,7 +59,7 @@ export default function Login({ onBack }: LoginProps) {
     setConfirmPassword,
     confirmPasswordError,
     setConfirmPasswordError,
-  } = useCustomHook();
+  } = UseHook();
 
   const isSignupValid = Boolean(
     signupName.trim() &&
@@ -216,7 +216,7 @@ export default function Login({ onBack }: LoginProps) {
                   onChange={(e) => {
                     const value = e.target.value;
                     setUsername(value);
-                    setFieldErrors((currentErrors) => ({
+                    setFieldErrors((currentErrors: any) => ({
                       ...currentErrors,
                       username: getUsernameValidationError(value),
                     }));
@@ -250,7 +250,7 @@ export default function Login({ onBack }: LoginProps) {
                     onChange={(e) => {
                       const value = e.target.value;
                       setPassword(value);
-                      setFieldErrors((currentErrors) => ({
+                      setFieldErrors((currentErrors: any) => ({
                         ...currentErrors,
                         password: getPasswordValidationError(value),
                       }));
@@ -275,7 +275,7 @@ export default function Login({ onBack }: LoginProps) {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword((visible) => !visible)}
+                    onClick={() => setShowPassword((visible: any) => !visible)}
                     aria-label={
                       showPassword ? 'Hide password' : 'Show password'
                     }
@@ -367,7 +367,7 @@ export default function Login({ onBack }: LoginProps) {
                 className="w-full"
                 disabled={Loading}
                 onClick={() => {
-                  setSignupMode((mode) => !mode);
+                  setSignupMode((mode: any) => !mode);
                   setUsername('');
                   setSignupName('');
                   setFieldErrors({ username: '', password: '' });
