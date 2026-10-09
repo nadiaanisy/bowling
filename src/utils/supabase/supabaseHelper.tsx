@@ -3,7 +3,7 @@ import { supabase } from './supabaseClient';
 /* SUPABASE HELPER */
 export const getHelper = (table: string, query: string, options?: any) => {
   return supabase.from(table).select(query, options);
-}
+};
 
 export const insertHelper = (table: string, values: any) => {
   return supabase.from(table).insert(values);
