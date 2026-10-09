@@ -3,7 +3,7 @@ import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
-import { features } from '../../utils/constants';
+import { features } from '../../utils/constants/landing';
 
 interface FeaturesProps {
   hoveredFeature: number | null;

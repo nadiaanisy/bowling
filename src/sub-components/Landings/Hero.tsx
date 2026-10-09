@@ -1,8 +1,8 @@
 import { ArrowRight, Award, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
-import { stats } from '../../utils/constants';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
+import { stats } from '../../utils/constants/landing';
 import { ImageWithFallback } from '../../components/ImageWithFallback';
 
 interface HeroProps {

@@ -1,8 +1,8 @@
 import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
-import { faqs } from '../../utils/constants';
 import { Badge } from '../../components/badge';
+import { faqs } from '../../utils/constants/landing';
 
 interface FAQProps {
   openFaq: number | null;

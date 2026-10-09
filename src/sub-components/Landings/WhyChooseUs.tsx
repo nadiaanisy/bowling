@@ -2,20 +2,12 @@ import { ArrowRight, Award, CheckCircle2, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
+import { benefits } from '../../utils/constants/landing';
 import { ImageWithFallback } from '../../components/ImageWithFallback';
 
 interface WhyChooseUsProps {
   onGetStarted: () => void;
 }
-
-const benefits = [
-  'Automated handicap calculations',
-  'Multi-block season tracking',
-  'Player transfer management',
-  'AI-powered match predictions',
-  'Comprehensive performance analytics',
-  'Easy score entry and validation',
-];
 
 export default function WhyChooseUs({ onGetStarted }: WhyChooseUsProps) {
   return (

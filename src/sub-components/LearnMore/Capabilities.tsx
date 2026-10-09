@@ -12,7 +12,7 @@ import {
 import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { Badge } from '../../components/badge';
-import { capabilities } from '../../utils/constants';
+import { capabilities } from '../../utils/constants/landing';
 
 export default function Capabilities() {
   return (

@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { CheckCircle2 } from 'lucide-react';
-import { featureDetails } from '../../utils/constants';
+import { featureDetails } from '../../utils/constants/landing';
 import { ImageWithFallback } from '../../components/ImageWithFallback';
 
 export default function Features() {

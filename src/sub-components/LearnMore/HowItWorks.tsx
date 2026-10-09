@@ -2,7 +2,7 @@ import { Card, CardContent } from '../../components/card';
 import { motion } from 'motion/react';
 import { RefreshCw } from 'lucide-react';
 import { Badge } from '../../components/badge';
-import { howItWorks } from '../../utils/constants';
+import { howItWorks } from '../../utils/constants/landing';
 
 export default function HowItWorks() {
   return (
