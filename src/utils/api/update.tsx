@@ -3,6 +3,7 @@ import { errorToastStyle } from '../functions/toast-styles';
 import { catchError } from '../functions/toasts';
 import { updateHelper } from '../supabase/supabaseHelper';
 import { table } from '../constants/db';
+import { HandicapSetting } from '../interfaces';
 
 /* Updates a league's configuration settings and timestamp. */
 export const updateLeagueSetup = async (
@@ -87,6 +88,48 @@ export const touchTeamUpdatedAt = async (
     return updatedAt;
   } catch (err) {
     catchError('Error updating team timestamp: ', err);
+    return null;
+  }
+};
+
+/* Updates a handicap setting and its last modified timestamp. */
+export const updateHandicapSetting = async (
+  id: string | number,
+  leagueId: string | number,
+  average: number,
+  handicap: number,
+): Promise<HandicapSetting | null> => {
+  try {
+    if (!Number.isFinite(average)) {
+      toast.error('Average must be a valid number.', errorToastStyle);
+      return null;
+    }
+
+    if (!Number.isFinite(handicap)) {
+      toast.error('Handicap must be a valid number.', errorToastStyle);
+      return null;
+    }
+
+    const updatedAt = new Date().toISOString();
+
+    const { data, error } = await updateHelper(table.handicapSettings, {
+      average,
+      handicap,
+      updated_at: updatedAt,
+    })
+      .eq('id', id)
+      .eq('league_id', leagueId)
+      .select('id, league_id, average, handicap, created_at, updated_at')
+      .single();
+
+    if (error) {
+      toast.error('Error updating handicap: ' + error.message, errorToastStyle);
+      return null;
+    }
+
+    return data as unknown as HandicapSetting;
+  } catch (err) {
+    catchError('Error updating handicap: ', err);
     return null;
   }
 };

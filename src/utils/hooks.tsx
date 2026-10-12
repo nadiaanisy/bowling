@@ -13,6 +13,7 @@ import { checkIfLeagueHasBlocks, getLeaguesByUser, loginUser } from './api/get';
 import type {
   // //   ContextType,
   DashboardData,
+  HandicapSetting,
   // //   HandicapRule,
   // //   Lane,
   League,
@@ -52,6 +53,9 @@ export const useCustomHook = () => {
   );
   const [CurrentPage, setCurrentPage] = useState('dashboard');
   const [MobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
 
   // Landing.tsx state
   const [ShowLanding, setShowLanding] = useState(true);
@@ -112,6 +116,24 @@ export const useCustomHook = () => {
     null,
   );
   const [dashboardReloadKey, setDashboardReloadKey] = useState(0);
+
+  /* Handicap.tsx state */
+  const [rules, setRules] = useState<HandicapSetting[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkInput, setBulkInput] = useState('');
+  const [bulkError, setBulkError] = useState('');
+  const [selectedRuleIds, setSelectedRuleIds] = useState<
+    Array<string | number>
+  >([]);
+  const [editingRule, setEditingRule] = useState<HandicapSetting | null>(null);
+  const [ruleToDelete, setRuleToDelete] = useState<HandicapSetting | null>(
+    null,
+  );
+  const [average, setAverage] = useState('');
+  const [handicap, setHandicap] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -367,5 +389,37 @@ export const useCustomHook = () => {
     dashboardReloadKey,
     setDashboardReloadKey,
     retryDashboard: () => setDashboardReloadKey((key) => key + 1),
+
+    /* Handicap.tsx */
+    rules,
+    setRules,
+    isLoading,
+    setIsLoading,
+    loadError,
+    setLoadError,
+    bulkDialogOpen,
+    setBulkDialogOpen,
+    bulkInput,
+    setBulkInput,
+    bulkError,
+    setBulkError,
+    selectedRuleIds,
+    setSelectedRuleIds,
+    editingRule,
+    setEditingRule,
+    ruleToDelete,
+    setRuleToDelete,
+    average,
+    setAverage,
+    handicap,
+    setHandicap,
+    isSaving,
+    setIsSaving,
+    dialogOpen,
+    setDialogOpen,
+    deleteDialogOpen,
+    setDeleteDialogOpen,
+    bulkDeleteDialogOpen,
+    setBulkDeleteDialogOpen,
   };
 };

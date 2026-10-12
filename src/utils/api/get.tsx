@@ -1,5 +1,6 @@
 import {
   DashboardData,
+  HandicapSetting,
   League,
   MatchData,
   MatchesByBlock,
@@ -318,5 +319,29 @@ export const getAllMatchesGroupedByMatchAndBlock = async (
   } catch (err) {
     catchError('Unexpected error:', err);
     return {};
+  }
+};
+
+/* Fetches handicap settings for a league, sorted by average in ascending order. */
+export const getHandicapSettings = async (
+  leagueId: string | number,
+): Promise<HandicapSetting[]> => {
+  try {
+    const { data, error } = await getHelper(
+      table.handicapSettings,
+      'id, league_id, average, handicap, created_at, updated_at',
+    )
+      .eq('league_id', leagueId)
+      .order('average', { ascending: true });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return (data ?? []) as unknown as HandicapSetting[];
+  } catch (err) {
+    throw err instanceof Error
+      ? err
+      : new Error('Unable to load handicap settings.');
   }
 };

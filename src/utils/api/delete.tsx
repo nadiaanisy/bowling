@@ -46,3 +46,54 @@ export const deleteLeagueWithData = async (
     return null;
   }
 };
+
+/* Deletes a single handicap setting from a league. */
+export const deleteHandicapSetting = async (
+  id: string | number,
+  leagueId: string | number,
+): Promise<boolean | null> => {
+  try {
+    const { data, error } = await deleteHelper(table.handicapSettings)
+      .eq('id', id)
+      .eq('league_id', leagueId)
+      .select('id');
+
+    if (error) {
+      toast.error('Error deleting handicap: ' + error.message, errorToastStyle);
+      return false;
+    }
+
+    return (data?.length ?? 0) > 0;
+  } catch (err) {
+    catchError('Error deleting handicap: ', err);
+    return null;
+  }
+};
+
+/* Deletes multiple handicap settings from a league in bulk. */
+export const deleteHandicapSettings = async (
+  ids: Array<string | number>,
+  leagueId: string | number,
+): Promise<number | null> => {
+  if (ids.length === 0) return 0;
+
+  try {
+    const { data, error } = await deleteHelper(table.handicapSettings)
+      .in('id', ids)
+      .eq('league_id', leagueId)
+      .select('id');
+
+    if (error) {
+      toast.error(
+        'Error deleting handicaps: ' + error.message,
+        errorToastStyle,
+      );
+      return 0;
+    }
+
+    return data?.length ?? 0;
+  } catch (err) {
+    catchError('Error deleting handicaps: ', err);
+    return null;
+  }
+};

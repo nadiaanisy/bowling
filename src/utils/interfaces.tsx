@@ -193,20 +193,11 @@ export interface LeagueTeamWithMembers extends LeagueTeam {
 //   gamesPlayed: number;
 // }
 
-// export interface HandicapSetting {
-//   id: string | number;
-//   league_id: string | number;
-//   average: number;
-//   handicap: number;
-//   created_at?: string;
-//   updated_at?: string;
-// }
-
-// export interface HandicapRule {
-//   id: string | number;
-//   league_id?: string | number;
-//   average: number;
-//   handicap: number;
-//   created_at?: string;
-//   updated_at?: string;
-// }
+export interface HandicapSetting {
+  id: string | number;
+  league_id: string | number;
+  average: number;
+  handicap: number;
+  created_at?: string;
+  updated_at?: string;
+}
