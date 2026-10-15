@@ -3,7 +3,13 @@ import { catchError } from '../functions/toasts';
 import { errorToastStyle } from '../functions/toast-styles';
 import { insertHelper } from '../supabase/supabaseHelper';
 import { table } from '../constants/db';
-import { HandicapSetting, League, NewUser } from '../interfaces';
+import {
+  HandicapSetting,
+  League,
+  LeagueMember,
+  LeagueTeam,
+  NewUser,
+} from '../interfaces';
 
 /* Creates a new user account and handles duplicate usernames and errors. */
 export const addUser = async (
@@ -241,5 +247,132 @@ export const addLeagueHandicapConfig = async (
   } catch (err) {
     catchError('Error creating handicap configuration: ', err);
     return false;
+  }
+};
+
+/* Adds a player to a team within a league. */
+export const addPlayerToTeam = async (
+  name: string,
+  teamId: string | number,
+  leagueId: string | number,
+  type: 'regular' | 'substitute' = 'regular',
+): Promise<LeagueMember | null> => {
+  try {
+    const createdAt = new Date().toISOString();
+    const { data, error } = await insertHelper(table.players, {
+      name,
+      team_id: teamId,
+      league_id: leagueId,
+      type,
+      status: 'active',
+      created_at: createdAt,
+      updated_at: createdAt,
+    })
+      .select(
+        'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
+      )
+      .single();
+
+    if (error) {
+      toast.error('Error creating player: ' + error.message, errorToastStyle);
+      return null;
+    }
+
+    return data as unknown as LeagueMember;
+  } catch (err) {
+    catchError('Error creating player: ', err);
+    return null;
+  }
+};
+
+/* Adds multiple players to a team within a league. */
+export const addPlayersToTeam = async (
+  names: string[],
+  teamId: string | number,
+  leagueId: string | number,
+  type: 'regular' | 'substitute' = 'regular',
+): Promise<LeagueMember[]> => {
+  try {
+    const createdAt = new Date().toISOString();
+    const players = names.map((name) => ({
+      name,
+      team_id: teamId,
+      league_id: leagueId,
+      type,
+      status: 'active',
+      created_at: createdAt,
+      updated_at: createdAt,
+    }));
+    const { data, error } = await insertHelper(table.players, players).select(
+      'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
+    );
+
+    if (error) {
+      toast.error('Error creating players: ' + error.message, errorToastStyle);
+      return [];
+    }
+
+    return (data || []) as unknown as LeagueMember[];
+  } catch (err) {
+    catchError('Error creating players: ', err);
+    return [];
+  }
+};
+
+/* Creates a new team within a league. */
+export const addTeam = async (
+  name: string,
+  leagueId: string | number,
+): Promise<LeagueTeam | null> => {
+  try {
+    const createdAt = new Date().toISOString();
+    const { data, error } = await insertHelper(table.teams, {
+      name,
+      league_id: leagueId,
+      created_at: createdAt,
+    })
+      .select('id, name, league_id, notes, created_at, updated_at')
+      .single();
+
+    if (error) {
+      toast.error('Error creating team: ' + error.message, errorToastStyle);
+      return null;
+    }
+
+    return data as unknown as LeagueTeam;
+  } catch (err) {
+    catchError('Error creating team: ', err);
+    return null;
+  }
+};
+
+/* Creates multiple teams within a league. */
+export const addTeams = async (
+  names: string[],
+  leagueId: string | number,
+): Promise<LeagueTeam[]> => {
+  try {
+    const createdAt = new Date().toISOString();
+
+    const teams = names.map((name) => ({
+      name,
+      league_id: leagueId,
+      created_at: createdAt,
+    }));
+
+    const { data, error } = await insertHelper(table.teams, teams).select(
+      'id, name, league_id, notes, created_at, updated_at',
+    );
+
+    if (error) {
+      toast.error('Error creating teams: ' + error.message, errorToastStyle);
+
+      return [];
+    }
+
+    return (data || []) as unknown as LeagueTeam[];
+  } catch (err) {
+    catchError('Error creating teams: ', err);
+    return [];
   }
 };
