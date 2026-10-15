@@ -14,10 +14,14 @@ import type {
   // //   ContextType,
   DashboardData,
   HandicapSetting,
+  Lane,
   // //   HandicapRule,
   // //   Lane,
   League,
+  LeagueBlock,
+  LeagueTeam,
   LeagueTeamWithMembers,
+  MatchesByBlock,
   // //   LeagueBlock,
   // //   LeagueTeam,
   // //   LeagueTeamWithMembers,
@@ -205,6 +209,32 @@ export const useCustomHook = () => {
   const [pendingDeleteType, setPendingDeleteType] = useState<
     'team' | 'teams' | 'player' | 'players' | null
   >(null);
+
+  /* Timetable.tsx */
+  const [blocksData, setBlocksData] = useState<LeagueBlock[]>([]);
+  const [blockNumber, setBlockNumber] = useState<number | null>(null);
+  const [timetableTeams, setTimetableTeams] = useState<LeagueTeam[]>([]);
+  const [lanes, setLanes] = useState<Lane[]>([]);
+  const [matches, setMatches] = useState<MatchesByBlock>({});
+  const [usedTeams, setUsedTeams] = useState<string[]>([]);
+  const [usedLanes, setUsedLanes] = useState<string[]>([]);
+  const [team1, setTeam1] = useState('');
+  const [team2, setTeam2] = useState('');
+  const [week, setWeek] = useState('');
+  const [selectedLane, setSelectedLane] = useState('');
+  const [filterWeek, setFilterWeek] = useState('all');
+  const [filterTeam, setFilterTeam] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [isLoadingTimetable, setIsLoadingTimetable] = useState(false);
+  const [timetableLoadError, setTimetableLoadError] = useState<string | null>(
+    null,
+  );
+  const [timetableReloadKey, setTimetableReloadKey] = useState(0);
+  const [creatingMatch, setCreatingMatch] = useState(false);
+  const [deletingMatch, setDeletingMatch] = useState(false);
+  const [selectedMatchIds, setSelectedMatchIds] = useState<
+    Array<string | number>
+  >([]);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -580,5 +610,47 @@ export const useCustomHook = () => {
     setMultipleTeamNames,
     creatingTeams,
     setCreatingTeams,
+
+    /* Timetable.tsx */
+    blocksData,
+    setBlocksData,
+    blockNumber,
+    setBlockNumber,
+    timetableTeams,
+    setTimetableTeams,
+    lanes,
+    setLanes,
+    matches,
+    setMatches,
+    usedTeams,
+    setUsedTeams,
+    usedLanes,
+    setUsedLanes,
+    team1,
+    setTeam1,
+    team2,
+    setTeam2,
+    week,
+    setWeek,
+    selectedLane,
+    setSelectedLane,
+    filterWeek,
+    setFilterWeek,
+    filterTeam,
+    setFilterTeam,
+    filterStatus,
+    setFilterStatus,
+    isLoadingTimetable,
+    setIsLoadingTimetable,
+    timetableLoadError,
+    setTimetableLoadError,
+    timetableReloadKey,
+    retryTimetable: () => setTimetableReloadKey((key) => key + 1),
+    creatingMatch,
+    setCreatingMatch,
+    deletingMatch,
+    setDeletingMatch,
+    selectedMatchIds,
+    setSelectedMatchIds,
   };
 };

@@ -1,7 +1,4 @@
-import {
-  errorToastStyle,
-  successToastStyle
-} from './toast-styles';
+import { errorToastStyle, successToastStyle } from './toast-styles';
 import { toast } from 'sonner';
 import { FormEvent } from 'react';
 import { catchError } from './toasts';
@@ -18,7 +15,7 @@ export const handleAddMatch = async (
   team1Id: string,
   team2Id: string,
   lane: string,
-  onSuccess: () => void
+  onSuccess: () => void,
 ) => {
   event.preventDefault();
   if (creatingMatch) return;
@@ -51,7 +48,14 @@ export const handleAddMatch = async (
 
   setCreatingMatch(true);
   try {
-    const created = await addMatchToSchedule(leagueId, blockId, week, team1Id, team2Id, lane);
+    const created = await addMatchToSchedule(
+      leagueId,
+      blockId,
+      week,
+      team1Id,
+      team2Id,
+      lane,
+    );
     if (!created) return;
 
     toast.success('Match scheduled successfully.', successToastStyle);
@@ -65,7 +69,7 @@ export const handleDeleteMatch = async (
   deletingMatch: boolean,
   setDeletingMatch: (deleting: boolean) => void,
   matchId: string | number,
-  onSuccess: () => void
+  onSuccess: () => void,
 ) => {
   if (deletingMatch) return;
 
@@ -85,7 +89,7 @@ export const handleBulkDeleteMatches = async (
   deletingMatch: boolean,
   setDeletingMatch: (deleting: boolean) => void,
   matchIds: Array<string | number>,
-  onSuccess: () => void
+  onSuccess: () => void,
 ) => {
   if (deletingMatch || matchIds.length === 0) return;
 
@@ -93,7 +97,7 @@ export const handleBulkDeleteMatches = async (
 
   try {
     const results = await Promise.all(
-      matchIds.map((matchId) => deleteMatchFromSchedule(matchId))
+      matchIds.map((matchId) => deleteMatchFromSchedule(matchId)),
     );
 
     const deletedCount = results.filter((result) => result === true).length;
@@ -101,13 +105,13 @@ export const handleBulkDeleteMatches = async (
     if (deletedCount === 0) return;
 
     toast.success(
-      `${deletedCount} match${deletedCount === 1 ? "" : "es"} removed from schedule.`,
-      successToastStyle
+      `${deletedCount} match${deletedCount === 1 ? '' : 'es'} removed from schedule.`,
+      successToastStyle,
     );
 
     onSuccess();
   } catch (err) {
-    catchError("Error deleting selected matches: ", err);
+    catchError('Error deleting selected matches: ', err);
   } finally {
     setDeletingMatch(false);
   }

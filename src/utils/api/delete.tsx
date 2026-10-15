@@ -236,3 +236,22 @@ export const deletePlayersFromTeam = async (
     return null;
   }
 };
+
+/* Deletes a match from the timetable by its ID. */
+export const deleteMatchFromSchedule = async (
+  matchId: string | number,
+): Promise<boolean | null> => {
+  try {
+    const { error } = await deleteHelper(table.timetable).eq('id', matchId);
+
+    if (error) {
+      toast.error('Error deleting match: ' + error.message, errorToastStyle);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    catchError('Error deleting match: ', err);
+    return null;
+  }
+};

@@ -376,3 +376,34 @@ export const addTeams = async (
     return [];
   }
 };
+
+/* Adds a match to the league timetable for a specific week, block, and lane. */
+export const addMatchToSchedule = async (
+  leagueId: string | number,
+  blockId: string | number,
+  weekNumber: number,
+  team1Id: string | number,
+  team2Id: string | number,
+  lane: string | number,
+): Promise<boolean | null> => {
+  try {
+    const { error } = await insertHelper(table.timetable, {
+      league_id: leagueId,
+      block_id: blockId,
+      week_number: weekNumber,
+      team1_id: team1Id,
+      team2_id: team2Id,
+      lane: lane,
+    });
+
+    if (error) {
+      toast.error('Error scheduling match: ' + error.message, errorToastStyle);
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    catchError('Error scheduling match: ', err);
+    return null;
+  }
+};

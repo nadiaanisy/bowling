@@ -8,6 +8,8 @@ import {
   PlayerScoreDetails,
   User,
   LeagueTeamWithMembers,
+  LeagueBlock,
+  LeagueTeam,
 } from '../interfaces';
 import { sql_query, table } from '../constants/db';
 import { toast } from 'sonner';
@@ -390,5 +392,55 @@ export const getTeamsWithMembersByLeague = async (
     throw err instanceof Error
       ? err
       : new Error('Unexpected error while fetching teams and members.');
+  }
+};
+
+/* Fetches all blocks for a league, sorted by block number. */
+export const getBlocksByLeague = async (
+  leagueId: string | number | null,
+): Promise<LeagueBlock[]> => {
+  if (leagueId === null) return [];
+
+  try {
+    const { data, error } = await getHelper(
+      table.blocks,
+      'id, number, league_id',
+    )
+      .eq('league_id', leagueId)
+      .order('number', { ascending: true });
+
+    if (error) {
+      toast.error('Error fetching blocks: ' + error.message, errorToastStyle);
+      return [];
+    }
+
+    return (data || []) as unknown as LeagueBlock[];
+  } catch (err) {
+    catchError('Error fetching blocks: ', err);
+    return [];
+  }
+};
+
+/* Fetches all teams in a league, sorted alphabetically by name. */
+export const getTeamsByLeague = async (
+  leagueId: string | number | null,
+): Promise<LeagueTeam[]> => {
+  if (leagueId === null) return [];
+
+  try {
+    const { data, error } = await getHelper(
+      table.teams,
+      'id, name, league_id, notes, created_at, updated_at',
+    )
+      .eq('league_id', leagueId)
+      .order('name', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    return (data || []) as unknown as LeagueTeam[];
+  } catch (err) {
+    throw err instanceof Error
+      ? err
+      : new Error('Unexpected error while fetching teams.');
   }
 };

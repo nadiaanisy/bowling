@@ -131,17 +131,18 @@ export interface LeagueTeamWithMembers extends LeagueTeam {
   members: LeagueMember[];
 }
 
-// export interface LeagueBlock {
-//   id: string | number;
-//   number: number;
-//   league_id: string | number;
-// }
+export interface LeagueBlock {
+  id: string | number;
+  number: number;
+  league_id: string | number;
+}
 
-// export interface Lane {
-//   id: string | number;
-//   lane: string;
-//   league_id?: string | number;
-// }
+export interface Lane {
+  id: string | number;
+  lane: string;
+  league_id?: string | number;
+}
+
 // // export interface Player {
 // //   id: string;
 // //   name: string;

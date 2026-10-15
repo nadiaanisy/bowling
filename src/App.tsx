@@ -10,7 +10,7 @@ import Dashboard from '../src/sections/Dashboard';
 import { Button } from '../src/components/button';
 import { menuItems } from './utils/constants/others';
 import { Toaster } from '../src/components/sooner';
-// import Timetable from '../src/sections/Timetable';
+import Timetable from '../src/sections/Timetable';
 import LeagueSelection from '../src/sections/LeagueSelection';
 // // // import Forecast from "./sections/Forecast";
 // // // import Timetable from "./sections/Timetable";
@@ -67,8 +67,8 @@ function AppContent() {
         return <Teams />;
       // case "players":
       //   return <Players />;
-      // case 'timetable':
-      //   return <Timetable />;
+      case 'timetable':
+        return <Timetable />;
       // case "scores":
       //   return <Scores />;
 
