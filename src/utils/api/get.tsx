@@ -1,6 +1,7 @@
 import {
   DashboardData,
   HandicapSetting,
+  LeagueHandicapConfig,
   League,
   MatchData,
   MatchesByBlock,
@@ -329,7 +330,7 @@ export const getHandicapSettings = async (
   try {
     const { data, error } = await getHelper(
       table.handicapSettings,
-      'id, league_id, average, handicap, created_at, updated_at',
+      'id, league_id, average, men_handicap, women_handicap, created_at, updated_at',
     )
       .eq('league_id', leagueId)
       .order('average', { ascending: true });
@@ -343,5 +344,26 @@ export const getHandicapSettings = async (
     throw err instanceof Error
       ? err
       : new Error('Unable to load handicap settings.');
+  }
+};
+
+/* Fetches a league's maximum handicap configuration, if one exists. */
+export const getLeagueHandicapConfig = async (
+  leagueId: string | number,
+): Promise<LeagueHandicapConfig | null> => {
+  try {
+    const { data, error } = await getHelper(
+      'league_handicap_config',
+      'id, league_id, men_max_handicap, women_max_handicap, created_at, updated_at',
+    )
+      .eq('league_id', leagueId)
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    return (data ?? null) as unknown as LeagueHandicapConfig | null;
+  } catch (err) {
+    throw err instanceof Error
+      ? err
+      : new Error('Unable to load league handicap configuration.');
   }
 };

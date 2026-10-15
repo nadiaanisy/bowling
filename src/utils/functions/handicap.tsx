@@ -1,11 +1,11 @@
-import { FormEvent, useCallback, useEffect } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { addHandicapSetting, addHandicapSettings } from '../api/add';
 import { deleteHandicapSetting, deleteHandicapSettings } from '../api/delete';
-import { getHandicapSettings } from '../api/get';
-import { updateHandicapSetting } from '../api/update';
-import { useCustomHook } from '../hooks';
+import { getHandicapSettings, getLeagueHandicapConfig } from '../api/get';
+import { saveLeagueHandicapConfig, updateHandicapSetting } from '../api/update';
 import { HandicapSetting } from '../interfaces';
+import { useCustomHook } from '../hooks';
 
 export function useHandicap(leagueId: string | number | null) {
   const {
@@ -29,8 +29,10 @@ export function useHandicap(leagueId: string | number | null) {
     setRuleToDelete,
     average,
     setAverage,
-    handicap,
-    setHandicap,
+    menHandicap,
+    setMenHandicap,
+    womenHandicap,
+    setWomenHandicap,
     isSaving,
     setIsSaving,
     dialogOpen,
@@ -39,6 +41,12 @@ export function useHandicap(leagueId: string | number | null) {
     setDeleteDialogOpen,
     bulkDeleteDialogOpen,
     setBulkDeleteDialogOpen,
+    menMaxHandicap,
+    setMenMaxHandicap,
+    womenMaxHandicap,
+    setWomenMaxHandicap,
+    isSavingConfig,
+    setIsSavingConfig,
   } = useCustomHook();
 
   const loadRules = useCallback(async () => {
@@ -47,14 +55,23 @@ export function useHandicap(leagueId: string | number | null) {
       setSelectedRuleIds([]);
       setLoadError('');
       setIsLoading(false);
+      setMenMaxHandicap('40');
+      setWomenMaxHandicap('50');
       return;
     }
 
     setIsLoading(true);
     setLoadError('');
+
     try {
-      const data = await getHandicapSettings(leagueId);
+      const [data, config] = await Promise.all([
+        getHandicapSettings(leagueId),
+        getLeagueHandicapConfig(leagueId),
+      ]);
       setRules([...data].sort((a, b) => a.average - b.average));
+      setSelectedRuleIds([]);
+      setMenMaxHandicap(String(config?.men_max_handicap ?? 40));
+      setWomenMaxHandicap(String(config?.women_max_handicap ?? 50));
     } catch (error) {
       setRules([]);
       setLoadError(
@@ -65,15 +82,15 @@ export function useHandicap(leagueId: string | number | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [leagueId, setRules, setSelectedRuleIds, setLoadError, setIsLoading]);
-
+  }, [leagueId]);
   useEffect(() => {
     void loadRules();
   }, [loadRules]);
 
   const resetForm = () => {
     setAverage('');
-    setHandicap('');
+    setMenHandicap('');
+    setWomenHandicap('');
     setEditingRule(null);
   };
 
@@ -91,7 +108,8 @@ export function useHandicap(leagueId: string | number | null) {
   const openEditDialog = (rule: HandicapSetting) => {
     setEditingRule(rule);
     setAverage(String(rule.average));
-    setHandicap(String(rule.handicap));
+    setMenHandicap(String(rule.men_handicap));
+    setWomenHandicap(String(rule.women_handicap ?? ''));
     setDialogOpen(true);
   };
 
@@ -107,61 +125,50 @@ export function useHandicap(leagueId: string | number | null) {
       return;
     }
 
-    const averageValue = Number(average);
-    const handicapValue = Number(handicap);
+    const avg = Number(average),
+      men = Number(menHandicap),
+      women = Number(womenHandicap);
 
-    if (!Number.isFinite(averageValue) || averageValue < 0) {
+    if (!average.trim() || !Number.isFinite(avg) || avg < 0) {
       toast.error('Average must be a valid non-negative number.');
       return;
     }
-    if (!Number.isFinite(handicapValue) || handicapValue < 0) {
-      toast.error('Handicap must be a valid non-negative number.');
+
+    if (!menHandicap.trim() || !Number.isFinite(men) || men < 0) {
+      toast.error("Men's handicap must be a valid non-negative number.");
       return;
     }
 
-    const duplicate = rules.some(
-      (rule) => rule.average === averageValue && rule.id !== editingRule?.id,
+    if (!womenHandicap.trim() || !Number.isFinite(women) || women < 0) {
+      toast.error("Women's handicap must be a valid non-negative number.");
+      return;
+    }
+
+    const duplicateAverage = rules.some(
+      (rule) => Number(rule.average) === avg && rule.id !== editingRule?.id,
     );
-    if (duplicate) {
-      toast.error(`AVG ${averageValue} already exists in this league.`);
+
+    if (duplicateAverage) {
+      toast.error(`AVG ${avg} already exists in this league.`);
       return;
     }
 
     setIsSaving(true);
     try {
-      if (editingRule) {
-        const updated = await updateHandicapSetting(
-          editingRule.id,
-          leagueId,
-          averageValue,
-          handicapValue,
-        );
-        if (!updated) return;
-
-        setRules((current) =>
-          current
-            .map((rule) =>
-              rule.id === editingRule.id ? (updated as HandicapSetting) : rule,
-            )
-            .sort((a, b) => a.average - b.average),
-        );
-        toast.success('Handicap updated successfully.');
-      } else {
-        const created = await addHandicapSetting(
-          leagueId,
-          averageValue,
-          handicapValue,
-        );
-        if (!created) return;
-
-        setRules((current) =>
-          [...current, created as HandicapSetting].sort(
-            (a, b) => a.average - b.average,
-          ),
-        );
-        toast.success('Handicap added successfully.');
-      }
-
+      const result = editingRule
+        ? await updateHandicapSetting(editingRule.id, leagueId, avg, men, women)
+        : await addHandicapSetting(leagueId, avg, men, women);
+      if (!result) return;
+      setRules((current) =>
+        [...current.filter((rule) => rule.id !== result.id), result].sort(
+          (a, b) => a.average - b.average,
+        ),
+      );
+      toast.success(
+        editingRule
+          ? 'Handicap updated successfully.'
+          : 'Handicap added successfully.',
+      );
       setDialogOpen(false);
       resetForm();
     } catch (error) {
@@ -186,51 +193,46 @@ export function useHandicap(leagueId: string | number | null) {
       .split(/\r?\n/)
       .map((line) => line.trim())
       .filter(Boolean);
-    if (lines.length === 0) {
-      setBulkError('Please enter at least one AVG and HDC row.');
+
+    if (!lines.length) {
+      setBulkError('Please enter at least one AVG, Men HDC, Women HDC row.');
       return;
     }
 
-    const parsed: Array<{ average: number; handicap: number }> = [];
-    const seenAverages = new Set<number>();
-    const existingAverages = new Set(rules.map((rule) => rule.average));
+    const parsed: Array<{
+      average: number;
+      men_handicap: number;
+      women_handicap: number;
+    }> = [];
+    const seen = new Set<number>();
+    const existing = new Set(rules.map((rule) => Number(rule.average)));
+    for (let i = 0; i < lines.length; i += 1) {
+      const values = lines[i].split(/[\,\t;]/).map((value) => value.trim());
 
-    for (let index = 0; index < lines.length; index += 1) {
-      const lineNumber = index + 1;
-      const values = lines[index]
-        .split(/[,\t;]/)
-        .map((value) => value.trim())
-        .filter(Boolean);
-
-      if (values.length !== 2) {
-        setBulkError(`Row ${lineNumber}: enter exactly AVG and HDC.`);
-        return;
-      }
-
-      const averageValue = Number(values[0]);
-      const handicapValue = Number(values[1]);
-      if (
-        !Number.isFinite(averageValue) ||
-        averageValue < 0 ||
-        !Number.isFinite(handicapValue) ||
-        handicapValue < 0
-      ) {
+      if (values.length !== 3 || values.some((value) => value === '')) {
         setBulkError(
-          `Row ${lineNumber}: AVG and HDC must be valid non-negative numbers.`,
+          `Row ${i + 1}: enter exactly AVG, Men's HDC, and Women's HDC.`,
         );
         return;
       }
 
+      const [avg, men, women] = values.map(Number);
       if (
-        existingAverages.has(averageValue) ||
-        seenAverages.has(averageValue)
+        [avg, men, women].some((value) => !Number.isFinite(value) || value < 0)
       ) {
-        setBulkError(`Row ${lineNumber}: AVG ${averageValue} is duplicated.`);
+        setBulkError(
+          `Row ${i + 1}: all values must be valid non-negative numbers.`,
+        );
         return;
       }
 
-      seenAverages.add(averageValue);
-      parsed.push({ average: averageValue, handicap: handicapValue });
+      if (existing.has(avg) || seen.has(avg)) {
+        setBulkError(`Row ${i + 1}: AVG ${avg} is duplicated.`);
+        return;
+      }
+
+      seen.add(avg);
+      parsed.push({ average: avg, men_handicap: men, women_handicap: women });
     }
 
     setIsSaving(true);
@@ -244,9 +246,7 @@ export function useHandicap(leagueId: string | number | null) {
       }
 
       setRules((current) =>
-        [...current, ...(created as HandicapSetting[])].sort(
-          (a, b) => a.average - b.average,
-        ),
+        [...current, ...created].sort((a, b) => a.average - b.average),
       );
       toast.success(`${created.length} handicap rules added successfully.`);
       setBulkDialogOpen(false);
@@ -262,32 +262,61 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
-  const toggleRuleSelection = (ruleId: string | number) => {
-    setSelectedRuleIds((current) =>
-      current.includes(ruleId)
-        ? current.filter((id) => id !== ruleId)
-        : [...current, ruleId],
-    );
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedRuleIds.length === rules.length) {
-      setSelectedRuleIds([]);
+  const handleSaveConfig = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (leagueId === null) {
+      toast.error('Please select a league first.');
       return;
     }
-    setSelectedRuleIds(rules.map((rule) => rule.id));
+
+    const men = Number(menMaxHandicap),
+      women = Number(womenMaxHandicap);
+    if (
+      !menMaxHandicap.trim() ||
+      !womenMaxHandicap.trim() ||
+      !Number.isInteger(men) ||
+      men < 0 ||
+      !Number.isInteger(women) ||
+      women < 0
+    ) {
+      toast.error('Maximum handicaps must be non-negative whole numbers.');
+      return;
+    }
+
+    setIsSavingConfig(true);
+    try {
+      if (await saveLeagueHandicapConfig(leagueId, men, women)) {
+        toast.success('Maximum handicap settings saved.');
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Unable to save maximum handicaps.',
+      );
+    } finally {
+      setIsSavingConfig(false);
+    }
   };
 
+  const toggleRuleSelection = (id: string | number) =>
+    setSelectedRuleIds((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+  const toggleSelectAll = () =>
+    setSelectedRuleIds(
+      selectedRuleIds.length === rules.length
+        ? []
+        : rules.map((rule) => rule.id),
+    );
   const confirmDelete = async () => {
     if (!ruleToDelete || leagueId === null) return;
-
     setIsSaving(true);
     try {
       const deleted = await deleteHandicapSetting(ruleToDelete.id, leagueId);
-      // The API helper already handles database errors. Do not show a
-      // duplicate error toast when it returns false/null.
       if (!deleted) return;
-
       setRules((current) =>
         current.filter((rule) => rule.id !== ruleToDelete.id),
       );
@@ -297,40 +326,24 @@ export function useHandicap(leagueId: string | number | null) {
       toast.success('Handicap deleted successfully.');
       setRuleToDelete(null);
       setDeleteDialogOpen(false);
-    } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : 'Unable to delete handicap.',
-      );
     } finally {
       setIsSaving(false);
     }
   };
 
   const confirmBulkDelete = async () => {
-    if (leagueId === null || selectedRuleIds.length === 0) return;
-
+    if (leagueId === null || !selectedRuleIds.length) return;
     setIsSaving(true);
     try {
-      const idsToDelete = [...selectedRuleIds];
-      const deletedCount = await deleteHandicapSettings(idsToDelete, leagueId);
-      // The API helper already handles database errors. A zero count is
-      // not a successful deletion, so leave the dialog open without a toast.
-      if (deletedCount === null || deletedCount === 0) return;
-
-      setRules((current) =>
-        current.filter((rule) => !idsToDelete.includes(rule.id)),
-      );
+      const ids = [...selectedRuleIds],
+        count = await deleteHandicapSettings(ids, leagueId);
+      if (count === null || count === 0) return;
+      setRules((current) => current.filter((rule) => !ids.includes(rule.id)));
       toast.success(
-        `${deletedCount} handicap rule${deletedCount === 1 ? '' : 's'} deleted successfully.`,
+        `${count} handicap rule${count === 1 ? '' : 's'} deleted successfully.`,
       );
       setSelectedRuleIds([]);
       setBulkDeleteDialogOpen(false);
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : 'Unable to delete handicap rules.',
-      );
     } finally {
       setIsSaving(false);
     }
@@ -352,8 +365,6 @@ export function useHandicap(leagueId: string | number | null) {
     ruleToDelete,
     average,
     setAverage,
-    handicap,
-    setHandicap,
     dialogOpen,
     setDialogOpen,
     deleteDialogOpen,
@@ -371,5 +382,15 @@ export function useHandicap(leagueId: string | number | null) {
     toggleSelectAll,
     confirmDelete,
     confirmBulkDelete,
+    menHandicap,
+    setMenHandicap,
+    womenHandicap,
+    setWomenHandicap,
+    menMaxHandicap,
+    setMenMaxHandicap,
+    womenMaxHandicap,
+    setWomenMaxHandicap,
+    isSavingConfig,
+    handleSaveConfig,
   };
 }

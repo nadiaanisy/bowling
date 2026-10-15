@@ -92,33 +92,53 @@ export const addLeague = async (
   }
 };
 
-/* Adds a single handicap setting for a league. */
+/* Adds a single gender-specific handicap setting for a league. */
 export const addHandicapSetting = async (
   leagueId: string | number,
   average: number,
-  handicap: number,
+  menHandicap: number,
+  womenHandicap: number | null,
 ): Promise<HandicapSetting | null> => {
   try {
-    if (!Number.isFinite(average)) {
-      toast.error('Average must be a valid number.', errorToastStyle);
+    if (!Number.isFinite(average) || average < 0) {
+      toast.error(
+        'Average must be a valid non-negative number.',
+        errorToastStyle,
+      );
       return null;
     }
 
-    if (!Number.isFinite(handicap)) {
-      toast.error('Handicap must be a valid number.', errorToastStyle);
+    if (!Number.isFinite(menHandicap) || menHandicap < 0) {
+      toast.error(
+        'Men handicap must be a valid non-negative number.',
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    if (
+      womenHandicap !== null &&
+      (!Number.isFinite(womenHandicap) || womenHandicap < 0)
+    ) {
+      toast.error(
+        'Women handicap must be a valid non-negative number.',
+        errorToastStyle,
+      );
       return null;
     }
 
     const now = new Date().toISOString();
-
     const { data, error } = await insertHelper(table.handicapSettings, {
       league_id: leagueId,
       average,
-      handicap,
+      men_handicap: menHandicap,
+      women_handicap: womenHandicap,
       created_at: now,
       updated_at: now,
     })
-      .select('id, league_id, average, handicap, created_at, updated_at')
+      .select(
+        'id, league_id, average, men_handicap, women_handicap, created_at, updated_at',
+      )
       .single();
 
     if (error) {
@@ -133,23 +153,43 @@ export const addHandicapSetting = async (
   }
 };
 
-/* Adds multiple handicap settings for a league in bulk. */
+/* Adds multiple gender-specific handicap settings for a league in bulk. */
 export const addHandicapSettings = async (
   leagueId: string | number,
   settings: Array<{
     average: number;
-    handicap: number;
+    men_handicap: number;
+    women_handicap: number | null;
   }>,
 ): Promise<HandicapSetting[]> => {
   if (settings.length === 0) return [];
 
   try {
-    const now = new Date().toISOString();
+    const invalid = settings.some(
+      (setting) =>
+        !Number.isFinite(setting.average) ||
+        setting.average < 0 ||
+        !Number.isFinite(setting.men_handicap) ||
+        setting.men_handicap < 0 ||
+        (setting.women_handicap !== null &&
+          (!Number.isFinite(setting.women_handicap) ||
+            setting.women_handicap < 0)),
+    );
 
+    if (invalid) {
+      toast.error(
+        'All averages and handicap values must be valid non-negative numbers.',
+        errorToastStyle,
+      );
+      return [];
+    }
+
+    const now = new Date().toISOString();
     const rows = settings.map((setting) => ({
       league_id: leagueId,
       average: setting.average,
-      handicap: setting.handicap,
+      men_handicap: setting.men_handicap,
+      women_handicap: setting.women_handicap,
       created_at: now,
       updated_at: now,
     }));
@@ -157,7 +197,9 @@ export const addHandicapSettings = async (
     const { data, error } = await insertHelper(
       table.handicapSettings,
       rows,
-    ).select('id, league_id, average, handicap, created_at, updated_at');
+    ).select(
+      'id, league_id, average, men_handicap, women_handicap, created_at, updated_at',
+    );
 
     if (error) {
       toast.error('Error adding handicaps: ' + error.message, errorToastStyle);
@@ -168,5 +210,36 @@ export const addHandicapSettings = async (
   } catch (err) {
     catchError('Error adding handicaps: ', err);
     return [];
+  }
+};
+
+/* Creates the default maximum handicap configuration for a league. */
+export const addLeagueHandicapConfig = async (
+  leagueId: string | number,
+  menMaxHandicap = 40,
+  womenMaxHandicap = 50,
+): Promise<boolean> => {
+  try {
+    const now = new Date().toISOString();
+    const { error } = await insertHelper('league_handicap_config', {
+      league_id: leagueId,
+      men_max_handicap: menMaxHandicap,
+      women_max_handicap: womenMaxHandicap,
+      created_at: now,
+      updated_at: now,
+    });
+
+    if (error && error.code !== '23505') {
+      toast.error(
+        'Error creating handicap configuration: ' + error.message,
+        errorToastStyle,
+      );
+      return false;
+    }
+
+    return true;
+  } catch (err) {
+    catchError('Error creating handicap configuration: ', err);
+    return false;
   }
 };

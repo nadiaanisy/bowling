@@ -18,8 +18,10 @@ interface HandicapFormDialogProps {
   editingRule: HandicapSetting | null;
   average: string;
   onAverageChange: (value: string) => void;
-  handicap: string;
-  onHandicapChange: (value: string) => void;
+  menHandicap: string;
+  onMenHandicapChange: (value: string) => void;
+  womenHandicap: string;
+  onWomenHandicapChange: (value: string) => void;
   isSaving: boolean;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
@@ -30,8 +32,10 @@ export function HandicapFormDialog({
   editingRule,
   average,
   onAverageChange,
-  handicap,
-  onHandicapChange,
+  menHandicap,
+  onMenHandicapChange,
+  womenHandicap,
+  onWomenHandicapChange,
   isSaving,
   onSubmit,
 }: HandicapFormDialogProps) {
@@ -43,7 +47,8 @@ export function HandicapFormDialog({
             {editingRule ? 'Edit Handicap' : 'Add Handicap'}
           </DialogTitle>
           <DialogDescription>
-            Enter the average and the handicap value for this league.
+            Enter the average and the separate handicap values for men and
+            women.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit}>
@@ -62,19 +67,37 @@ export function HandicapFormDialog({
                 disabled={isSaving}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="handicap-value">Handicap</Label>
-              <Input
-                id="handicap-value"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="e.g. 20"
-                value={handicap}
-                onChange={(event) => onHandicapChange(event.target.value)}
-                required
-                disabled={isSaving}
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="men-handicap-value">Men's HDC</Label>
+                <Input
+                  id="men-handicap-value"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 40"
+                  value={menHandicap}
+                  onChange={(event) => onMenHandicapChange(event.target.value)}
+                  required
+                  disabled={isSaving}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="women-handicap-value">Women's HDC</Label>
+                <Input
+                  id="women-handicap-value"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="e.g. 50"
+                  value={womenHandicap}
+                  onChange={(event) =>
+                    onWomenHandicapChange(event.target.value)
+                  }
+                  required
+                  disabled={isSaving}
+                />
+              </div>
             </div>
           </div>
           <DialogFooter className="mt-6">

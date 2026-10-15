@@ -1,59 +1,81 @@
-import { Trophy, LogOut, Menu, X, ArrowLeft } from "lucide-react";
-import { BowlingProvider, useCustomHook } from "./components/misc";
-
-/* --- Sections --- */
-import Login from "./components/sections/Login";
-import Teams from "./components/sections/Teams";
-import Scores from "./components/sections/Scores";
-import Forecast from "./components/sections/Forecast";
-import Dashboard from "./components/sections/Dashboard";
-import Timetable from "./components/sections/Timetable";
-import Statistics from "./components/sections/Statistics";
-import LeagueSelection from "./components/sections/LeagueSelection";
-
-/* --- UI --- */
-import { Button } from "./components/ui/button";
-import { Toaster } from "./components/ui/sooner";
-
-/* --- Data --- */
-import { menuItems } from "./components/constant";
+import { Trophy, LogOut, Menu, X, ArrowLeft } from 'lucide-react';
+import { Provider, UseHook } from '../src/utils/hooks';
+// import Players from '../src2/sections/Players';
+import Login from '../src/sections/Login';
+// import Teams from '../src2/sections/Teams';
+// import Scores from '../src/sections/Scores';
+import Landing from '../src/sections/Landing';
+import Handicap from '../src/sections/Handicap';
+import Dashboard from '../src/sections/Dashboard';
+import { Button } from '../src/components/button';
+import { menuItems } from './utils/constants/others';
+import { Toaster } from '../src/components/sooner';
+// import Timetable from '../src/sections/Timetable';
+import LeagueSelection from '../src/sections/LeagueSelection';
+// // // import Forecast from "./sections/Forecast";
+// // // import Timetable from "./sections/Timetable";
+// // // import Statistics from "./sections/Statistics";
 
 function AppContent() {
   const {
     isAuthenticated,
+    sessionExpired,
     logout,
     selectedLeagueName,
-    currentPage,
-    mobileMenuOpen,
+    CurrentPage,
+    MobileMenuOpen,
     selectedLeague,
+    ShowLanding,
     setCurrentPage,
     setMobileMenuOpen,
+    setShowLanding,
     changeLeague,
-  } = useCustomHook();
+  } = UseHook();
+
+  const handleLogout = () => {
+    logout();
+    setShowLanding(true);
+  };
+
+  /* --- Public entry flow --- */
+  if (!isAuthenticated && !sessionExpired && ShowLanding) {
+    return <Landing onGetStarted={() => setShowLanding(false)} />;
+  }
 
   /* --- Auth Check --- */
   if (!isAuthenticated) {
-    return <Login />;
+    return <Login onBack={() => setShowLanding(true)} />;
   }
 
   if (!selectedLeague) {
-    return <LeagueSelection />;
+    return (
+      <LeagueSelection
+        onBackToLanding={() => setShowLanding(true)}
+        onLogout={handleLogout}
+        onLeagueOpened={() => setCurrentPage('dashboard')}
+      />
+    );
   }
 
   const renderPage = () => {
-    switch (currentPage) {
-      case "dashboard":
+    switch (CurrentPage) {
+      case 'dashboard':
         return <Dashboard />;
-      case "teams":
-        return <Teams />;
-      case "timetable":
-        return <Timetable />;
-      case "scores":
-        return <Scores />;
-      case "statistics":
-        return <Statistics />;
-      case "forecast":
-        return <Forecast />;
+      case 'hdc':
+        return <Handicap leagueId={selectedLeague} />;
+      // case 'teams':
+      //   return <Teams />;
+      // case "players":
+      //   return <Players />;
+      // case 'timetable':
+      //   return <Timetable />;
+      // case "scores":
+      //   return <Scores />;
+
+      // case "statistics":
+      //   return <Statistics />;
+      // case "forecast":
+      //   return <Forecast />;
       default:
         return <Dashboard />;
     }
@@ -78,9 +100,9 @@ function AppContent() {
             {/* Mobile menu button */}
             <button
               className="lg:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              onClick={() => setMobileMenuOpen(!MobileMenuOpen)}
             >
-              {mobileMenuOpen ? (
+              {MobileMenuOpen ? (
                 <X className="h-6 w-6" />
               ) : (
                 <Menu className="h-6 w-6" />
@@ -94,7 +116,7 @@ function AppContent() {
                 return (
                   <Button
                     key={item.id}
-                    variant={currentPage === item.id ? "default" : "ghost"}
+                    variant={CurrentPage === item.id ? 'default' : 'ghost'}
                     onClick={() => setCurrentPage(item.id)}
                   >
                     <Icon className="h-4 w-4 mr-2" />
@@ -102,14 +124,11 @@ function AppContent() {
                   </Button>
                 );
               })}
-              <Button
-                variant="outline"
-                onClick={() => changeLeague(null as any)}
-              >
+              <Button variant="outline" onClick={() => changeLeague()}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Change League
               </Button>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </Button>
@@ -117,14 +136,14 @@ function AppContent() {
           </div>
 
           {/* Mobile navigation */}
-          {mobileMenuOpen && (
+          {MobileMenuOpen && (
             <nav className="lg:hidden mt-4 pb-4 flex flex-col gap-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Button
                     key={item.id}
-                    variant={currentPage === item.id ? "default" : "ghost"}
+                    variant={CurrentPage === item.id ? 'default' : 'ghost'}
                     className="justify-start"
                     onClick={() => {
                       setCurrentPage(item.id);
@@ -139,14 +158,14 @@ function AppContent() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  changeLeague(null as any);
+                  changeLeague();
                   setMobileMenuOpen(false);
                 }}
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Change League
               </Button>
-              <Button variant="outline" onClick={logout}>
+              <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
               </Button>
@@ -163,9 +182,9 @@ function AppContent() {
 
 export default function App() {
   return (
-    <BowlingProvider>
+    <Provider>
       <Toaster />
       <AppContent />
-    </BowlingProvider>
+    </Provider>
   );
 }

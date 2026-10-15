@@ -5,8 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from '../components/card';
+import { Input } from '../components/input';
+import { Label } from '../components/label';
 import { Button } from '../components/button';
-import { Plus, Trash2, Upload } from 'lucide-react';
+import { Plus, Save, Trash2, Upload } from 'lucide-react';
 import { HandicapTable } from '../sub-components/Handicap/HandicapTable';
 import { HandicapFormDialog } from '../sub-components/Handicap/HandicapFormDialog';
 import { HandicapBulkAddDialog } from '../sub-components/Handicap/HandicapBulkAddDialog';
@@ -26,7 +28,8 @@ export default function Handicap({ leagueId }: HandicapProps) {
         <div>
           <h1>Handicap Setup</h1>
           <p className="text-muted-foreground">
-            Define the handicap value assigned to each player average.
+            Configure average-based handicap values separately for men and
+            women.
           </p>
         </div>
 
@@ -58,9 +61,65 @@ export default function Handicap({ leagueId }: HandicapProps) {
 
       <Card>
         <CardHeader>
+          <CardTitle>Maximum Handicap</CardTitle>
+          <CardDescription>
+            Set the maximum handicap applied to each gender in this league.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handicap.handleSaveConfig} className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="men-max-handicap">Men's maximum handicap</Label>
+                <Input
+                  id="men-max-handicap"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={handicap.menMaxHandicap}
+                  onChange={(event) =>
+                    handicap.setMenMaxHandicap(event.target.value)
+                  }
+                  disabled={handicap.isSavingConfig || leagueId === null}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="women-max-handicap">
+                  Women's maximum handicap
+                </Label>
+                <Input
+                  id="women-max-handicap"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={handicap.womenMaxHandicap}
+                  onChange={(event) =>
+                    handicap.setWomenMaxHandicap(event.target.value)
+                  }
+                  disabled={handicap.isSavingConfig || leagueId === null}
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <Button
+                type="submit"
+                disabled={handicap.isSavingConfig || leagueId === null}
+              >
+                <Save className="mr-2 h-4 w-4" />
+                {handicap.isSavingConfig ? 'Saving...' : 'Save Maximums'}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Handicap Table</CardTitle>
           <CardDescription>
-            Maintain the average-to-handicap values used by this league.
+            Each average has a separate men's and women's handicap value.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -108,8 +167,10 @@ export default function Handicap({ leagueId }: HandicapProps) {
         editingRule={handicap.editingRule}
         average={handicap.average}
         onAverageChange={handicap.setAverage}
-        handicap={handicap.handicap}
-        onHandicapChange={handicap.setHandicap}
+        menHandicap={handicap.menHandicap}
+        onMenHandicapChange={handicap.setMenHandicap}
+        womenHandicap={handicap.womenHandicap}
+        onWomenHandicapChange={handicap.setWomenHandicap}
         isSaving={handicap.isSaving}
         onSubmit={handicap.handleSave}
       />

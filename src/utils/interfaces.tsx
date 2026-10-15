@@ -119,6 +119,7 @@ export interface LeagueMember {
   team_id?: string | number;
   league_id?: string | number;
   type?: 'regular' | 'substitute';
+  gender?: 'male' | 'female' | string | null;
   status?: string;
   position?: string | null;
   notes?: string | null;
@@ -197,7 +198,17 @@ export interface HandicapSetting {
   id: string | number;
   league_id: string | number;
   average: number;
-  handicap: number;
+  men_handicap: number;
+  women_handicap: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LeagueHandicapConfig {
+  id: string | number;
+  league_id: string | number;
+  men_max_handicap: number;
+  women_max_handicap: number;
   created_at?: string;
   updated_at?: string;
 }

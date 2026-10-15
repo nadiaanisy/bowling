@@ -51,7 +51,8 @@ export function HandicapTable({
               />
             </TableHead>
             <TableHead>Average</TableHead>
-            <TableHead>Handicap</TableHead>
+            <TableHead>Men HDC</TableHead>
+            <TableHead>Women HDC</TableHead>
             <TableHead className="w-[140px] text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -59,7 +60,7 @@ export function HandicapTable({
           {isLoading ? (
             <TableRow>
               <TableCell
-                colSpan={4}
+                colSpan={5}
                 className="py-10 text-center text-muted-foreground"
               >
                 Loading handicap settings...
@@ -68,7 +69,7 @@ export function HandicapTable({
           ) : rules.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={4}
+                colSpan={5}
                 className="py-10 text-center text-muted-foreground"
               >
                 No handicap rules configured yet.
@@ -88,7 +89,8 @@ export function HandicapTable({
                   />
                 </TableCell>
                 <TableCell className="font-medium">{rule.average}</TableCell>
-                <TableCell>{rule.handicap}</TableCell>
+                <TableCell>{rule.men_handicap}</TableCell>
+                <TableCell>{rule.women_handicap ?? '—'}</TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-2">
                     <Button

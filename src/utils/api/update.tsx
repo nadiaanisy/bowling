@@ -4,6 +4,7 @@ import { catchError } from '../functions/toasts';
 import { updateHelper } from '../supabase/supabaseHelper';
 import { table } from '../constants/db';
 import { HandicapSetting } from '../interfaces';
+import { supabase } from '../supabase/supabaseClient';
 
 /* Updates a league's configuration settings and timestamp. */
 export const updateLeagueSetup = async (
@@ -92,44 +93,106 @@ export const touchTeamUpdatedAt = async (
   }
 };
 
-/* Updates a handicap setting and its last modified timestamp. */
+/* Updates a gender-specific handicap setting and its timestamp. */
 export const updateHandicapSetting = async (
   id: string | number,
   leagueId: string | number,
   average: number,
-  handicap: number,
+  menHandicap: number,
+  womenHandicap: number | null,
 ): Promise<HandicapSetting | null> => {
   try {
-    if (!Number.isFinite(average)) {
-      toast.error('Average must be a valid number.', errorToastStyle);
+    if (!Number.isFinite(average) || average < 0) {
+      toast.error(
+        'Average must be a valid non-negative number.',
+        errorToastStyle,
+      );
       return null;
     }
-
-    if (!Number.isFinite(handicap)) {
-      toast.error('Handicap must be a valid number.', errorToastStyle);
+    if (!Number.isFinite(menHandicap) || menHandicap < 0) {
+      toast.error(
+        'Men handicap must be a valid non-negative number.',
+        errorToastStyle,
+      );
+      return null;
+    }
+    if (
+      womenHandicap !== null &&
+      (!Number.isFinite(womenHandicap) || womenHandicap < 0)
+    ) {
+      toast.error(
+        'Women handicap must be a valid non-negative number.',
+        errorToastStyle,
+      );
       return null;
     }
 
     const updatedAt = new Date().toISOString();
-
     const { data, error } = await updateHelper(table.handicapSettings, {
       average,
-      handicap,
+      men_handicap: menHandicap,
+      women_handicap: womenHandicap,
       updated_at: updatedAt,
     })
       .eq('id', id)
       .eq('league_id', leagueId)
-      .select('id, league_id, average, handicap, created_at, updated_at')
+      .select(
+        'id, league_id, average, men_handicap, women_handicap, created_at, updated_at',
+      )
       .single();
 
     if (error) {
       toast.error('Error updating handicap: ' + error.message, errorToastStyle);
       return null;
     }
-
     return data as unknown as HandicapSetting;
   } catch (err) {
     catchError('Error updating handicap: ', err);
     return null;
+  }
+};
+
+/* Updates or creates a league's maximum handicap configuration. */
+export const saveLeagueHandicapConfig = async (
+  leagueId: string | number,
+  menMaxHandicap: number,
+  womenMaxHandicap: number,
+): Promise<boolean> => {
+  try {
+    if (
+      !Number.isInteger(menMaxHandicap) ||
+      menMaxHandicap < 0 ||
+      !Number.isInteger(womenMaxHandicap) ||
+      womenMaxHandicap < 0
+    ) {
+      toast.error(
+        'Maximum handicaps must be non-negative whole numbers.',
+        errorToastStyle,
+      );
+      return false;
+    }
+
+    const now = new Date().toISOString();
+    const { error } = await supabase.from('league_handicap_config').upsert(
+      {
+        league_id: leagueId,
+        men_max_handicap: menMaxHandicap,
+        women_max_handicap: womenMaxHandicap,
+        updated_at: now,
+      },
+      { onConflict: 'league_id' },
+    );
+
+    if (error) {
+      toast.error(
+        'Error saving handicap configuration: ' + error.message,
+        errorToastStyle,
+      );
+      return false;
+    }
+    return true;
+  } catch (err) {
+    catchError('Error saving handicap configuration: ', err);
+    return false;
   }
 };
