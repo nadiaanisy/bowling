@@ -2,7 +2,7 @@ import { Trophy, LogOut, Menu, X, ArrowLeft } from 'lucide-react';
 import { Provider, UseHook } from '../src/utils/hooks';
 // import Players from '../src2/sections/Players';
 import Login from '../src/sections/Login';
-// import Teams from '../src2/sections/Teams';
+import Teams from '../src/sections/Teams';
 // import Scores from '../src/sections/Scores';
 import Landing from '../src/sections/Landing';
 import Handicap from '../src/sections/Handicap';
@@ -63,8 +63,8 @@ function AppContent() {
         return <Dashboard />;
       case 'hdc':
         return <Handicap leagueId={selectedLeague} />;
-      // case 'teams':
-      //   return <Teams />;
+      case 'teams':
+        return <Teams />;
       // case "players":
       //   return <Players />;
       // case 'timetable':

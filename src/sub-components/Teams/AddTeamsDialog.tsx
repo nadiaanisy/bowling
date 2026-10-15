@@ -1,6 +1,5 @@
 import type React from 'react';
 import { Loader2, Users } from 'lucide-react';
-
 import {
   Dialog,
   DialogContent,
@@ -9,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/dialog';
-
 import { Button } from '../../components/button';
 import { Textarea } from '../../components/textarea';
 

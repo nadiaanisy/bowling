@@ -7,6 +7,7 @@ import {
   MatchesByBlock,
   PlayerScoreDetails,
   User,
+  LeagueTeamWithMembers,
 } from '../interfaces';
 import { sql_query, table } from '../constants/db';
 import { toast } from 'sonner';
@@ -365,5 +366,29 @@ export const getLeagueHandicapConfig = async (
     throw err instanceof Error
       ? err
       : new Error('Unable to load league handicap configuration.');
+  }
+};
+
+/* Fetches teams and their members for a league, sorted alphabetically by team name. */
+export const getTeamsWithMembersByLeague = async (
+  leagueId: string | number | null,
+): Promise<LeagueTeamWithMembers[]> => {
+  if (leagueId === null) return [];
+
+  try {
+    const { data, error } = await getHelper(
+      table.teams,
+      'id, name, league_id, notes, created_at, updated_at, members:players(id, name, team_id, league_id, type, status, notes, position, created_at, updated_at)',
+    )
+      .eq('league_id', leagueId)
+      .order('name', { ascending: true });
+
+    if (error) throw new Error(error.message);
+
+    return (data || []) as unknown as LeagueTeamWithMembers[];
+  } catch (err) {
+    throw err instanceof Error
+      ? err
+      : new Error('Unexpected error while fetching teams and members.');
   }
 };
