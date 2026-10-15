@@ -30,12 +30,27 @@ export function AddTeamsDialog({
   existingTeams,
   onSubmit,
 }: AddTeamsDialogProps) {
-  const parsedNames = Array.from(
+  const inputNames = teamNames
+    .split(/\r?\n/)
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+  const parsedNames = Array.from(new Set(inputNames));
+
+  const inputNameCounts = inputNames.reduce<Map<string, number>>(
+    (counts, name) => {
+      const normalizedName = name.toLowerCase();
+      counts.set(normalizedName, (counts.get(normalizedName) ?? 0) + 1);
+      return counts;
+    },
+    new Map(),
+  );
+
+  const duplicateInputNames = Array.from(
     new Set(
-      teamNames
-        .split(/\r?\n/)
-        .map((name) => name.trim())
-        .filter(Boolean),
+      inputNames.filter(
+        (name) => (inputNameCounts.get(name.toLowerCase()) ?? 0) > 1,
+      ),
     ),
   );
 
@@ -49,6 +64,7 @@ export function AddTeamsDialog({
 
   const canSubmit =
     parsedNames.length > 0 &&
+    duplicateInputNames.length === 0 &&
     duplicateExistingNames.length === 0 &&
     !creatingTeams;
 
@@ -65,20 +81,20 @@ export function AddTeamsDialog({
         }
       }}
     >
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[50vh] w-[calc(100%-2rem)] max-w-xl flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
             Add Teams
           </DialogTitle>
 
           <DialogDescription>
-            Enter one team name per line. Blank lines will be ignored and
-            duplicate names will be removed.
+            Enter one team name per line. Blank lines will be ignored. Team
+            names must be unique and cannot match teams that already exist.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-4">
+        <form onSubmit={onSubmit} className="flex min-h-0 flex-col gap-4">
           <Textarea
             value={teamNames}
             onChange={(event) => setTeamNames(event.target.value)}
@@ -86,27 +102,34 @@ export function AddTeamsDialog({
 Team B
 Team C
 Team D`}
-            rows={10}
+            rows={8}
+            className="min-h-[180px] max-h-[45vh] resize-y overflow-y-auto"
             disabled={creatingTeams}
             autoFocus
           />
 
-          <div className="space-y-2 text-sm">
+          <div className="max-h-[18vh] shrink-0 space-y-2 overflow-y-auto text-sm">
             <p className="text-muted-foreground">
               {parsedNames.length} {parsedNames.length === 1 ? 'team' : 'teams'}{' '}
               ready to add.
             </p>
 
+            {duplicateInputNames.length > 0 && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+                <p className="font-medium">Duplicate names in this list:</p>
+                <p className="mt-1">{duplicateInputNames.join(', ')}</p>
+              </div>
+            )}
+
             {duplicateExistingNames.length > 0 && (
               <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
                 <p className="font-medium">These teams already exist:</p>
-
                 <p className="mt-1">{duplicateExistingNames.join(', ')}</p>
               </div>
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="shrink-0">
             <Button
               type="button"
               variant="outline"

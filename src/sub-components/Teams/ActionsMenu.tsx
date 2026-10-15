@@ -28,6 +28,7 @@ export function ActionsMenu({
   onDeleteTeam,
 }: ActionsMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
+  const isBlindTeam = teamName.trim().toLowerCase() === 'blind';
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +57,13 @@ export function ActionsMenu({
           <button
             type="button"
             onClick={onAddPlayer}
-            className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted"
+            disabled={isBlindTeam}
+            title={
+              isBlindTeam
+                ? 'BLIND is a scoring placeholder and cannot have team members.'
+                : undefined
+            }
+            className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
           >
             <UserPlus className="h-4 w-4" />
             Add player
@@ -72,7 +79,12 @@ export function ActionsMenu({
           <button
             type="button"
             onClick={onBulkDelete}
-            disabled={memberCount === 0 || deletingPlayer}
+            disabled={isBlindTeam || memberCount === 0 || deletingPlayer}
+            title={
+              isBlindTeam
+                ? 'BLIND is a scoring placeholder and cannot have team members.'
+                : undefined
+            }
             className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-muted disabled:pointer-events-none disabled:opacity-50"
           >
             <ListX className="h-4 w-4" />

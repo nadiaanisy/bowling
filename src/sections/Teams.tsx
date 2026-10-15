@@ -293,6 +293,7 @@ export default function Teams() {
       />
 
       <ManagementCard
+        existingTeams={teams.map((team) => ({ name: team.name }))}
         newTeamName={newTeamName}
         setNewTeamName={setNewTeamName}
         creatingTeam={creatingTeam}
