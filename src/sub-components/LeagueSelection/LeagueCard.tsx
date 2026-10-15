@@ -53,7 +53,9 @@ export function LeagueCard({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-semibold truncate">{league.name}</span>
+                  <span className="font-semibold whitespace-normal break-words [overflow-wrap:anywhere]">
+                    {league.name}
+                  </span>
                   {hasBlocks ? (
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs flex-shrink-0">
                       <Sparkles className="h-2.5 w-2.5 mr-1" />
