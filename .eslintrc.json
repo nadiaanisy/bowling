@@ -17,15 +17,6 @@
           "minProperties": 2
         }
       }
-    ],
-    "@stylistic/object-property-newline": [
-      "error",
-      {
-        "allowAllPropertiesOnSameLine": false,
-        "overrides": {
-          "ImportDeclaration": true
-        }
-      }
     ]
   }
 }
