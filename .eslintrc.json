@@ -1,3 +1,4 @@
+
 {
   "root": true,
   "extends": ["react-app"],
@@ -13,12 +14,24 @@
         "avoidEscape": true
       }
     ],
+    "@stylistic/indent": [
+      "error",
+      2
+    ],
     "@stylistic/object-curly-newline": [
       "error",
       {
         "ImportDeclaration": {
           "minProperties": 2
         }
+      }
+    ],
+    "import-newlines/enforce": [
+      "error",
+      {
+        "items": 1,
+        "max-len": 80,
+        "semi": true
       }
     ]
   }
