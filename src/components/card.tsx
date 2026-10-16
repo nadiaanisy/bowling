@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { cn } from '../utils/functions/others';
+import { cn } from '../functions/others';
 
 function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (
@@ -27,13 +27,23 @@ function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
   );
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
+function CardTitle({
+  className,
+  children,
+  ...props
+}: React.ComponentProps<'div'>) {
+  if (children == null || children === '') {
+    return null;
+  }
+
   return (
     <h4
       data-slot="card-title"
       className={cn('leading-none', className)}
       {...props}
-    />
+    >
+      {children}
+    </h4>
   );
 }
 

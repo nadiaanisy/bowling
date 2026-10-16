@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { XIcon } from 'lucide-react';
-import { cn } from '../utils/functions/others';
+import { cn } from '../functions/others';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
 function Dialog({

@@ -72,6 +72,10 @@
           "max-len": 80,
           "semi": true
         }
+      ],
+      "@stylistic/indent": [
+        "error",
+        2
       ]
     }
   },

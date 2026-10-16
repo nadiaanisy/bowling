@@ -1,7 +1,10 @@
 {
   "root": true,
   "extends": ["react-app"],
-  "plugins": ["@stylistic"],
+  "plugins": [
+    "@stylistic",
+    "import-newlines"
+  ],
   "rules": {
     "@stylistic/quotes": [
       "error",
