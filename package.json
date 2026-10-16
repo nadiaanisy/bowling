@@ -43,13 +43,37 @@
     "prepare": "husky"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": "prettier --write"
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "eslintConfig": {
     "extends": [
       "react-app",
       "react-app/jest"
-    ]
+    ],
+    "plugins": [
+      "@stylistic",
+      "import-newlines"
+    ],
+    "rules": {
+      "@stylistic/quotes": [
+        "error",
+        "single",
+        {
+          "avoidEscape": true
+        }
+      ],
+      "import-newlines/enforce": [
+        "error",
+        {
+          "items": 1,
+          "max-len": 80,
+          "semi": true
+        }
+      ]
+    }
   },
   "browserslist": {
     "production": [
@@ -64,10 +88,13 @@
     ]
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^3.1.0",
     "@tailwindcss/postcss": "^4.1.16",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
     "autoprefixer": "^10.4.21",
+    "eslint-plugin-import-newlines": "^2.0.0",
+    "eslint-plugin-simple-import-sort": "^14.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "postcss": "^8.5.6",

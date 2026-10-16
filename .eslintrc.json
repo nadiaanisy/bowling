@@ -1,0 +1,31 @@
+{
+  "root": true,
+  "extends": ["react-app"],
+  "plugins": ["@stylistic"],
+  "rules": {
+    "@stylistic/quotes": [
+      "error",
+      "single",
+      {
+        "avoidEscape": true
+      }
+    ],
+    "@stylistic/object-curly-newline": [
+      "error",
+      {
+        "ImportDeclaration": {
+          "minProperties": 2
+        }
+      }
+    ],
+    "@stylistic/object-property-newline": [
+      "error",
+      {
+        "allowAllPropertiesOnSameLine": false,
+        "overrides": {
+          "ImportDeclaration": true
+        }
+      }
+    ]
+  }
+}
