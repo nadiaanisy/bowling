@@ -1,7 +1,9 @@
-
 {
   "root": true,
-  "extends": ["react-app"],
+  "extends": [
+    "react-app",
+    "react-app/jest"
+  ],
   "plugins": [
     "@stylistic",
     "import-newlines"

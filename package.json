@@ -45,6 +45,7 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
       "prettier --write",
+      "node scripts/sort-imports-by-length.js",
       "eslint --fix"
     ]
   },
