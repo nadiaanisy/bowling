@@ -1,7 +1,15 @@
+import {
+  Capability,
+  FAQItem,
+  Feature,
+  FeatureDetail,
+  HowItWorksStep,
+  LandingStat,
+} from '../interfaces';
 import { Shield } from 'lucide-react';
 
 /* Defines the benefits displayed on the landing page. */
-export const benefits: [] = [
+export const benefits: string[] = [
   // 'Automated handicap calculations',
   // 'Multi-block season tracking',
   // 'Player transfer management',
@@ -11,12 +19,7 @@ export const benefits: [] = [
 ];
 
 /* Defines the main features displayed on the landing page. */
-export const features: {
-  icon: any;
-  title: string;
-  description: string;
-  color: any;
-}[] = [
+export const features: Feature[] = [
   //   {
   //     icon: Users,
   //     title: 'Team Management',
@@ -62,10 +65,7 @@ export const features: {
 ];
 
 /* Defines the statistics displayed on the landing page. */
-export const stats: {
-  label: any;
-  value: any;
-}[] = [
+export const stats: LandingStat[] = [
   //   // { label: 'Leagues Supported', value: '10+' },
   //   // { label: 'Teams per League', value: '10+' },
   //   // { label: 'Week Blocks', value: '1–10' },
@@ -73,15 +73,7 @@ export const stats: {
 ];
 
 /* Defines detailed descriptions and bullet points for each feature. */
-export const featureDetails: {
-  icon: any;
-  color: any;
-  title?: string;
-  subtitle?: string;
-  description?: string;
-  bullets: string[];
-  image: any;
-}[] = [
+export const featureDetails: FeatureDetail[] = [
   //   // {
   //   //   icon: Users,
   //   //   color: 'from-purple-500 to-pink-500',
@@ -187,13 +179,9 @@ export const featureDetails: {
 ];
 
 /* Defines the step-by-step process of using the application. */
-export const howItWorks: {
-  step: string;
-  icon: any;
-  title: string;
-  description: string;
-}[] = [
+export const howItWorks: HowItWorksStep[] = [
   {
+    id: 'login',
     step: '01',
     icon: Shield,
     title: 'Log In',
@@ -231,10 +219,7 @@ export const howItWorks: {
 ];
 
 /* Defines frequently asked questions and their answers. */
-export const faqs: {
-  question: string;
-  answer: string;
-}[] = [
+export const faqs: FAQItem[] = [
   //   // {
   //   //   question: 'How many leagues can I manage at once?',
   //   //   answer:
@@ -268,13 +253,7 @@ export const faqs: {
 ];
 
 /* Defines the key capabilities and highlights of the application. */
-export const capabilities: {
-  value: string;
-  label: string;
-  sublabel: string;
-  icon: any;
-  color: any;
-}[] = [
+export const capabilities: Capability[] = [
   //   // {
   //   //   value: '3+',
   //   //   label: 'Leagues',

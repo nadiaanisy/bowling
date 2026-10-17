@@ -12,7 +12,7 @@ export default function Features() {
 
         return (
           <motion.div
-            key={index}
+            key={feature.id}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-80px' }}
@@ -44,7 +44,7 @@ export default function Features() {
               <ul className="space-y-3">
                 {feature.bullets.map((bullet, bulletIndex) => (
                   <motion.li
-                    key={bulletIndex}
+                    key={`${feature.id}-${bullet}`}
                     initial={{ opacity: 0, x: -10 }}
                     whileInView={{ opacity: 1, x: 0 }}
                     viewport={{ once: true }}

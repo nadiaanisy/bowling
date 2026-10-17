@@ -6,7 +6,6 @@ import {
   ArrowRight,
   Award,
   Sparkles,
-  TrendingUp,
   Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -70,7 +69,7 @@ export default function Hero({ onGetStarted, onLearnMore }: HeroProps) {
           <div className="grid grid-cols-4 gap-4 pt-8">
             {stats.map((stat, index) => (
               <motion.div
-                key={index}
+                key={stat.id}
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: index * 0.1 + 0.3 }}

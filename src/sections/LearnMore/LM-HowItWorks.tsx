@@ -23,7 +23,10 @@ export default function HowItWorks() {
 
         <h2 className="text-4xl font-bold mb-4">
           Up and Running in
-          <span className="gradient-text"> Five Steps</span>
+          <span className="gradient-text">
+            {' '}
+            {howItWorks.length} {howItWorks.length === 1 ? 'Step' : 'Steps'}
+          </span>
         </h2>
 
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
@@ -32,13 +35,15 @@ export default function HowItWorks() {
         </p>
       </motion.div>
 
-      <div className="grid md:grid-cols-5 gap-4">
+      <div
+        className={`grid gap-4 ${howItWorks.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : howItWorks.length === 2 ? 'md:grid-cols-2' : howItWorks.length === 3 ? 'md:grid-cols-3' : howItWorks.length === 4 ? 'md:grid-cols-4' : 'md:grid-cols-5'}`}
+      >
         {howItWorks.map((step, index) => {
           const Icon = step.icon;
 
           return (
             <motion.div
-              key={index}
+              key={step.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

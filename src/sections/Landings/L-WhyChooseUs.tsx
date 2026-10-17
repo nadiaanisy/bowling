@@ -58,7 +58,7 @@ export default function WhyChooseUs({ onGetStarted }: WhyChooseUsProps) {
           <div className="space-y-4">
             {benefits.map((item, index) => (
               <motion.div
-                key={index}
+                key={item}
                 initial={{ opacity: 0, x: -10 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}

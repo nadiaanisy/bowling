@@ -43,7 +43,7 @@ export default function Capabilities() {
 
           return (
             <motion.div
-              key={index}
+              key={stat.id}
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}

@@ -39,35 +39,47 @@ export default function FAQ({ openFaq, setOpenFaq }: FAQProps) {
       <div className="space-y-3">
         {faqs.map((faq, index) => (
           <motion.div
-            key={index}
+            key={faq.id}
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: index * 0.07 }}
           >
-            <Card
-              className="glass border-border/50 cursor-pointer transition-all duration-200 hover:border-primary/30"
-              onClick={() => setOpenFaq(openFaq === index ? null : index)}
-            >
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between gap-4">
-                  <h3 className="font-semibold">{faq.question}</h3>
+            <Card className="glass border-border/50 transition-all duration-200 hover:border-primary/30">
+              <CardContent className="p-0 [&:last-child]:pb-0">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-4 p-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset rounded-lg"
+                  aria-expanded={openFaq === index}
+                  aria-controls={`faq-answer-${faq.id}`}
+                  onClick={() => setOpenFaq(openFaq === index ? null : index)}
+                >
+                  <span className="font-semibold">{faq.question}</span>
 
                   {openFaq === index ? (
-                    <ChevronUp className="h-4 w-4 text-primary flex-shrink-0" />
+                    <ChevronUp
+                      aria-hidden="true"
+                      className="h-4 w-4 text-primary flex-shrink-0"
+                    />
                   ) : (
-                    <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <ChevronDown
+                      aria-hidden="true"
+                      className="h-4 w-4 text-muted-foreground flex-shrink-0"
+                    />
                   )}
-                </div>
+                </button>
 
                 {openFaq === index && (
-                  <motion.p
+                  <motion.div
+                    id={`faq-answer-${faq.id}`}
+                    role="region"
+                    aria-label={faq.question}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-4 text-muted-foreground leading-relaxed text-sm"
+                    className="px-5 pb-5 text-muted-foreground leading-relaxed text-sm"
                   >
                     {faq.answer}
-                  </motion.p>
+                  </motion.div>
                 )}
               </CardContent>
             </Card>
