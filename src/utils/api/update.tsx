@@ -1,7 +1,8 @@
 import {
   HandicapSetting,
+  League,
   LeagueMember,
-  LeagueTeam
+  LeagueTeam,
 } from '../interfaces';
 import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
@@ -407,6 +408,41 @@ export const updatePlayerInTeam = async (
     };
   } catch (err) {
     catchError('Error updating player: ', err);
+    return null;
+  }
+};
+
+/* Updates a league name for the specified owner. */
+export const updateLeagueName = async (
+  leagueId: string | number,
+  userId: string | number,
+  name: string,
+): Promise<League | null> => {
+  const trimmedName = name.trim();
+
+  if (!trimmedName) {
+    toast.error('Please enter a league name.', errorToastStyle);
+    return null;
+  }
+
+  try {
+    const { data, error } = await updateHelper(table.leagues, {
+      name: trimmedName,
+      updated_at: new Date().toISOString(),
+    })
+      .eq('id', leagueId)
+      .eq('user_id', userId)
+      .select('id, name, user_id, created_at, updated_at')
+      .single();
+
+    if (error) {
+      toast.error('Error updating league: ' + error.message, errorToastStyle);
+      return null;
+    }
+
+    return data as unknown as League;
+  } catch (err) {
+    catchError('Error updating league: ', err);
     return null;
   }
 };

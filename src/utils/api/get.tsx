@@ -10,6 +10,7 @@ import {
   LeagueTeamWithMembers,
   LeagueBlock,
   LeagueTeam,
+  LeagueSummary,
 } from '../interfaces';
 import {
   sql_query,
@@ -86,77 +87,46 @@ export const loginUser = async (
 export const getLeaguesByUser = async (
   userId: string | number,
 ): Promise<League[]> => {
-  try {
-    let query = getHelper(table.leagues, sql_query.all);
-    if (userId !== 1) {
-      query = query.eq('user_id', userId);
-    }
-    const { data, error } = await query.order('updated_at', {
-      ascending: false,
-    });
-    if (error) {
-      throw new Error(error.message);
-    }
-    return (data || []) as unknown as League[];
-  } catch (err) {
-    throw err instanceof Error
-      ? err
-      : new Error('Unexpected error while fetching leagues.');
+  const { data, error } = await getHelper(table.leagues, sql_query.all)
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
   }
+
+  return (data ?? []) as unknown as League[];
 };
 
 /* Checks whether a league has any blocks. */
 export const checkIfLeagueHasBlocks = async (
   leagueId: string | number,
 ): Promise<boolean> => {
-  try {
-    const { data, error } = await getHelper(table.blocks, sql_query.all).eq(
-      'league_id',
-      leagueId,
-    );
+  const { data, error } = await getHelper(table.blocks, 'id')
+    .eq('league_id', leagueId)
+    .limit(1);
 
-    if (error) {
-      toast.error(
-        'Error checking league blocks: ' + error.message,
-        errorToastStyle,
-      );
-      return false;
-    }
-
-    if (data && data.length > 0) {
-      return true;
-    }
-
-    return false;
-  } catch (err) {
-    catchError('Error checking league blocks:', err);
-    return false;
+  if (error) {
+    throw new Error(`Error checking league blocks: ${error.message}`);
   }
+
+  return (data?.length ?? 0) > 0;
 };
 
 /* Fetches the total number of teams in a league. */
 export const getTeamCountByLeague = async (
   leagueId: string | number,
 ): Promise<number> => {
-  try {
-    const { data, error } = await getHelper(table.teams, sql_query.all).eq(
-      'league_id',
-      leagueId,
-    );
+  const { count, error } = await getHelper(table.teams, 'id', {
+    count: 'exact',
+    head: true,
+  }).eq('league_id', leagueId);
 
-    if (error) {
-      toast.error(
-        'Error fetching team count: ' + error.message,
-        errorToastStyle,
-      );
-      return 0;
-    }
-
-    return data?.length || 0;
-  } catch (err) {
-    catchError('Error fetching team count:', err);
-    return 0;
+  if (error) {
+    throw new Error(`Error fetching team count: ${error.message}`);
   }
+
+  return count ?? 0;
 };
 
 /* Fetches the total number of blocks in a league. */
@@ -484,4 +454,15 @@ export const getTeamsByLeague = async (
       ? err
       : new Error('Unexpected error while fetching teams.');
   }
+};
+
+/* Fetches league summaries for the authenticated user. */
+export const getMyLeagueSummaries = async (): Promise<LeagueSummary[]> => {
+  const { data, error } = await supabase.rpc('get_my_league_summaries');
+
+  if (error) {
+    throw new Error(`Error fetching league summaries: ${error.message}`);
+  }
+
+  return (data ?? []) as LeagueSummary[];
 };

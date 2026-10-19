@@ -1,4 +1,5 @@
 import {
+  ReactNode,
   useContext,
   useEffect,
   useRef,
@@ -79,31 +80,34 @@ export const useCustomHook = () => {
   const [listOfLeaguesByUser, setListOfLeaguesByUser] = useState<League[]>([]);
   const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
   const [hasBlock, setHasBlock] = useState<boolean>(false);
-  // const [showBlockDialog, setShowBlockDialog] = useState(false);
-  // const [blockCount, setBlockCount] = useState('2');
-  // const [gamesPerWeek, setGamesPerWeek] = useState('');
-  // const [startingLane, setStartingLane] = useState('');
-  // const [totalLanes, setTotalLanes] = useState('');
-  // const [newLeagueName, setNewLeagueName] = useState('');
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [blockCount, setBlockCount] = useState('2');
+  const [gamesPerWeek, setGamesPerWeek] = useState('');
+  const [startingLane, setStartingLane] = useState('');
+  const [totalLanes, setTotalLanes] = useState('');
+  const [newLeagueName, setNewLeagueName] = useState('');
   const [selectedLeagueName, setSelectedLeagueName] = useState('');
-  // const [isLoadingLeagueDetails, setIsLoadingLeagueDetails] = useState(false);
-  // const [showCreateLeagueDialog, setShowCreateLeagueDialog] = useState(false);
-  // const [leagueBlockStatus, setLeagueBlockStatus] = useState<
-  //   Record<string, boolean>
-  // >({});
-  // const [teamCounts, setTeamCounts] = useState<Record<string, number>>({});
-  // const [selectedLeagueId, setSelectedLeagueId] = useState<
-  //   string | number | null
-  // >(null);
-  // const [confirmOpen, setConfirmOpen] = useState(false);
-  // const [confirmMessage, setConfirmMessage] = useState<ReactNode>('');
-  // const [confirmAction, setConfirmAction] = useState<
-  //   () => void | Promise<void>
-  // >(() => () => undefined);
-  // const [creatingBlocks, setCreatingBlocks] = useState(false);
-  // const [creatingLeague, setCreatingLeague] = useState(false);
-  // const [deletingLeague, setDeletingLeague] = useState(false);
-  // const [playersPerGame, setPlayersPerGame] = useState('');
+  const [isLoadingLeagueDetails, setIsLoadingLeagueDetails] = useState(false);
+  const [showCreateLeagueDialog, setShowCreateLeagueDialog] = useState(false);
+  const [leagueBlockStatus, setLeagueBlockStatus] = useState<
+    Record<string, boolean>
+  >({});
+  const [teamCounts, setTeamCounts] = useState<Record<string, number>>({});
+  const [selectedLeagueId, setSelectedLeagueId] = useState<
+    string | number | null
+  >(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState<ReactNode>('');
+  const [confirmAction, setConfirmAction] = useState<
+    () => void | Promise<void>
+  >(() => () => undefined);
+  const [creatingBlocks, setCreatingBlocks] = useState(false);
+  const [creatingLeague, setCreatingLeague] = useState(false);
+  const [deletingLeague, setDeletingLeague] = useState(false);
+  const [playersPerGame, setPlayersPerGame] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [editingLeague, setEditingLeague] = useState<League | null>(null);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -177,9 +181,6 @@ export const useCustomHook = () => {
     const storedAuth = sessionStorage.getItem('bowling-auth') === 'true';
     const storedUserData = sessionStorage.getItem('bowling-user-data');
     const expiresAt = Number(sessionStorage.getItem('bowling-auth-expires-at'));
-    const storedPreviouslySelectedLeague = sessionStorage.getItem(
-      'bowling-previously-selected-league',
-    );
 
     if (storedAuth && storedUserData && expiresAt > Date.now()) {
       try {
@@ -190,20 +191,52 @@ export const useCustomHook = () => {
         void loadLeagues(parsedUserData.id);
       } catch {
         clearBowlingSessionStorage();
+        setIsAuthenticated(false);
+        setUserData(null);
+        setSelectedLeague(null);
       }
     } else if (storedAuth || storedUserData) {
       clearBowlingSessionStorage();
       setSessionExpired(true);
-    }
-
-    if (storedPreviouslySelectedLeague) {
-      setSelectedLeague(storedPreviouslySelectedLeague);
+      setIsAuthenticated(false);
+      setUserData(null);
+      setSelectedLeague(null);
     }
 
     return () => {
-      if (sessionTimer.current) clearTimeout(sessionTimer.current);
+      if (sessionTimer.current) {
+        clearTimeout(sessionTimer.current);
+      }
     };
   }, []);
+
+  /* Validates the previously selected league after the user's leagues load. */
+  useEffect(() => {
+    if (!isAuthenticated || isLoadingLeagues || leagueLoadError !== null) {
+      return;
+    }
+
+    const storedLeagueId = sessionStorage.getItem(
+      'bowling-previously-selected-league',
+    );
+
+    if (!storedLeagueId) return;
+
+    const leagueExists = listOfLeaguesByUser.some(
+      (league) => String(league.id) === storedLeagueId,
+    );
+
+    if (!leagueExists) {
+      setSelectedLeague(null);
+      sessionStorage.removeItem('bowling-previously-selected-league');
+    }
+  }, [
+    isAuthenticated,
+    isLoadingLeagues,
+    leagueLoadError,
+    listOfLeaguesByUser,
+    setSelectedLeague,
+  ]);
 
   /* Logs out the user and clears session data. */
   const logout = () => {
@@ -272,6 +305,7 @@ export const useCustomHook = () => {
     bulkDeleteDialogOpen,
     setBulkDeleteDialogOpen,
     changeLeague,
+    selectLeague,
 
     /* Landing.tsx */
     showLanding,
@@ -318,5 +352,47 @@ export const useCustomHook = () => {
     setHasBlock,
     selectedLeagueName,
     setSelectedLeagueName,
+    showBlockDialog,
+    setShowBlockDialog,
+    blockCount,
+    setBlockCount,
+    gamesPerWeek,
+    setGamesPerWeek,
+    startingLane,
+    setStartingLane,
+    totalLanes,
+    setTotalLanes,
+    newLeagueName,
+    setNewLeagueName,
+    isLoadingLeagueDetails,
+    setIsLoadingLeagueDetails,
+    showCreateLeagueDialog,
+    setShowCreateLeagueDialog,
+    leagueBlockStatus,
+    setLeagueBlockStatus,
+    teamCounts,
+    setTeamCounts,
+    selectedLeagueId,
+    setSelectedLeagueId,
+    confirmOpen,
+    setConfirmOpen,
+    confirmMessage,
+    setConfirmMessage,
+    confirmAction,
+    setConfirmAction,
+    creatingBlocks,
+    setCreatingBlocks,
+    creatingLeague,
+    setCreatingLeague,
+    deletingLeague,
+    setDeletingLeague,
+    playersPerGame,
+    setPlayersPerGame,
+    searchQuery,
+    setSearchQuery,
+    sortOrder,
+    setSortOrder,
+    editingLeague,
+    setEditingLeague,
   };
 };

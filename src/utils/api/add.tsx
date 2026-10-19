@@ -77,6 +77,35 @@ export const addBlockForLeague = async (
   }
 };
 
+/* Sets up a league and its blocks atomically through a Supabase RPC call. */
+export const setupLeagueAtomic = async (
+  leagueId: string | number,
+  blockCount: number,
+  gamesPerWeek: number,
+  playersPerGame: number,
+  startingLane: number,
+  totalLanes: number,
+): Promise<string> => {
+  const { data, error } = await supabase.rpc('setup_league_atomic', {
+    p_league_id: Number(leagueId),
+    p_block_count: blockCount,
+    p_games_per_week: gamesPerWeek,
+    p_players_per_game: playersPerGame,
+    p_starting_lane: startingLane,
+    p_total_lanes: totalLanes,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error('League setup returned no timestamp.');
+  }
+
+  return data;
+};
+
 /* Creates a new league and returns its details. */
 export const addLeague = async (
   name: string,

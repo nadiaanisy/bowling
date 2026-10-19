@@ -1,5 +1,6 @@
 import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
+import { supabase } from '../supabase/supabaseClient';
 import {
   deleteHelper,
   getHelper
@@ -12,34 +13,17 @@ export const deleteLeagueWithData = async (
   leagueId: string | number,
 ): Promise<boolean | null> => {
   try {
-    const childTables = [
-      table.blocks,
-      table.teams,
-      table.players,
-      table.timetable,
-      table.weeklyScore,
-      table.handicapSettings,
-    ];
-
-    for (const childTable of childTables) {
-      const { error } = await deleteHelper(childTable).eq(
-        'league_id',
-        leagueId,
-      );
-
-      if (error) {
-        toast.error(
-          `Error deleting league data from ${childTable}: ${error.message}`,
-          errorToastStyle,
-        );
-        return false;
-      }
-    }
-
-    const { error } = await deleteHelper(table.leagues).eq('id', leagueId);
+    const { data, error } = await supabase.rpc('delete_league_atomic', {
+      p_league_id: Number(leagueId),
+    });
 
     if (error) {
       toast.error('Error deleting league: ' + error.message, errorToastStyle);
+      return false;
+    }
+
+    if (data !== true) {
+      toast.error('League was not deleted.', errorToastStyle);
       return false;
     }
 

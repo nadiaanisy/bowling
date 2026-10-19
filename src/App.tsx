@@ -4,7 +4,6 @@
 // import Handicap from '../src/sections/Handicap';
 // import Dashboard from '../src/sections/Dashboard';
 // import Timetable from '../src/sections/Timetable';
-// import LeagueSelection from '../src/sections/LeagueSelection';
 // // // // import Forecast from "./sections/Forecast";
 // // // // import Timetable from "./sections/Timetable";
 // // // // import Statistics from "./sections/Statistics";
@@ -16,6 +15,7 @@ import { Toaster } from './components/sooner';
 import Login from './sections/Login/Login';
 import { menuItems } from './utils/constants/others';
 import Landing from './sections/Landings/L-MainPage';
+import LeagueSelection from './sections/LeagueSelection/MainPage';
 import {
   ArrowLeft,
   LogOut,
@@ -55,15 +55,15 @@ function AppContent() {
     return <Login onBack={() => setShowLanding(true)} />;
   }
 
-  //   if (!selectedLeague) {
-  //     return (
-  //       <LeagueSelection
-  //         onBackToLanding={() => setShowLanding(true)}
-  //         onLogout={handleLogout}
-  //         onLeagueOpened={() => setCurrentPage('dashboard')}
-  //       />
-  //     );
-  //   }
+  if (!selectedLeague) {
+    return (
+      <LeagueSelection
+        onBackToLanding={() => setShowLanding(true)}
+        onLogout={handleLogout}
+        onLeagueOpened={() => setCurrentPage('dashboard')}
+      />
+    );
+  }
 
   //   const renderPage = () => {
   //     switch (CurrentPage) {
