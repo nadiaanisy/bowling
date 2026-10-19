@@ -1,8 +1,3 @@
-import { toast } from 'sonner';
-import { catchError } from '../functions/toasts';
-import { errorToastStyle } from '../functions/toast-styles';
-import { insertHelper } from '../supabase/supabaseHelper';
-import { table } from '../constants/db';
 import {
   HandicapSetting,
   League,
@@ -10,6 +5,12 @@ import {
   LeagueTeam,
   NewUser,
 } from '../interfaces';
+import { table } from '../constants/db';
+import { catchError } from '../../functions/toasts';
+import { supabase } from '../supabase/supabaseClient';
+import { insertHelper } from '../supabase/supabaseHelper';
+import { errorToastStyle } from '../../functions/toast-styles';
+import { toast } from 'sonner';
 
 /* Creates a new user account and handles duplicate usernames and errors. */
 export const addUser = async (
@@ -18,27 +19,32 @@ export const addUser = async (
   password: string,
 ): Promise<NewUser | null> => {
   try {
-    const { data, error } = await insertHelper(table.user, {
-      name: name.trim(),
-      user_name: username.trim(),
-      password,
-    })
-      .select('id, name, user_name, created_at, updated_at')
-      .single();
+    const { data, error } = await supabase.functions.invoke(
+      'signup-with-username',
+      {
+        body: {
+          name: name.trim(),
+          username: username.trim(),
+          password,
+        },
+      },
+    );
 
-    if (error) {
-      toast.error(
-        error.code === '23505'
-          ? 'That username is already in use.'
-          : 'Error creating account: ' + error.message,
-        errorToastStyle,
-      );
+    if (error || !data?.profile) {
+      const message =
+        data?.error ?? error?.message ?? 'Unable to create account.';
+
+      toast.error(message, errorToastStyle);
       return null;
     }
 
-    return data as unknown as NewUser;
+    return data.profile as NewUser;
   } catch (err) {
-    catchError('Error creating account: ', err);
+    catchError('Signup failed: ', err);
+    toast.error(
+      'Unable to create account right now. Please try again.',
+      errorToastStyle,
+    );
     return null;
   }
 };

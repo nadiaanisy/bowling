@@ -1,10 +1,17 @@
-import { toast } from 'sonner';
-import { errorToastStyle } from '../functions/toast-styles';
-import { catchError } from '../functions/toasts';
-import { getHelper, updateHelper } from '../supabase/supabaseHelper';
+import {
+  HandicapSetting,
+  LeagueMember,
+  LeagueTeam
+} from '../interfaces';
 import { table } from '../constants/db';
-import { HandicapSetting, LeagueMember, LeagueTeam } from '../interfaces';
+import { catchError } from '../../functions/toasts';
 import { supabase } from '../supabase/supabaseClient';
+import {
+  getHelper,
+  updateHelper
+} from '../supabase/supabaseHelper';
+import { errorToastStyle } from '../../functions/toast-styles';
+import { toast } from 'sonner';
 
 /* Updates a league's configuration settings and timestamp. */
 export const updateLeagueSetup = async (

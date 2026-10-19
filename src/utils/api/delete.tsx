@@ -1,8 +1,11 @@
-import { toast } from 'sonner';
 import { table } from '../constants/db';
-import { errorToastStyle } from '../functions/toast-styles';
-import { catchError } from '../functions/toasts';
-import { deleteHelper, getHelper } from '../supabase/supabaseHelper';
+import { catchError } from '../../functions/toasts';
+import {
+  deleteHelper,
+  getHelper
+} from '../supabase/supabaseHelper';
+import { errorToastStyle } from '../../functions/toast-styles';
+import { toast } from 'sonner';
 
 /* Deletes a league and all associated data from related tables. */
 export const deleteLeagueWithData = async (

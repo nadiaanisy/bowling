@@ -1,20 +1,28 @@
-import { Trophy, LogOut, Menu, X, ArrowLeft } from 'lucide-react';
-import { Provider, UseHook } from '../src/utils/hooks';
-// import Players from '../src2/sections/Players';
-import Login from '../src/sections/Login';
-import Teams from '../src/sections/Teams';
-// import Scores from '../src/sections/Scores';
-import Landing from '../src/sections/Landing';
-import Handicap from '../src/sections/Handicap';
-import Dashboard from '../src/sections/Dashboard';
-import { Button } from '../src/components/button';
+// // import Players from '../src2/sections/Players';
+// import Teams from '../src/sections/Teams';
+// // import Scores from '../src/sections/Scores';
+// import Handicap from '../src/sections/Handicap';
+// import Dashboard from '../src/sections/Dashboard';
+// import Timetable from '../src/sections/Timetable';
+// import LeagueSelection from '../src/sections/LeagueSelection';
+// // // // import Forecast from "./sections/Forecast";
+// // // // import Timetable from "./sections/Timetable";
+// // // // import Statistics from "./sections/Statistics";
+
+import { UseHook } from './utils/hooks';
+import { Provider } from './utils/provider';
+import { Button } from './components/button';
+import { Toaster } from './components/sooner';
+import Login from './sections/Login/Login';
 import { menuItems } from './utils/constants/others';
-import { Toaster } from '../src/components/sooner';
-import Timetable from '../src/sections/Timetable';
-import LeagueSelection from '../src/sections/LeagueSelection';
-// // // import Forecast from "./sections/Forecast";
-// // // import Timetable from "./sections/Timetable";
-// // // import Statistics from "./sections/Statistics";
+import Landing from './sections/Landings/L-MainPage';
+import {
+  ArrowLeft,
+  LogOut,
+  Menu,
+  Trophy,
+  X
+} from 'lucide-react';
 
 function AppContent() {
   const {
@@ -22,10 +30,10 @@ function AppContent() {
     sessionExpired,
     logout,
     selectedLeagueName,
-    CurrentPage,
-    MobileMenuOpen,
+    currentPage,
+    mobileMenuOpen,
     selectedLeague,
-    ShowLanding,
+    showLanding,
     setCurrentPage,
     setMobileMenuOpen,
     setShowLanding,
@@ -38,7 +46,7 @@ function AppContent() {
   };
 
   /* --- Public entry flow --- */
-  if (!isAuthenticated && !sessionExpired && ShowLanding) {
+  if (!isAuthenticated && !sessionExpired && showLanding) {
     return <Landing onGetStarted={() => setShowLanding(false)} />;
   }
 
@@ -47,39 +55,39 @@ function AppContent() {
     return <Login onBack={() => setShowLanding(true)} />;
   }
 
-  if (!selectedLeague) {
-    return (
-      <LeagueSelection
-        onBackToLanding={() => setShowLanding(true)}
-        onLogout={handleLogout}
-        onLeagueOpened={() => setCurrentPage('dashboard')}
-      />
-    );
-  }
+  //   if (!selectedLeague) {
+  //     return (
+  //       <LeagueSelection
+  //         onBackToLanding={() => setShowLanding(true)}
+  //         onLogout={handleLogout}
+  //         onLeagueOpened={() => setCurrentPage('dashboard')}
+  //       />
+  //     );
+  //   }
 
-  const renderPage = () => {
-    switch (CurrentPage) {
-      case 'dashboard':
-        return <Dashboard />;
-      case 'hdc':
-        return <Handicap leagueId={selectedLeague} />;
-      case 'teams':
-        return <Teams />;
-      // case "players":
-      //   return <Players />;
-      case 'timetable':
-        return <Timetable />;
-      // case "scores":
-      //   return <Scores />;
+  //   const renderPage = () => {
+  //     switch (CurrentPage) {
+  //       case 'dashboard':
+  //         return <Dashboard />;
+  //       case 'hdc':
+  //         return <Handicap leagueId={selectedLeague} />;
+  //       case 'teams':
+  //         return <Teams />;
+  //       // case "players":
+  //       //   return <Players />;
+  //       case 'timetable':
+  //         return <Timetable />;
+  //       // case "scores":
+  //       //   return <Scores />;
 
-      // case "statistics":
-      //   return <Statistics />;
-      // case "forecast":
-      //   return <Forecast />;
-      default:
-        return <Dashboard />;
-    }
-  };
+  //       // case "statistics":
+  //       //   return <Statistics />;
+  //       // case "forecast":
+  //       //   return <Forecast />;
+  //       default:
+  //         return <Dashboard />;
+  //     }
+  //   };
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -100,9 +108,9 @@ function AppContent() {
             {/* Mobile menu button */}
             <button
               className="lg:hidden"
-              onClick={() => setMobileMenuOpen(!MobileMenuOpen)}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {MobileMenuOpen ? (
+              {mobileMenuOpen ? (
                 <X className="h-6 w-6" />
               ) : (
                 <Menu className="h-6 w-6" />
@@ -116,7 +124,7 @@ function AppContent() {
                 return (
                   <Button
                     key={item.id}
-                    variant={CurrentPage === item.id ? 'default' : 'ghost'}
+                    variant={currentPage === item.id ? 'default' : 'ghost'}
                     onClick={() => setCurrentPage(item.id)}
                   >
                     <Icon className="h-4 w-4 mr-2" />
@@ -136,14 +144,14 @@ function AppContent() {
           </div>
 
           {/* Mobile navigation */}
-          {MobileMenuOpen && (
+          {mobileMenuOpen && (
             <nav className="lg:hidden mt-4 pb-4 flex flex-col gap-2">
               {menuItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Button
                     key={item.id}
-                    variant={CurrentPage === item.id ? 'default' : 'ghost'}
+                    variant={currentPage === item.id ? 'default' : 'ghost'}
                     className="justify-start"
                     onClick={() => {
                       setCurrentPage(item.id);
@@ -175,7 +183,7 @@ function AppContent() {
       </header>
 
       {/* Main content */}
-      <main className="container mx-auto px-4 py-8">{renderPage()}</main>
+      {/* <main className="container mx-auto px-4 py-8">{renderPage()}</main> */}
     </div>
   );
 }

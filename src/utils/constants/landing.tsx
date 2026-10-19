@@ -6,7 +6,11 @@ import {
   HowItWorksStep,
   LandingStat,
 } from '../interfaces';
-import { Shield } from 'lucide-react';
+import {
+  BookOpen,
+  Shield,
+  Users
+} from 'lucide-react';
 
 /* Defines the benefits displayed on the landing page. */
 export const benefits: string[] = [
@@ -20,13 +24,14 @@ export const benefits: string[] = [
 
 /* Defines the main features displayed on the landing page. */
 export const features: Feature[] = [
-  //   {
-  //     icon: Users,
-  //     title: 'Team Management',
-  //     description:
-  //       'Effortlessly manage multiple leagues with multiple teams each. Track players, <s>substitutes</s>, and team rosters.',
-  //     color: 'from-purple-500 to-pink-500',
-  //   },
+  // {
+  //   id: 'test',
+  //   icon: Users,
+  //   title: 'Team Management',
+  //   description:
+  //     'Effortlessly manage multiple leagues with multiple teams each. Track players, <s>substitutes</s>, and team rosters.',
+  //   color: 'from-purple-500 to-pink-500',
+  // },
   //   // {
   //   //   icon: Calendar,
   //   //   title: 'Smart Scheduling',
@@ -66,7 +71,7 @@ export const features: Feature[] = [
 
 /* Defines the statistics displayed on the landing page. */
 export const stats: LandingStat[] = [
-  //   // { label: 'Leagues Supported', value: '10+' },
+  // { id: 'test', label: 'Leagues Supported', value: '10+' },
   //   // { label: 'Teams per League', value: '10+' },
   //   // { label: 'Week Blocks', value: '1–10' },
   //   // { label: 'Players Tracked', value: '∞' },
@@ -74,23 +79,24 @@ export const stats: LandingStat[] = [
 
 /* Defines detailed descriptions and bullet points for each feature. */
 export const featureDetails: FeatureDetail[] = [
-  //   // {
-  //   //   icon: Users,
-  //   //   color: 'from-purple-500 to-pink-500',
-  //   //   title: 'Team & Player Management',
-  //   //   subtitle: 'Full roster control at your fingertips',
-  //   //   description:
-  //   //     'Manage up to multiple teams per league with complete player profiles. Track substitutes with distinctive guest badges, manage player transfers while preserving full history, and monitor attendance with visual indicators across every session.',
-  //   //   bullets: [
-  //   //     'Create and manage teams across multiple leagues',
-  //   //     'Track regular players, substitutes, and guest bowlers',
-  //   //     'Player transfer system with complete history preservation',
-  //   //     'Attendance tracking with per-week visual indicators',
-  //   //     'Detailed player profiles with career statistics',
-  //   //   ],
-  //   //   image:
-  //   //     'https://images.unsplash.com/photo-1504639725590-34d0984388bd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
-  //   // },
+  // {
+  //   id: 'test',
+  //   icon: Users,
+  //   color: 'from-purple-500 to-pink-500',
+  //   title: 'Team & Player Management',
+  //   subtitle: 'Full roster control at your fingertips',
+  //   description:
+  //     'Manage up to multiple teams per league with complete player profiles. Track substitutes with distinctive guest badges, manage player transfers while preserving full history, and monitor attendance with visual indicators across every session.',
+  //   bullets: [
+  //     'Create and manage teams across multiple leagues',
+  //     'Track regular players, substitutes, and guest bowlers',
+  //     'Player transfer system with complete history preservation',
+  //     'Attendance tracking with per-week visual indicators',
+  //     'Detailed player profiles with career statistics',
+  //   ],
+  //   image:
+  //     'https://images.unsplash.com/photo-1504639725590-34d0984388bd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
+  // },
   //   // {
   //   //   icon: Calendar,
   //   //   color: 'from-cyan-500 to-blue-500',
@@ -188,13 +194,14 @@ export const howItWorks: HowItWorksStep[] = [
     description:
       'Access the system with your account. A single secure entry point protects all your data.',
   },
-  //   // {
-  //   //   step: '02',
-  //   //   icon: BookOpen,
-  //   //   title: 'Select Your League',
-  //   //   description:
-  //   //     'Choose which of your leagues to manage. Switch between them anytime.',
-  //   // },
+  // {
+  //   id: 'next',
+  //   step: '02',
+  //   icon: BookOpen,
+  //   title: 'Select Your League',
+  //   description:
+  //     'Choose which of your leagues to manage. Switch between them anytime.',
+  // },
   //   // {
   //   //   step: '03',
   //   //   icon: ClipboardList,
@@ -220,16 +227,18 @@ export const howItWorks: HowItWorksStep[] = [
 
 /* Defines frequently asked questions and their answers. */
 export const faqs: FAQItem[] = [
-  //   // {
-  //   //   question: 'How many leagues can I manage at once?',
-  //   //   answer:
-  //   //     'You can create and manage multiple leagues from the league selection screen — each with up to multiple teams. You switch between leagues from the league selection screen after login.',
-  //   // },
-  //   // {
-  //   //   question: 'How are handicaps calculated?',
-  //   //   answer:
-  //   //     "Handicaps are calculated automatically from each player's current rolling average using the standard league formula. Every time you enter a new week's scores, all handicaps update without any manual input.",
-  //   // },
+  {
+    id: 'test',
+    question: 'How many leagues can I manage at once?',
+    answer:
+      'You can create and manage multiple leagues from the league selection screen — each with up to multiple teams. You switch between leagues from the league selection screen after login.',
+  },
+  {
+    id: 'test2',
+    question: 'How are handicaps calculated?',
+    answer:
+      "Handicaps are calculated automatically from each player's current rolling average using the standard league formula. Every time you enter a new week's scores, all handicaps update without any manual input.",
+  },
   //   // {
   //   //   question: 'Can I track players who move between teams?',
   //   //   answer:

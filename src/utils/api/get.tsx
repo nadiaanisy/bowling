@@ -11,12 +11,15 @@ import {
   LeagueBlock,
   LeagueTeam,
 } from '../interfaces';
-import { sql_query, table } from '../constants/db';
-import { toast } from 'sonner';
-import { catchError } from '../functions/toasts';
-import { getHelper } from '../supabase/supabaseHelper';
-import { errorToastStyle } from '../functions/toast-styles';
+import {
+  sql_query,
+  table
+} from '../constants/db';
+import { catchError } from '../../functions/toasts';
 import { supabase } from '../supabase/supabaseClient';
+import { getHelper } from '../supabase/supabaseHelper';
+import { errorToastStyle } from '../../functions/toast-styles';
+import { toast } from 'sonner';
 
 /* Authenticates the user and returns their data if successful. */
 export const loginUser = async (
@@ -24,17 +27,55 @@ export const loginUser = async (
   password: string,
 ): Promise<User | null> => {
   try {
-    const { data, error } = await getHelper(table.user, sql_query.all)
-      .eq('user_name', username)
-      .eq('password', password)
-      .single();
+    const { data, error } = await supabase.functions.invoke(
+      'login-with-username',
+      {
+        body: {
+          username: username.trim(),
+          password,
+        },
+      },
+    );
 
-    if (error) {
-      console.error('Supabase login error:', error.message, errorToastStyle);
+    if (
+      error ||
+      !data?.session?.access_token ||
+      !data?.session?.refresh_token
+    ) {
+      console.error('Supabase login failed:', error?.message ?? data?.error);
       return null;
     }
 
-    return data as unknown as User;
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+
+    if (sessionError || !sessionData.user) {
+      console.error(
+        'Could not establish Supabase session:',
+        sessionError?.message,
+      );
+      return null;
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from('user')
+      .select('*')
+      .eq('auth_user_id', sessionData.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error(
+        'Could not load Bowling Project profile:',
+        profileError?.message,
+      );
+      await supabase.auth.signOut();
+      return null;
+    }
+
+    return profile as unknown as User;
   } catch (err) {
     catchError('Login failed: ', err);
     return null;

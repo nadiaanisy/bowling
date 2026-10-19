@@ -16,6 +16,17 @@ import {
   User
 } from './interfaces';
 
+const BOWLING_SESSION_STORAGE_KEYS = [
+  'bowling-auth',
+  'bowling-user-data',
+  'bowling-auth-expires-at',
+  'bowling-previously-selected-league',
+] as const;
+
+const clearBowlingSessionStorage = () => {
+  BOWLING_SESSION_STORAGE_KEYS.forEach((key) => sessionStorage.removeItem(key));
+};
+
 /* Returns the current context value and throws an error if used outside the Provider. */
 export const UseHook = () => {
   const context = useContext(Context);
@@ -48,6 +59,20 @@ export const useCustomHook = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [hoveredFeature, setHoveredFeature] = useState<number | null>(null);
 
+  /* Login.tsx state */
+  const [Username, setUsername] = useState('');
+  const [Password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({
+    username: '',
+    password: '',
+  });
+  const [signupMode, setSignupMode] = useState(false);
+  const [signupName, setSignupName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [signupNameError, setSignupNameError] = useState('');
+  const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
   /* SelectLeague.tsx */
   const [isLoadingLeagues, setIsLoadingLeagues] = useState(false);
   const [leagueLoadError, setLeagueLoadError] = useState<string | null>(null);
@@ -60,7 +85,7 @@ export const useCustomHook = () => {
   // const [startingLane, setStartingLane] = useState('');
   // const [totalLanes, setTotalLanes] = useState('');
   // const [newLeagueName, setNewLeagueName] = useState('');
-  // const [selectedLeagueName, setSelectedLeagueName] = useState('');
+  const [selectedLeagueName, setSelectedLeagueName] = useState('');
   // const [isLoadingLeagueDetails, setIsLoadingLeagueDetails] = useState(false);
   // const [showCreateLeagueDialog, setShowCreateLeagueDialog] = useState(false);
   // const [leagueBlockStatus, setLeagueBlockStatus] = useState<
@@ -164,10 +189,10 @@ export const useCustomHook = () => {
         startSessionTimer(expiresAt);
         void loadLeagues(parsedUserData.id);
       } catch {
-        sessionStorage.clear();
+        clearBowlingSessionStorage();
       }
     } else if (storedAuth || storedUserData) {
-      sessionStorage.clear();
+      clearBowlingSessionStorage();
       setSessionExpired(true);
     }
 
@@ -190,7 +215,9 @@ export const useCustomHook = () => {
     setLeagueLoadError(null);
     setIsLoadingLeagues(false);
     setSelectedLeague(null);
-    sessionStorage.clear();
+    setUsername('');
+    setPassword('');
+    clearBowlingSessionStorage();
   };
 
   /* Selects a league and checks whether it has blocks. */
@@ -244,6 +271,7 @@ export const useCustomHook = () => {
     setDeleteDialogOpen,
     bulkDeleteDialogOpen,
     setBulkDeleteDialogOpen,
+    changeLeague,
 
     /* Landing.tsx */
     showLanding,
@@ -254,6 +282,28 @@ export const useCustomHook = () => {
     setOpenFaq,
     hoveredFeature,
     setHoveredFeature,
+
+    /* Login.tsx */
+    login,
+    logout,
+    Username,
+    setUsername,
+    Password,
+    setPassword,
+    showPassword,
+    setShowPassword,
+    fieldErrors,
+    setFieldErrors,
+    signupMode,
+    setSignupMode,
+    signupName,
+    setSignupName,
+    confirmPassword,
+    setConfirmPassword,
+    signupNameError,
+    setSignupNameError,
+    confirmPasswordError,
+    setConfirmPasswordError,
 
     /* SelectLeague.tsx */
     isLoadingLeagues,
@@ -266,5 +316,7 @@ export const useCustomHook = () => {
     setSelectedLeague,
     hasBlock,
     setHasBlock,
+    selectedLeagueName,
+    setSelectedLeagueName,
   };
 };
