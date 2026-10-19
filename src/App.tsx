@@ -2,7 +2,6 @@
 // import Teams from '../src/sections/Teams';
 // // import Scores from '../src/sections/Scores';
 // import Handicap from '../src/sections/Handicap';
-// import Dashboard from '../src/sections/Dashboard';
 // import Timetable from '../src/sections/Timetable';
 // // // // import Forecast from "./sections/Forecast";
 // // // // import Timetable from "./sections/Timetable";
@@ -14,6 +13,7 @@ import { Button } from './components/button';
 import { Toaster } from './components/sooner';
 import Login from './sections/Login/Login';
 import { menuItems } from './utils/constants/others';
+import Dashboard from './sections/Dashboard/MainPage';
 import Landing from './sections/Landings/L-MainPage';
 import LeagueSelection from './sections/LeagueSelection/MainPage';
 import {
@@ -65,29 +65,29 @@ function AppContent() {
     );
   }
 
-  //   const renderPage = () => {
-  //     switch (CurrentPage) {
-  //       case 'dashboard':
-  //         return <Dashboard />;
-  //       case 'hdc':
-  //         return <Handicap leagueId={selectedLeague} />;
-  //       case 'teams':
-  //         return <Teams />;
-  //       // case "players":
-  //       //   return <Players />;
-  //       case 'timetable':
-  //         return <Timetable />;
-  //       // case "scores":
-  //       //   return <Scores />;
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Dashboard />;
+        // case 'hdc':
+        //   return <Handicap leagueId={selectedLeague} />;
+        // case 'teams':
+        //   return <Teams />;
+        // case "players":
+        //   return <Players />;
+        // case 'timetable':
+        //   return <Timetable />;
+        // case "scores":
+        //   return <Scores />;
 
-  //       // case "statistics":
-  //       //   return <Statistics />;
-  //       // case "forecast":
-  //       //   return <Forecast />;
-  //       default:
-  //         return <Dashboard />;
-  //     }
-  //   };
+      // case "statistics":
+      //   return <Statistics />;
+      // case "forecast":
+      //   return <Forecast />;
+      default:
+        return <Dashboard />;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-secondary/30">
@@ -183,7 +183,7 @@ function AppContent() {
       </header>
 
       {/* Main content */}
-      {/* <main className="container mx-auto px-4 py-8">{renderPage()}</main> */}
+      <main className="container mx-auto px-4 py-8">{renderPage()}</main>
     </div>
   );
 }

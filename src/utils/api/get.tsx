@@ -129,79 +129,106 @@ export const getTeamCountByLeague = async (
   return count ?? 0;
 };
 
-/* Fetches the total number of blocks in a league. */
+/** Fetches the total number of blocks in a league. */
 export const getBlockCountByLeague = async (
   leagueId: string | number | null,
 ): Promise<number> => {
-  if (leagueId === null) return 0;
-
-  try {
-    const { count, error } = await getHelper(table.blocks, sql_query.all, {
-      count: 'exact',
-      head: true,
-    }).eq('league_id', leagueId);
-
-    if (error) {
-      toast.error(
-        'Error fetching block count: ' + error.message,
-        errorToastStyle,
-      );
-      return 0;
-    }
-
-    return count ?? 0;
-  } catch (err) {
-    catchError('Error fetching block count:', err);
-    return 0;
+  if (leagueId === null) {
+    throw new Error('No league is selected.');
   }
+
+  const { count, error } = await getHelper(table.blocks, sql_query.all, {
+    count: 'exact',
+    head: true,
+  }).eq('league_id', leagueId);
+
+  if (error) {
+    throw new Error(`Error fetching block count: ${error.message}`);
+  }
+
+  return count ?? 0;
 };
 
-/* Fetches and summarizes dashboard statistics for a league. */
+/** Fetches and summarizes dashboard statistics for a league. */
 export const getDashboardDataByLeagueId = async (
   leagueId: string | number | null,
 ): Promise<DashboardData | null> => {
-  if (leagueId === null) return null;
+  if (leagueId === null) {
+    throw new Error('No league is selected.');
+  }
 
   try {
-    const { data } = await getHelper(table.teams, sql_query.all, {
-      count: 'exact',
-    }).eq('league_id', leagueId);
+    // 1. Fetch teams
+    const { data: teams, error: teamsError } = await getHelper(
+      table.teams,
+      sql_query.all,
+    ).eq('league_id', leagueId);
 
-    const totalTeams = (data || []).filter(
-      (team: any) => team.name?.toLowerCase() !== 'blind',
+    if (teamsError) {
+      throw new Error(`Error fetching teams: ${teamsError.message}`);
+    }
+
+    const totalTeams = ((teams ?? []) as { name?: string | null }[]).filter(
+      (team) => team.name?.toLowerCase() !== 'blind',
     ).length;
 
-    const totalPlayers = await getHelper(table.players, sql_query.all, {
-      count: 'exact',
-      head: true,
-    })
+    // 2. Fetch active players count
+    const { count: playerCount, error: playersError } = await getHelper(
+      table.players,
+      sql_query.all,
+      {
+        count: 'exact',
+        head: true,
+      },
+    )
       .eq('league_id', leagueId)
       .eq('status', 'active');
 
-    const totalBlocks = await getHelper(table.blocks, sql_query.all, {
-      count: 'exact',
-      head: true,
-    }).eq('league_id', leagueId);
+    if (playersError) {
+      throw new Error(`Error fetching players: ${playersError.message}`);
+    }
 
+    // 3. Fetch block count
+    const { count: blockCount, error: blocksError } = await getHelper(
+      table.blocks,
+      sql_query.all,
+      {
+        count: 'exact',
+        head: true,
+      },
+    ).eq('league_id', leagueId);
+
+    if (blocksError) {
+      throw new Error(`Error fetching blocks: ${blocksError.message}`);
+    }
+
+    // 4. Fetch all matches grouped by match and block
     const allMatches = await getAllMatchesGroupedByMatchAndBlock(leagueId);
 
-    // --- Initialize counters ---
+    // 5. Initialize counters
     const blockStats: Record<
       string,
       { completed: number; pending: number; total: number }
     > = {};
+
     const matchesPerWeek: Record<string, number> = {};
 
-    // --- Loop through blocks dynamically ---
+    // 6. Calculate match statistics for each block
     Object.entries(allMatches).forEach(([, matches], index) => {
-      const stats = { completed: 0, pending: 0, total: 0 };
+      const stats = {
+        completed: 0,
+        pending: 0,
+        total: 0,
+      };
 
       matches.forEach((match) => {
         // Exclude matches where either team is "blind"
         const team1 = match.team1.name?.toLowerCase() ?? '';
         const team2 = match.team2.name?.toLowerCase() ?? '';
-        const isBlindMatch = team1 === 'blind' || team2 === 'blind';
-        if (isBlindMatch) return;
+
+        if (team1 === 'blind' || team2 === 'blind') {
+          return;
+        }
 
         stats.total++;
 
@@ -211,34 +238,54 @@ export const getDashboardDataByLeagueId = async (
           stats.pending++;
         }
 
-        // 🧩 Count matches per week
-        const week = match.week_number || 'unknown';
-        matchesPerWeek[week] = (matchesPerWeek[week] || 0) + 1;
+        // Count matches per week
+        const week = match.week_number ?? 'unknown';
+        matchesPerWeek[week] = (matchesPerWeek[week] ?? 0) + 1;
       });
 
-      blockStats[index + 1] = stats;
+      blockStats[String(index + 1)] = stats;
     });
 
-    // --- Compute average matches per week ---
+    // 7. Calculate average matches per week
     const totalMatches = Object.values(matchesPerWeek).reduce(
-      (sum, val) => sum + val,
+      (sum, value) => sum + value,
       0,
     );
+
     const totalWeeks = Object.keys(matchesPerWeek).length;
+
     const averageMatchesPerWeek =
       totalWeeks > 0 ? Math.round(totalMatches / totalWeeks) : 0;
 
-    // --- Return formatted dashboard summary ---
+    const completedMatches = Object.values(blockStats).reduce(
+      (sum, block) => sum + block.completed,
+      0,
+    );
+
+    const scheduledMatches = Object.values(blockStats).reduce(
+      (sum, block) => sum + block.total,
+      0,
+    );
+
+    const completionPercentage =
+      scheduledMatches > 0
+        ? Math.round((completedMatches / scheduledMatches) * 100)
+        : 0;
+
+    // 8. Return dashboard summary
     return {
-      total_blocks: totalBlocks?.count ?? 0,
+      total_blocks: blockCount ?? 0,
       total_teams: totalTeams,
-      total_players: totalPlayers?.count ?? 0,
+      total_players: playerCount ?? 0,
       blocks: blockStats,
       average_matches_per_week: averageMatchesPerWeek,
+      completion_percentage: completionPercentage,
     };
   } catch (error) {
-    catchError('Error fetching dashboard data:', error);
-    return null;
+    // Preserve the original error so the Dashboard can display it
+    throw error instanceof Error
+      ? error
+      : new Error('Unable to load dashboard data.');
   }
 };
 

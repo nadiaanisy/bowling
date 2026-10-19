@@ -1,7 +1,16 @@
 import { supabase } from './supabaseClient';
 
 /* SUPABASE HELPER */
-export const getHelper = (table: string, query: string, options?: any) => {
+
+/* SUPABASE HELPER */
+export const getHelper = (
+  table: string,
+  query: string,
+  options?: {
+    count?: 'exact' | 'planned' | 'estimated';
+    head?: boolean;
+  },
+) => {
   return supabase.from(table).select(query, options);
 };
 

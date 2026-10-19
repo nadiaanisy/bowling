@@ -5,14 +5,18 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/card';
-import { motion } from 'motion/react';
+import type {
+  BlockWeekCalculation,
+  DashboardData,
+} from '../../utils/interfaces';
 import { Skeleton } from '../../components/skeleton';
-import type { DashboardData } from '../../utils/interfaces';
+import { motion } from 'motion/react';
 
 interface SummaryCardProps {
   label: string;
   value: number;
   isLoading: boolean;
+  suffix?: string;
 }
 
 interface BlockCardsProps {
@@ -23,10 +27,21 @@ interface BlockCardsProps {
   loadingBlockCount: number;
 }
 
+const calculateBlockWeeks = (
+  totalMatches: number,
+  matchesPerWeek: number,
+): BlockWeekCalculation => ({
+  totalWeeks:
+    totalMatches > 0 && matchesPerWeek > 0
+      ? Math.ceil(totalMatches / matchesPerWeek)
+      : 0,
+});
+
 export function DashboardSummaryCard({
   label,
   value,
   isLoading,
+  suffix = '',
 }: SummaryCardProps) {
   return (
     <motion.div
@@ -43,7 +58,10 @@ export function DashboardSummaryCard({
               <Skeleton className="h-10 w-10" />
             ) : (
               <div className="space-y-1">
-                <div>{value}</div>
+                <div>
+                  {value}
+                  {suffix}
+                </div>
               </div>
             )}
           </CardTitle>
@@ -103,10 +121,7 @@ export function DashboardBlockProgress({
         const total = block?.total ?? 0;
         const completed = block?.completed ?? 0;
 
-        const totalWeeks =
-          total > 0 && matchesPerWeek > 0
-            ? Math.ceil(total / matchesPerWeek)
-            : 0;
+        const { totalWeeks } = calculateBlockWeeks(total, matchesPerWeek);
 
         const completedWeeks =
           total > 0 && matchesPerWeek > 0
@@ -116,8 +131,8 @@ export function DashboardBlockProgress({
         const weeksLeft = Math.max(totalWeeks - completedWeeks, 0);
 
         const status =
-          totalWeeks === 0
-            ? 'No data'
+          total === 0
+            ? 'No matches scheduled yet'
             : completedWeeks >= totalWeeks
               ? 'Completed'
               : `${weeksLeft} ${weeksLeft === 1 ? 'week' : 'weeks'} remaining`;
@@ -192,8 +207,11 @@ export function DashboardBlockSummary({
   if (totalBlocks === 0) {
     return (
       <Card className="md:col-span-2">
-        <CardContent className="py-8 text-center text-muted-foreground">
-          No blocks have been configured for this league yet.
+        <CardContent className="flex flex-col items-center gap-2 py-8 text-center">
+          <p className="font-medium">No blocks configured yet</p>
+          <p className="text-sm text-muted-foreground">
+            Set up blocks for this league to start tracking match progress.
+          </p>
         </CardContent>
       </Card>
     );
@@ -208,10 +226,10 @@ export function DashboardBlockSummary({
         const pending = blockData?.pending ?? 0;
 
         // Calculate how many weeks this block occupies
-        const blockWeeks =
-          total > 0 && matchesPerWeek > 0
-            ? Math.ceil(total / matchesPerWeek)
-            : 0;
+        const { totalWeeks: blockWeeks } = calculateBlockWeeks(
+          total,
+          matchesPerWeek,
+        );
 
         // Calculate the number of weeks occupied by previous blocks
         let previousWeeks = 0;
@@ -222,7 +240,10 @@ export function DashboardBlockSummary({
           const previousTotal = previousBlock?.total ?? 0;
 
           if (previousTotal > 0 && matchesPerWeek > 0) {
-            previousWeeks += Math.ceil(previousTotal / matchesPerWeek);
+            previousWeeks += calculateBlockWeeks(
+              previousTotal,
+              matchesPerWeek,
+            ).totalWeeks;
           }
         }
 
@@ -246,7 +267,7 @@ export function DashboardBlockSummary({
               <CardHeader>
                 <CardTitle>Block {index + 1}</CardTitle>
                 <CardDescription>
-                  {total ? `${weekRange}` : 'No matches found'}
+                  {total > 0 ? weekRange : 'No matches scheduled yet'}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -266,6 +287,16 @@ export function DashboardBlockSummary({
                     <span className="text-sm">{pending}</span>
                   </div>
                 </div>
+
+                {total === 0 && (
+                  <div className="mt-3 flex items-start gap-2 rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800 dark:border-yellow-900 dark:bg-yellow-950/40 dark:text-yellow-300">
+                    <span className="font-semibold">ℹ</span>
+                    <p>
+                      No matches scheduled yet. Matches will appear here once
+                      they have been generated for this block.
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>

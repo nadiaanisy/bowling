@@ -109,6 +109,13 @@ export const useCustomHook = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [editingLeague, setEditingLeague] = useState<League | null>(null);
 
+  /* Dashboard.tsx */
+  const [loadingBlockCount, setLoadingBlockCount] = useState(0);
+  const [dashboardLoadError, setDashboardLoadError] = useState<string | null>(
+    null,
+  );
+  const [dashboardReloadKey, setDashboardReloadKey] = useState(0);
+
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -222,21 +229,18 @@ export const useCustomHook = () => {
 
     if (!storedLeagueId) return;
 
-    const leagueExists = listOfLeaguesByUser.some(
+    const storedLeague = listOfLeaguesByUser.find(
       (league) => String(league.id) === storedLeagueId,
     );
 
-    if (!leagueExists) {
-      setSelectedLeague(null);
+    if (!storedLeague) {
       sessionStorage.removeItem('bowling-previously-selected-league');
+      setSelectedLeague(null);
+      return;
     }
-  }, [
-    isAuthenticated,
-    isLoadingLeagues,
-    leagueLoadError,
-    listOfLeaguesByUser,
-    setSelectedLeague,
-  ]);
+
+    setSelectedLeague(String(storedLeague.id));
+  }, [isAuthenticated, isLoadingLeagues, leagueLoadError, listOfLeaguesByUser]);
 
   /* Logs out the user and clears session data. */
   const logout = () => {
@@ -394,5 +398,14 @@ export const useCustomHook = () => {
     setSortOrder,
     editingLeague,
     setEditingLeague,
+
+    /* Dashboard.tsx */
+    loadingBlockCount,
+    setLoadingBlockCount,
+    dashboardLoadError,
+    setDashboardLoadError,
+    dashboardReloadKey,
+    setDashboardReloadKey,
+    retryDashboard: () => setDashboardReloadKey((key) => key + 1),
   };
 };
