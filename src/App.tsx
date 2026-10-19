@@ -13,6 +13,7 @@ import { Button } from './components/button';
 import { Toaster } from './components/sooner';
 import Login from './sections/Login/Login';
 import { menuItems } from './utils/constants/others';
+import Handicap from './sections/Handicap/Handicap';
 import Dashboard from './sections/Dashboard/MainPage';
 import Landing from './sections/Landings/L-MainPage';
 import LeagueSelection from './sections/LeagueSelection/MainPage';
@@ -69,8 +70,8 @@ function AppContent() {
     switch (currentPage) {
       case 'dashboard':
         return <Dashboard />;
-        // case 'hdc':
-        //   return <Handicap leagueId={selectedLeague} />;
+      case 'hdc':
+        return <Handicap leagueId={selectedLeague} />;
         // case 'teams':
         //   return <Teams />;
         // case "players":

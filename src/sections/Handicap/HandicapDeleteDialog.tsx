@@ -1,3 +1,5 @@
+import { HandicapSetting } from '../../utils/interfaces';
+import { Button } from '../../components/button';
 import {
   Dialog,
   DialogContent,
@@ -6,8 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/dialog';
-import { Button } from '../../components/button';
-import { HandicapSetting } from '../../utils/interfaces';
 
 interface HandicapDeleteDialogProps {
   singleOpen: boolean;

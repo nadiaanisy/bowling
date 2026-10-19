@@ -1,4 +1,8 @@
 import { FormEvent } from 'react';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { HandicapSetting } from '../../utils/interfaces';
+import { Button } from '../../components/button';
 import {
   Dialog,
   DialogContent,
@@ -7,10 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/dialog';
-import { Input } from '../../components/input';
-import { Label } from '../../components/label';
-import { Button } from '../../components/button';
-import { HandicapSetting } from '../../utils/interfaces';
 
 interface HandicapFormDialogProps {
   open: boolean;

@@ -38,7 +38,7 @@ export const deleteLeagueWithData = async (
 export const deleteHandicapSetting = async (
   id: string | number,
   leagueId: string | number,
-): Promise<boolean | null> => {
+): Promise<boolean> => {
   try {
     const { data, error } = await deleteHelper(table.handicapSettings)
       .eq('id', id)
@@ -46,14 +46,14 @@ export const deleteHandicapSetting = async (
       .select('id');
 
     if (error) {
-      toast.error('Error deleting handicap: ' + error.message, errorToastStyle);
-      return false;
+      throw new Error(`Unable to delete handicap: ${error.message}`);
     }
 
     return (data?.length ?? 0) > 0;
-  } catch (err) {
-    catchError('Error deleting handicap: ', err);
-    return null;
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error('Unable to delete handicap.');
   }
 };
 
@@ -61,7 +61,7 @@ export const deleteHandicapSetting = async (
 export const deleteHandicapSettings = async (
   ids: Array<string | number>,
   leagueId: string | number,
-): Promise<number | null> => {
+): Promise<number> => {
   if (ids.length === 0) return 0;
 
   try {
@@ -71,17 +71,14 @@ export const deleteHandicapSettings = async (
       .select('id');
 
     if (error) {
-      toast.error(
-        'Error deleting handicaps: ' + error.message,
-        errorToastStyle,
-      );
-      return 0;
+      throw new Error(`Unable to delete handicap rules: ${error.message}`);
     }
 
     return data?.length ?? 0;
-  } catch (err) {
-    catchError('Error deleting handicaps: ', err);
-    return null;
+  } catch (error) {
+    throw error instanceof Error
+      ? error
+      : new Error('Unable to delete handicap rules.');
   }
 };
 

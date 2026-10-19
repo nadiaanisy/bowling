@@ -11,7 +11,7 @@ export const menuItems: {
   icon: any;
 }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  // { id: 'hdc', label: 'Handicap', icon: Calculator },
+  { id: 'hdc', label: 'Handicap', icon: Calculator },
   // { id: 'teams', label: 'Teams', icon: Users },
   //   { id: 'players', label: 'Players', icon: UserCircle },
   // { id: 'timetable', label: 'Timetable', icon: Calendar },

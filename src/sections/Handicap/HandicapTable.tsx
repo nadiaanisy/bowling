@@ -1,4 +1,3 @@
-import { Pencil, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -7,8 +6,12 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/table';
-import { Button } from '../../components/button';
 import { HandicapSetting } from '../../utils/interfaces';
+import { Button } from '../../components/button';
+import {
+  Pencil,
+  Trash2
+} from 'lucide-react';
 
 interface HandicapTableProps {
   rules: HandicapSetting[];

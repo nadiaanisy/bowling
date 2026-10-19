@@ -1,19 +1,24 @@
+import { HandicapTable } from './HandicapTable';
+import { HandicapFormDialog } from './HandicapFormDialog';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../components/card';
-import { Input } from '../components/input';
-import { Label } from '../components/label';
-import { Button } from '../components/button';
-import { Plus, Save, Trash2, Upload } from 'lucide-react';
-import { HandicapTable } from '../sub-components/Handicap/HandicapTable';
-import { HandicapFormDialog } from '../sub-components/Handicap/HandicapFormDialog';
-import { HandicapBulkAddDialog } from '../sub-components/Handicap/HandicapBulkAddDialog';
-import { HandicapDeleteDialog } from '../sub-components/Handicap/HandicapDeleteDialog';
-import { useHandicap } from '../utils/functions/handicap';
+} from '../../components/card';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import { HandicapDeleteDialog } from './HandicapDeleteDialog';
+import { Button } from '../../components/button';
+import { HandicapBulkAddDialog } from './HandicapBulkAddDialog';
+import { useHandicap } from '../../functions/handicap';
+import {
+  Plus,
+  Save,
+  Trash2,
+  Upload
+} from 'lucide-react';
 
 interface HandicapProps {
   leagueId: string | number | null;

@@ -1,4 +1,6 @@
 import { FormEvent } from 'react';
+import { Label } from '../../components/label';
+import { Button } from '../../components/button';
 import {
   Dialog,
   DialogContent,
@@ -7,8 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/dialog';
-import { Label } from '../../components/label';
-import { Button } from '../../components/button';
 
 interface HandicapBulkAddDialogProps {
   open: boolean;
