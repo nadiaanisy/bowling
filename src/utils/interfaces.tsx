@@ -1,4 +1,5 @@
 // import type { Dispatch, SetStateAction } from 'react';
+import { LucideIcon } from 'lucide-react';
 
 // export interface ContextType {
 //   isAuthenticated: boolean;
@@ -31,6 +32,53 @@
 //   setIsLoadingSkeleton: (isLoading: boolean) => void;
 //   setDashboardData: (data: DashboardData | null) => void;
 // }
+export interface Feature {
+  id: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  color: string;
+}
+
+export interface LandingStat {
+  id: string;
+  label: string;
+  value: string;
+}
+
+export interface FeatureDetail {
+  id: string;
+  icon: LucideIcon;
+  color: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  bullets: string[];
+  image: string;
+}
+
+export interface HowItWorksStep {
+  id: string;
+  step: string;
+  icon: LucideIcon;
+  title: string;
+  description: string;
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export interface Capability {
+  id: string;
+  value: string;
+  label: string;
+  sublabel: string;
+  icon: LucideIcon;
+  color: string;
+}
 
 export interface User {
   id: string | number;
@@ -45,20 +93,6 @@ export interface NewUser {
   updated_at?: string;
 }
 
-export interface DashboardData {
-  total_blocks: number;
-  total_teams: number;
-  total_players: number;
-  blocks: Record<string, DashboardBlockStats>;
-  average_matches_per_week: number;
-}
-
-export interface DashboardBlockStats {
-  completed: number;
-  pending: number;
-  total: number;
-}
-
 export interface League {
   id: string | number;
   name: string;
@@ -69,6 +103,69 @@ export interface League {
   total_lanes?: string | number;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface LeagueSummary {
+  league_id: number;
+  has_blocks: boolean;
+  team_count: number;
+}
+
+export interface BlockWeekCalculation {
+  totalWeeks: number;
+}
+
+export interface DashboardData {
+  total_blocks: number;
+  total_teams: number;
+  total_players: number;
+  blocks: Record<string, DashboardBlockStats>;
+  average_matches_per_week: number;
+  completion_percentage: number;
+}
+
+export interface DashboardBlockStats {
+  completed: number;
+  pending: number;
+  total: number;
+}
+
+export interface HandicapSetting {
+  id: string | number;
+  league_id: string | number;
+  average: number;
+  men_handicap: number;
+  women_handicap: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LeagueHandicapConfig {
+  id: string | number;
+  league_id: string | number;
+  men_max_handicap: number;
+  women_max_handicap: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface HandicapImportRow {
+  rowNumber: number;
+  averageText: string;
+  menHandicapText: string;
+  womenHandicapText: string;
+  average: number | null;
+  men_handicap: number | null;
+  women_handicap: number | null;
+  errors: string[];
+}
+
+export interface HandicapImportPreview {
+  rows: HandicapImportRow[];
+  dataRowCount: number;
+  validCount: number;
+  invalidCount: number;
+  errors: string[];
 }
 
 export type MatchesByBlock = Record<string, MatchData[]>;
@@ -195,21 +292,4 @@ export interface Lane {
 //   gamesPlayed: number;
 // }
 
-export interface HandicapSetting {
-  id: string | number;
-  league_id: string | number;
-  average: number;
-  men_handicap: number;
-  women_handicap: number | null;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface LeagueHandicapConfig {
-  id: string | number;
-  league_id: string | number;
-  men_max_handicap: number;
-  women_max_handicap: number;
-  created_at?: string;
-  updated_at?: string;
-}
+/////

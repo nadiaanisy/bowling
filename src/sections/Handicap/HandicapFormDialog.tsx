@@ -41,7 +41,10 @@ export function HandicapFormDialog({
 }: HandicapFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent onPointerDownOutside={(event) => event.preventDefault()}>
+      <DialogContent
+        className="top-[30%] md:top-[30%] left-[4.5%] md:left-[36%]"
+        onPointerDownOutside={(event) => event.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>
             {editingRule ? 'Edit Handicap' : 'Add Handicap'}

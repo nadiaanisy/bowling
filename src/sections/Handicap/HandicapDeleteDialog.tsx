@@ -35,7 +35,10 @@ export function HandicapDeleteDialog({
   return (
     <>
       <Dialog open={bulkOpen} onOpenChange={onBulkOpenChange}>
-        <DialogContent>
+        <DialogContent
+          className="top-[36%] md:top-[40%] left-[4.5%] md:left-[36%]"
+          onPointerDownOutside={(event) => event.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Delete Handicap Rules</DialogTitle>
             <DialogDescription>
@@ -61,7 +64,10 @@ export function HandicapDeleteDialog({
       </Dialog>
 
       <Dialog open={singleOpen} onOpenChange={onSingleOpenChange}>
-        <DialogContent>
+        <DialogContent
+          className="top-[36%] md:top-[40%] left-[4.5%] md:left-[36%]"
+          onPointerDownOutside={(event) => event.preventDefault()}
+        >
           <DialogHeader>
             <DialogTitle>Delete Handicap</DialogTitle>
             <DialogDescription>

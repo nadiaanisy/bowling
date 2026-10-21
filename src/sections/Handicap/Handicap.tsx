@@ -159,7 +159,19 @@ export default function Handicap({ leagueId }: HandicapProps) {
         open={handicap.bulkDialogOpen}
         onOpenChange={handicap.setBulkDialogOpen}
         input={handicap.bulkInput}
-        onInputChange={handicap.setBulkInput}
+        onInputChange={(value) => {
+          handicap.setBulkInput(value);
+          handicap.setBulkFileName('');
+        }}
+        fileName={handicap.bulkFileName}
+        onFileSelect={handicap.handleBulkFileSelect}
+        preview={handicap.bulkPreview}
+        importDisabled={
+          handicap.bulkPreview.dataRowCount === 0 ||
+          handicap.bulkPreview.invalidCount > 0 ||
+          handicap.bulkPreview.errors.length > 0 ||
+          handicap.bulkPreview.validCount === 0
+        }
         error={handicap.bulkError}
         onErrorChange={handicap.setBulkError}
         isSaving={handicap.isSaving}
