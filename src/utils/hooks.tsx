@@ -17,6 +17,12 @@ import {
   League,
   User
 } from './interfaces';
+import {
+  emptyRanges,
+  RangeFilters,
+  SortDirection,
+  SortField,
+} from '../functions/handicap';
 
 const BOWLING_SESSION_STORAGE_KEYS = [
   'bowling-auth',
@@ -139,6 +145,10 @@ export const useCustomHook = () => {
   const [menMaxHandicap, setMenMaxHandicap] = useState('40');
   const [womenMaxHandicap, setWomenMaxHandicap] = useState('50');
   const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState<SortField>('average');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [ranges, setRanges] = useState<RangeFilters>(emptyRanges);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -467,5 +477,13 @@ export const useCustomHook = () => {
     setWomenMaxHandicap,
     isSavingConfig,
     setIsSavingConfig,
+    search,
+    setSearch,
+    sortField,
+    setSortField,
+    sortDirection,
+    setSortDirection,
+    ranges,
+    setRanges,
   };
 };

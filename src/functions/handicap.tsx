@@ -447,12 +447,28 @@ export function useHandicap(leagueId: string | number | null) {
         ? current.filter((item) => item !== id)
         : [...current, id],
     );
-  const toggleSelectAll = () =>
-    setSelectedRuleIds(
-      selectedRuleIds.length === rules.length
-        ? []
-        : rules.map((rule) => rule.id),
-    );
+  const clearRuleSelection = () => setSelectedRuleIds([]);
+
+  const toggleSelectAll = (visibleRuleIds: Array<string | number>) => {
+    const allVisibleSelected =
+      visibleRuleIds.length > 0 &&
+      visibleRuleIds.every((id) => selectedRuleIds.includes(id));
+    setSelectedRuleIds((current) => {
+      if (allVisibleSelected) {
+        return current.filter((id) => !visibleRuleIds.includes(id));
+      }
+
+      const next = current.slice();
+
+      visibleRuleIds.forEach((id) => {
+        if (!next.includes(id)) {
+          next.push(id);
+        }
+      });
+
+      return next;
+    });
+  };
 
   const confirmDelete = async () => {
     if (!ruleToDelete || leagueId === null) return;
@@ -484,11 +500,13 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
-  const confirmBulkDelete = async () => {
-    if (leagueId === null || selectedRuleIds.length === 0) return;
+  const confirmBulkDelete = async (visibleRuleIds: Array<string | number>) => {
+    const visibleIds = new Set(visibleRuleIds);
+    const idsToDelete = selectedRuleIds.filter((id) => visibleIds.has(id));
+    if (leagueId === null || idsToDelete.length === 0) return;
     setIsSaving(true);
     try {
-      const ids = [...selectedRuleIds];
+      const ids = [...idsToDelete];
       const count = await deleteHandicapSettings(ids, leagueId);
 
       if (count === 0) {
@@ -552,6 +570,7 @@ export function useHandicap(leagueId: string | number | null) {
     handleSave,
     handleBulkAdd,
     toggleRuleSelection,
+    clearRuleSelection,
     toggleSelectAll,
     confirmDelete,
     confirmBulkDelete,
@@ -761,4 +780,24 @@ export const previewHandicapImport = (
     invalidCount,
     errors: topLevelErrors,
   };
+};
+
+export type SortField = 'average' | 'men_handicap' | 'women_handicap';
+export type SortDirection = 'asc' | 'desc';
+export type RangeFilters = {
+  averageMin: string;
+  averageMax: string;
+  menMin: string;
+  menMax: string;
+  womenMin: string;
+  womenMax: string;
+};
+
+export const emptyRanges: RangeFilters = {
+  averageMin: '',
+  averageMax: '',
+  menMin: '',
+  menMax: '',
+  womenMin: '',
+  womenMax: '',
 };
