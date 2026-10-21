@@ -12,7 +12,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../../components/dialog';
-import { successToastStyle } from '../../functions/toast-styles';
+import {
+  errorToastStyle,
+  successToastStyle,
+} from '../../functions/toast-styles';
 import { toast } from 'sonner';
 import {
   Loader2,
@@ -48,7 +51,7 @@ export default function CreateDialog({
 
     if (editingLeague) {
       if (userId === null || userId === undefined) {
-        toast.error('Unable to identify the current user.');
+        toast.error('Unable to identify the current user.', errorToastStyle);
         return;
       }
 
@@ -96,7 +99,7 @@ export default function CreateDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="glass border-border/50"
+        className="glass border-border/50 top-[30%] md:top-[30%] left-[4%] md:left-[36.6%]"
         onPointerDownOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>

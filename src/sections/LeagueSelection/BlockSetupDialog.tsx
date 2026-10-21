@@ -139,7 +139,7 @@ export default function BlockSetupDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="glass border-border/50"
+        className="glass border-border/50 top-[10%] md:top-[25%] left-[4%] md:left-[36.6%]"
         onPointerDownOutside={(event) => event.preventDefault()}
       >
         <DialogHeader>
