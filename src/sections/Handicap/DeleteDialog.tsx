@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from '../../components/dialog';
 
-interface HandicapDeleteDialogProps {
+interface DeleteDialogProps {
   singleOpen: boolean;
   onSingleOpenChange: (open: boolean) => void;
   bulkOpen: boolean;
@@ -21,7 +21,7 @@ interface HandicapDeleteDialogProps {
   onConfirmBulk: () => void;
 }
 
-export function HandicapDeleteDialog({
+export function DeleteDialog({
   singleOpen,
   onSingleOpenChange,
   bulkOpen,
@@ -31,7 +31,7 @@ export function HandicapDeleteDialog({
   isSaving,
   onConfirmSingle,
   onConfirmBulk,
-}: HandicapDeleteDialogProps) {
+}: DeleteDialogProps) {
   return (
     <>
       <Dialog open={bulkOpen} onOpenChange={onBulkOpenChange}>

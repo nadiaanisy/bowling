@@ -3,9 +3,12 @@ import {
   useMemo,
   useState
 } from 'react';
+import { FormDialog } from './FormDialog';
+import { DeleteDialog } from './DeleteDialog';
+import { BulkAddDialog } from './BulkAddDialog';
 import { HandicapTable } from './HandicapTable';
 import { useCustomHook } from '../../utils/hooks';
-import { HandicapFormDialog } from './HandicapFormDialog';
+import { MaximumHandicap } from './maximumHandicap';
 import {
   Card,
   CardContent,
@@ -15,9 +18,7 @@ import {
 } from '../../components/card';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
-import { HandicapDeleteDialog } from './HandicapDeleteDialog';
 import { Button } from '../../components/button';
-import { HandicapBulkAddDialog } from './HandicapBulkAddDialog';
 import {
   emptyRanges,
   RangeFilters,
@@ -27,7 +28,6 @@ import {
 } from '../../functions/handicap';
 import {
   Plus,
-  Save,
   Trash2,
   Upload,
   RotateCcw
@@ -168,61 +168,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Maximum Handicap</CardTitle>
-          <CardDescription>
-            Set the maximum handicap applied to each gender in this league.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handicap.handleSaveConfig} className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="men-max-handicap">Men's maximum handicap</Label>
-                <Input
-                  id="men-max-handicap"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={handicap.menMaxHandicap}
-                  onChange={(event) =>
-                    handicap.setMenMaxHandicap(event.target.value)
-                  }
-                  disabled={handicap.isSavingConfig || leagueId === null}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="women-max-handicap">
-                  Women's maximum handicap
-                </Label>
-                <Input
-                  id="women-max-handicap"
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={handicap.womenMaxHandicap}
-                  onChange={(event) =>
-                    handicap.setWomenMaxHandicap(event.target.value)
-                  }
-                  disabled={handicap.isSavingConfig || leagueId === null}
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <Button
-                type="submit"
-                disabled={handicap.isSavingConfig || leagueId === null}
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {handicap.isSavingConfig ? 'Saving...' : 'Save Maximums'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <MaximumHandicap leagueId={leagueId} />
 
       <Card>
         <CardHeader>
@@ -392,7 +338,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
         </CardContent>
       </Card>
 
-      <HandicapBulkAddDialog
+      <BulkAddDialog
         open={handicap.bulkDialogOpen}
         onOpenChange={handicap.setBulkDialogOpen}
         input={handicap.bulkInput}
@@ -415,7 +361,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
         onSubmit={handicap.handleBulkAdd}
       />
 
-      <HandicapFormDialog
+      <FormDialog
         open={handicap.dialogOpen}
         onOpenChange={handicap.setDialogOpen}
         editingRule={handicap.editingRule}
@@ -429,7 +375,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
         onSubmit={handicap.handleSave}
       />
 
-      <HandicapDeleteDialog
+      <DeleteDialog
         singleOpen={handicap.deleteDialogOpen}
         onSingleOpenChange={handicap.setDeleteDialogOpen}
         bulkOpen={handicap.bulkDeleteDialogOpen}

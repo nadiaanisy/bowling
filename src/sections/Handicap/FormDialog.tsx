@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from '../../components/dialog';
 
-interface HandicapFormDialogProps {
+interface FormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   editingRule: HandicapSetting | null;
@@ -26,7 +26,7 @@ interface HandicapFormDialogProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
-export function HandicapFormDialog({
+export function FormDialog({
   open,
   onOpenChange,
   editingRule,
@@ -38,7 +38,7 @@ export function HandicapFormDialog({
   onWomenHandicapChange,
   isSaving,
   onSubmit,
-}: HandicapFormDialogProps) {
+}: FormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent

@@ -14,7 +14,7 @@ import {
   DialogTitle,
 } from '../../components/dialog';
 
-interface HandicapBulkAddDialogProps {
+interface BulkAddDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   input: string;
@@ -29,7 +29,7 @@ interface HandicapBulkAddDialogProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
-export function HandicapBulkAddDialog({
+export function BulkAddDialog({
   open,
   onOpenChange,
   input,
@@ -42,7 +42,7 @@ export function HandicapBulkAddDialog({
   preview,
   importDisabled,
   onSubmit,
-}: HandicapBulkAddDialogProps) {
+}: BulkAddDialogProps) {
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) onFileSelect(file);
