@@ -149,6 +149,21 @@ export interface LeagueHandicapConfig {
   updated_at?: string;
 }
 
+export type HandicapChangeAction = 'created' | 'updated' | 'deleted';
+export type HandicapChangeEntityType = 'handicap_rule' | 'league_config';
+
+export interface HandicapChangeHistory {
+  id: number;
+  league_id: string | number;
+  entity_type: HandicapChangeEntityType;
+  entity_id: string | number | null;
+  action: HandicapChangeAction;
+  before_values: Record<string, unknown> | null;
+  after_values: Record<string, unknown> | null;
+  actor_id: string | null;
+  changed_at: string;
+}
+
 export interface HandicapImportRow {
   rowNumber: number;
   averageText: string;
@@ -167,6 +182,8 @@ export interface HandicapImportPreview {
   invalidCount: number;
   errors: string[];
 }
+
+/*.....*/
 
 export type MatchesByBlock = Record<string, MatchData[]>;
 

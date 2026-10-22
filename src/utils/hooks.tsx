@@ -13,9 +13,10 @@ import {
 import { Context } from './provider';
 import {
   DashboardData,
+  HandicapChangeHistory,
   HandicapSetting,
   League,
-  User
+  User,
 } from './interfaces';
 import {
   emptyRanges,
@@ -149,6 +150,9 @@ export const useCustomHook = () => {
   const [sortField, setSortField] = useState<SortField>('average');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [ranges, setRanges] = useState<RangeFilters>(emptyRanges);
+  const [historyRows, setHistoryRows] = useState<HandicapChangeHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -485,5 +489,11 @@ export const useCustomHook = () => {
     setSortDirection,
     ranges,
     setRanges,
+    historyRows,
+    setHistoryRows,
+    historyLoading,
+    setHistoryLoading,
+    historyError,
+    setHistoryError,
   };
 };

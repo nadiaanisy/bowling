@@ -801,3 +801,21 @@ export const emptyRanges: RangeFilters = {
   womenMin: '',
   womenMax: '',
 };
+
+export const formatHistoryValue = (value: unknown): string => {
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'object') return JSON.stringify(value);
+  return String(value);
+};
+
+export const HISTORY_LABELS: Record<string, string> = {
+  average: 'Average',
+  men_handicap: "Men's handicap",
+  women_handicap: "Women's handicap",
+  men_max_handicap: "Men's maximum handicap",
+  women_max_handicap: "Women's maximum handicap",
+  league_id: 'League ID',
+  id: 'Record ID',
+  created_at: 'Created at',
+  updated_at: 'Updated at',
+};

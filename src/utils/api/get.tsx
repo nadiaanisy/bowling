@@ -11,6 +11,7 @@ import {
   LeagueBlock,
   LeagueTeam,
   LeagueSummary,
+  HandicapChangeHistory,
 } from '../interfaces';
 import {
   sql_query,
@@ -406,6 +407,28 @@ export const getHandicapSettings = async (
       ? err
       : new Error('Unable to load handicap settings.');
   }
+};
+
+/** Fetches recent handicap rule and league-configuration changes for an owned league. */
+export const getHandicapChangeHistory = async (
+  leagueId: string | number,
+  limit = 50,
+): Promise<HandicapChangeHistory[]> => {
+  const { data, error } = await supabase
+    .from('handicap_change_history')
+    .select(
+      'id, league_id, entity_type, entity_id, action, before_values, after_values, actor_id, changed_at',
+    )
+    .eq('league_id', leagueId)
+    .order('changed_at', { ascending: false })
+    .order('id', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(`Error fetching handicap change history: ${error.message}`);
+  }
+
+  return (data ?? []) as unknown as HandicapChangeHistory[];
 };
 
 /* Fetches a league's maximum handicap configuration, if one exists. */
