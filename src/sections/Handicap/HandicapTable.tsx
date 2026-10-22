@@ -39,88 +39,98 @@ export function HandicapTable({
     rules.every((rule) => selectedRuleIds.includes(rule.id));
 
   return (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[48px]">
-              <input
-                type="checkbox"
-                aria-label="Select all handicap rules"
-                checked={allSelected}
-                onChange={onToggleAll}
-                disabled={isLoading || rules.length === 0 || isSaving}
-                className="h-4 w-4"
-              />
-            </TableHead>
-            <TableHead>Average</TableHead>
-            <TableHead>Men HDC</TableHead>
-            <TableHead>Women HDC</TableHead>
-            <TableHead className="w-[140px] text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {isLoading ? (
+    <div className="flex h-full min-h-0 min-w-0 flex-col">
+      <div className="shrink-0 overflow-x-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell
-                colSpan={5}
-                className="py-10 text-center text-muted-foreground"
-              >
-                Loading handicap settings...
-              </TableCell>
+              <TableHead className="w-[48px]">
+                <input
+                  type="checkbox"
+                  aria-label="Select all handicap rules"
+                  checked={allSelected}
+                  onChange={onToggleAll}
+                  disabled={isLoading || rules.length === 0 || isSaving}
+                  className="h-4 w-4"
+                />
+              </TableHead>
+              <TableHead>Average</TableHead>
+              <TableHead>Men HDC</TableHead>
+              <TableHead>Women HDC</TableHead>
+              <TableHead className="w-[140px] text-right">Actions</TableHead>
             </TableRow>
-          ) : rules.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={5}
-                className="py-10 text-center text-muted-foreground"
-              >
-                No handicap rules configured yet.
-              </TableCell>
-            </TableRow>
-          ) : (
-            rules.map((rule) => (
-              <TableRow key={rule.id}>
-                <TableCell>
-                  <input
-                    type="checkbox"
-                    aria-label={`Select handicap ${rule.average}`}
-                    checked={selectedRuleIds.includes(rule.id)}
-                    onChange={() => onToggleRule(rule.id)}
-                    disabled={isSaving}
-                    className="h-4 w-4"
-                  />
-                </TableCell>
-                <TableCell className="font-medium">{rule.average}</TableCell>
-                <TableCell>{rule.men_handicap}</TableCell>
-                <TableCell>{rule.women_handicap ?? '—'}</TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isSaving}
-                      onClick={() => onEdit(rule)}
-                      aria-label={`Edit handicap ${rule.average}`}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={isSaving}
-                      onClick={() => onDelete(rule)}
-                      aria-label={`Delete handicap ${rule.average}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+          </TableHeader>
+        </Table>
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-10 text-center text-muted-foreground"
+                  >
+                    Loading handicap settings...
+                  </TableCell>
+                </TableRow>
+              ) : rules.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="py-10 text-center text-muted-foreground"
+                  >
+                    No handicap rules configured yet.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                rules.map((rule) => (
+                  <TableRow key={rule.id}>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        aria-label={`Select handicap ${rule.average}`}
+                        checked={selectedRuleIds.includes(rule.id)}
+                        onChange={() => onToggleRule(rule.id)}
+                        disabled={isSaving}
+                        className="h-4 w-4"
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {rule.average}
+                    </TableCell>
+                    <TableCell>{rule.men_handicap}</TableCell>
+                    <TableCell>{rule.women_handicap ?? '—'}</TableCell>
+                    <TableCell>
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isSaving}
+                          onClick={() => onEdit(rule)}
+                          aria-label={`Edit handicap ${rule.average}`}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isSaving}
+                          onClick={() => onDelete(rule)}
+                          aria-label={`Delete handicap ${rule.average}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   );
 }
