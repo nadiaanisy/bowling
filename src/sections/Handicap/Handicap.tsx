@@ -4,11 +4,11 @@ import {
   useState
 } from 'react';
 import { FormDialog } from './FormDialog';
+import { MaximumHandicap } from './MaxHandicap';
 import { DeleteDialog } from './DeleteDialog';
 import { BulkAddDialog } from './BulkAddDialog';
 import { HandicapTable } from './HandicapTable';
 import { useCustomHook } from '../../utils/hooks';
-import { MaximumHandicap } from './maximumHandicap';
 import {
   Card,
   CardContent,
