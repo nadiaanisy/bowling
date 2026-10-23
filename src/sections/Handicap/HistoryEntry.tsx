@@ -1,8 +1,6 @@
 import { HandicapChangeHistory } from '../../utils/interfaces';
-import {
-  formatHistoryValue,
-  HISTORY_LABELS
-} from '../../functions/handicap';
+import { formatHistoryValue } from '../../functions/handicap';
+import { HISTORY_LABELS } from '../../utils/constants/handicap';
 
 export default function ({ entry }: { entry: HandicapChangeHistory }) {
   const before = entry.before_values ?? {};

@@ -2,8 +2,7 @@ import {
   FormEvent,
   useCallback,
   useEffect,
-  useMemo,
-  useState
+  useMemo
 } from 'react';
 import { useCustomHook } from '../utils/hooks';
 import {
@@ -73,16 +72,19 @@ export function useHandicap(leagueId: string | number | null) {
     setWomenMaxHandicap,
     isSavingConfig,
     setIsSavingConfig,
+    bulkFileName,
+    setBulkFileName,
   } = useCustomHook();
 
+  /* Loads handicap rules and league configuration, resetting state when no league is selected. */
   const loadRules = useCallback(async () => {
     if (leagueId === null) {
       setRules([]);
       setSelectedRuleIds([]);
       setLoadError('');
       setIsLoading(false);
-      setMenMaxHandicap('40');
-      setWomenMaxHandicap('50');
+      setMenMaxHandicap('0');
+      setWomenMaxHandicap('0');
       return;
     }
 
@@ -108,57 +110,6 @@ export function useHandicap(leagueId: string | number | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [leagueId]);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    const load = async () => {
-      if (leagueId === null) {
-        setRules([]);
-        setSelectedRuleIds([]);
-        setLoadError('');
-        setIsLoading(false);
-        setMenMaxHandicap('40');
-        setWomenMaxHandicap('50');
-        return;
-      }
-
-      setIsLoading(true);
-      setLoadError('');
-
-      try {
-        const [data, config] = await Promise.all([
-          getHandicapSettings(leagueId),
-          getLeagueHandicapConfig(leagueId),
-        ]);
-
-        if (!isCurrent) return;
-
-        setRules([...data].sort((a, b) => a.average - b.average));
-        setSelectedRuleIds([]);
-        setMenMaxHandicap(String(config?.men_max_handicap ?? 40));
-        setWomenMaxHandicap(String(config?.women_max_handicap ?? 50));
-      } catch (error) {
-        if (!isCurrent) return;
-
-        setLoadError(
-          error instanceof Error
-            ? error.message
-            : 'Unable to load handicap settings.',
-        );
-      } finally {
-        if (isCurrent) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void load();
-
-    return () => {
-      isCurrent = false;
-    };
   }, [
     leagueId,
     setRules,
@@ -169,8 +120,12 @@ export function useHandicap(leagueId: string | number | null) {
     setWomenMaxHandicap,
   ]);
 
-  const [bulkFileName, setBulkFileName] = useState('');
+  /* Loads handicap rules and league limits whenever the selected league changes. */
+  useEffect(() => {
+    void loadRules();
+  }, [loadRules]);
 
+  /* Generates a preview of the bulk handicap import using the current input and rule averages. */
   const bulkPreview = useMemo(
     () =>
       previewHandicapImport(
@@ -180,6 +135,7 @@ export function useHandicap(leagueId: string | number | null) {
     [bulkInput, rules],
   );
 
+  /* Clears the add/edit form and its current editing target. */
   const resetForm = () => {
     setAverage('');
     setMenHandicap('');
@@ -187,11 +143,13 @@ export function useHandicap(leagueId: string | number | null) {
     setEditingRule(null);
   };
 
+  /* Resets the form and opens the dialog for a new handicap rule. */
   const openAddDialog = () => {
     resetForm();
     setDialogOpen(true);
   };
 
+  /* Clears previous import data and opens the bulk-import dialog. */
   const openBulkDialog = () => {
     setBulkInput('');
     setBulkError('');
@@ -199,6 +157,7 @@ export function useHandicap(leagueId: string | number | null) {
     setBulkDialogOpen(true);
   };
 
+  /* Validates and reads a supported handicap import file. */
   const handleBulkFileSelect = async (file: File) => {
     setBulkError('');
     setBulkInput('');
@@ -225,6 +184,7 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
+  /* Loads an existing rule into the form and opens the edit dialog. */
   const openEditDialog = (rule: HandicapSetting) => {
     setEditingRule(rule);
     setAverage(String(rule.average));
@@ -233,11 +193,13 @@ export function useHandicap(leagueId: string | number | null) {
     setDialogOpen(true);
   };
 
+  /* Selects a rule for deletion and opens its confirmation dialog. */
   const openDeleteDialog = (rule: HandicapSetting) => {
     setRuleToDelete(rule);
     setDeleteDialogOpen(true);
   };
 
+  /* Validates and creates or updates one handicap rule. */
   const handleSave = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (leagueId === null) {
@@ -311,6 +273,7 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
+  /* Validates the import preview and inserts all valid rows as one operation. */
   const handleBulkAdd = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBulkError('');
@@ -401,6 +364,7 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
+  /* Validates and saves the league's maximum-handicap configuration. */
   const handleSaveConfig = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (leagueId === null) {
@@ -441,14 +405,17 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
+  /* Toggles selection of a single handicap rule. */
   const toggleRuleSelection = (id: string | number) =>
     setSelectedRuleIds((current) =>
       current.includes(id)
         ? current.filter((item) => item !== id)
         : [...current, id],
     );
+  /* Clears all selected handicap rules. */
   const clearRuleSelection = () => setSelectedRuleIds([]);
 
+  /* Selects all visible rules, or clears them when all are already selected. */
   const toggleSelectAll = (visibleRuleIds: Array<string | number>) => {
     const allVisibleSelected =
       visibleRuleIds.length > 0 &&
@@ -470,6 +437,7 @@ export function useHandicap(leagueId: string | number | null) {
     });
   };
 
+  /* Deletes the confirmed rule and updates local state after success. */
   const confirmDelete = async () => {
     if (!ruleToDelete || leagueId === null) return;
     setIsSaving(true);
@@ -500,6 +468,7 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
+  /* Deletes selected rules that are currently visible in the table. */
   const confirmBulkDelete = async (visibleRuleIds: Array<string | number>) => {
     const visibleIds = new Set(visibleRuleIds);
     const idsToDelete = selectedRuleIds.filter((id) => visibleIds.has(id));
@@ -587,6 +556,7 @@ export function useHandicap(leagueId: string | number | null) {
   };
 }
 
+/* Validates a non-negative numeric value with a maximum decimal precision. */
 const isValidNumber = (value: string, decimals: number): boolean => {
   const trimmed = value.trim();
   if (!trimmed) return false;
@@ -598,6 +568,7 @@ const isValidNumber = (value: string, decimals: number): boolean => {
   return !decimalPart || decimalPart.length <= decimals;
 };
 
+/* Counts candidate delimiters while ignoring delimiters inside quoted values. */
 const countDelimiters = (line: string): Record<string, number> => {
   const counts: Record<string, number> = { ',': 0, '\t': 0, ';': 0 };
   let quoted = false;
@@ -618,6 +589,7 @@ const countDelimiters = (line: string): Record<string, number> => {
   return counts;
 };
 
+/* Detects the most likely delimiter for an import row. */
 const detectDelimiter = (line: string): string => {
   const counts = countDelimiters(line);
   return Object.entries(counts).sort((a, b) => b[1] - a[1])[0][1] > 0
@@ -625,6 +597,7 @@ const detectDelimiter = (line: string): string => {
     : ',';
 };
 
+/* Parses one delimited row while respecting quoted and escaped quotes. */
 const parseLine = (line: string, delimiter: string): string[] => {
   const values: string[] = [];
   let value = '';
@@ -651,6 +624,7 @@ const parseLine = (line: string, delimiter: string): string[] => {
   return values;
 };
 
+/* Identifies a supported AVG / men's / women's handicap header row. */
 const isHeaderRow = (values: string[]): boolean => {
   const normalized = values.map((value) =>
     value
@@ -668,6 +642,7 @@ const isHeaderRow = (values: string[]): boolean => {
   );
 };
 
+/* Parses import text and reports row-level validation and duplicate errors. */
 export const previewHandicapImport = (
   input: string,
   existingAverages: number[],
@@ -782,40 +757,9 @@ export const previewHandicapImport = (
   };
 };
 
-export type SortField = 'average' | 'men_handicap' | 'women_handicap';
-export type SortDirection = 'asc' | 'desc';
-export type RangeFilters = {
-  averageMin: string;
-  averageMax: string;
-  menMin: string;
-  menMax: string;
-  womenMin: string;
-  womenMax: string;
-};
-
-export const emptyRanges: RangeFilters = {
-  averageMin: '',
-  averageMax: '',
-  menMin: '',
-  menMax: '',
-  womenMin: '',
-  womenMax: '',
-};
-
+/* Formats a value as a string, using an em dash for nullish values and JSON for objects. */
 export const formatHistoryValue = (value: unknown): string => {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'object') return JSON.stringify(value);
   return String(value);
-};
-
-export const HISTORY_LABELS: Record<string, string> = {
-  average: 'Average',
-  men_handicap: "Men's handicap",
-  women_handicap: "Women's handicap",
-  men_max_handicap: "Men's maximum handicap",
-  women_max_handicap: "Women's maximum handicap",
-  league_id: 'League ID',
-  id: 'Record ID',
-  created_at: 'Created at',
-  updated_at: 'Updated at',
 };

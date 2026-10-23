@@ -21,20 +21,23 @@ import {
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
 import { Button } from '../../components/button';
+import { useHandicap } from '../../functions/handicap';
 import {
   emptyRanges,
   RangeFilters,
   SortDirection,
   SortField,
-  useHandicap,
-} from '../../functions/handicap';
+} from '../../utils/constants/handicap';
 import {
   Plus,
   Trash2,
-  Upload,
   RotateCcw,
   History,
   RefreshCw,
+  Download,
+  FileJson,
+  ChevronDown,
+  ListPlus,
 } from 'lucide-react';
 
 interface HandicapProps {
@@ -42,8 +45,6 @@ interface HandicapProps {
 }
 
 export default function Handicap({ leagueId }: HandicapProps) {
-  const handicap = useHandicap(leagueId);
-
   const {
     search,
     setSearch,
@@ -59,7 +60,74 @@ export default function Handicap({ leagueId }: HandicapProps) {
     setHistoryLoading,
     historyError,
     setHistoryError,
+    backupMenuOpen,
+    setBackupMenuOpen,
+    addMenuOpen,
+    setAddMenuOpen,
   } = useCustomHook();
+
+  const handicap = useHandicap(leagueId);
+  const backupMenuRef = useRef<HTMLDivElement>(null);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+
+  const refreshHistory = async () => {
+    if (leagueId === null) return;
+    setHistoryLoading(true);
+    setHistoryError('');
+    try {
+      setHistoryRows(await getHandicapChangeHistory(leagueId));
+    } catch (error) {
+      setHistoryError(
+        error instanceof Error
+          ? error.message
+          : 'Unable to load handicap change history.',
+      );
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Close Add Handicap menu when clicking outside
+  useEffect(() => {
+    const handleAddOutside = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (
+        target instanceof Node &&
+        addMenuRef.current &&
+        !addMenuRef.current.contains(target)
+      ) {
+        setAddMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleAddOutside, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleAddOutside, true);
+    };
+  }, []);
+
+  // Close Export / Backup menu when clicking outside
+  useEffect(() => {
+    const handleBackupOutside = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (
+        target instanceof Node &&
+        backupMenuRef.current &&
+        !backupMenuRef.current.contains(target)
+      ) {
+        setBackupMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handleBackupOutside, true);
+
+    return () => {
+      document.removeEventListener('pointerdown', handleBackupOutside, true);
+    };
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -96,24 +164,9 @@ export default function Handicap({ leagueId }: HandicapProps) {
     };
   }, [leagueId]);
 
-  const refreshHistory = async () => {
-    if (leagueId === null) return;
-    setHistoryLoading(true);
-    setHistoryError('');
-    try {
-      setHistoryRows(await getHandicapChangeHistory(leagueId));
-    } catch (error) {
-      setHistoryError(
-        error instanceof Error
-          ? error.message
-          : 'Unable to load handicap change history.',
-      );
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
+  /* Tracks whether a save operation was in progress during the previous render. */
   const wasSavingRef = useRef(false);
+
   useEffect(() => {
     const isSaving = handicap.isSaving || handicap.isSavingConfig;
     if (wasSavingRef.current && !isSaving && leagueId !== null) {
@@ -139,6 +192,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
 
   const invalidRange = (min: string, max: string) =>
     min !== '' && max !== '' && Number(min) > Number(max);
+
   const hasInvalidRange =
     invalidRange(ranges.averageMin, ranges.averageMax) ||
     invalidRange(ranges.menMin, ranges.menMax) ||
@@ -190,24 +244,124 @@ export default function Handicap({ leagueId }: HandicapProps) {
     setSearch(value);
     handicap.clearRuleSelection();
   };
+
   const updateRange = (key: keyof RangeFilters, value: string) => {
     setRanges((current) => ({ ...current, [key]: value }));
     handicap.clearRuleSelection();
   };
+
   const updateSortField = (value: SortField) => {
     setSortField(value);
     handicap.clearRuleSelection();
   };
+
   const updateSortDirection = (value: SortDirection) => {
     setSortDirection(value);
     handicap.clearRuleSelection();
   };
+
   const resetTableControls = () => {
     setSearch('');
     setSortField('average');
     setSortDirection('asc');
     setRanges(emptyRanges);
     handicap.clearRuleSelection();
+  };
+
+  /* Creates and downloads a file with the specified filename, contents, and MIME type. */
+  const downloadFile = (
+    filename: string,
+    contents: string,
+    mimeType: string,
+  ) => {
+    const blob = new Blob([contents], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  /* Formats a value as a string, using an em dash for nullish values and JSON for objects. */
+  const csvCell = (value: unknown) => {
+    const text =
+      value == null
+        ? ''
+        : typeof value === 'object'
+          ? JSON.stringify(value)
+          : String(value);
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+
+  /* Exports the league's handicap rules as a downloadable CSV file. */
+  const exportRulesCsv = () => {
+    if (leagueId === null) return;
+    const rows = [
+      ['average', 'men_handicap', 'women_handicap', 'id'],
+      ...handicap.rules.map((rule) => [
+        rule.average,
+        rule.men_handicap,
+        rule.women_handicap,
+        rule.id,
+      ]),
+    ];
+    downloadFile(
+      `handicap-rules-league-${leagueId}.csv`,
+      rows.map((row) => row.map(csvCell).join(',')).join('\\r\\n'),
+      'text/csv;charset=utf-8',
+    );
+  };
+
+  /* Exports the league's handicap change history as a downloadable CSV file. */
+  const exportHistoryCsv = () => {
+    if (leagueId === null) return;
+    const fields = [
+      'id',
+      'league_id',
+      'entity_type',
+      'entity_id',
+      'action',
+      'before_values',
+      'after_values',
+      'actor_id',
+      'changed_at',
+    ] as const;
+    const rows = [
+      fields,
+      ...historyRows.map((entry) => fields.map((field) => entry[field])),
+    ];
+    downloadFile(
+      `handicap-history-league-${leagueId}.csv`,
+      rows.map((row) => row.map(csvCell).join(',')).join('\\r\\n'),
+      'text/csv;charset=utf-8',
+    );
+  };
+
+  /* Exports the league's handicap rules, maximum handicap settings, and change history as a JSON backup snapshot. */
+  const exportJsonBackup = () => {
+    if (leagueId === null) return;
+    const backup = {
+      format: 'bowling-handicap-backup',
+      version: 1,
+      exported_at: new Date().toISOString(),
+      league_id: leagueId,
+      handicap_rules: handicap.rules,
+      maximum_handicap_settings: {
+        men_max_handicap: Number(handicap.menMaxHandicap),
+        women_max_handicap: Number(handicap.womenMaxHandicap),
+      },
+      change_history: historyRows,
+      notes:
+        'This is a league-level export snapshot, not a full database backup or automatic restore file.',
+    };
+    downloadFile(
+      `handicap-backup-league-${leagueId}.json`,
+      JSON.stringify(backup, null, 2),
+      'application/json;charset=utf-8',
+    );
   };
 
   return (
@@ -221,7 +375,90 @@ export default function Handicap({ leagueId }: HandicapProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <div className="relative" ref={backupMenuRef}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setBackupMenuOpen((open) => !open)}
+              disabled={leagueId === null}
+              aria-haspopup="menu"
+              aria-expanded={backupMenuOpen}
+            >
+              Export / Backup
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+            {backupMenuOpen && (
+              <div
+                role="menu"
+                aria-label="Export and backup options"
+                className="absolute right-0 top-full z-50 mt-2 w-64 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setBackupMenuOpen(false);
+                    exportRulesCsv();
+                  }}
+                  disabled={handicap.isLoading}
+                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <Download className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    <span className="block font-medium">
+                      Export rules (CSV)
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      Handicap averages and values
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setBackupMenuOpen(false);
+                    exportHistoryCsv();
+                  }}
+                  disabled={historyLoading}
+                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <History className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    <span className="block font-medium">
+                      Export history (CSV)
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      Recorded changes and timestamps
+                    </span>
+                  </span>
+                </button>
+                <div className="my-1 border-t" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setBackupMenuOpen(false);
+                    exportJsonBackup();
+                  }}
+                  disabled={handicap.isLoading || historyLoading}
+                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <FileJson className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    <span className="block font-medium">
+                      Download JSON backup
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      Rules, maximum settings, and history
+                    </span>
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
           {handicap.selectedRuleIds.length > 0 && (
             <Button
               variant="outline"
@@ -232,18 +469,63 @@ export default function Handicap({ leagueId }: HandicapProps) {
               Bulk Delete ({handicap.selectedRuleIds.length})
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={handicap.openBulkDialog}
-            disabled={leagueId === null}
-          >
-            <Upload className="mr-2 h-4 w-4" />
-            Bulk Add
-          </Button>
-          <Button onClick={handicap.openAddDialog} disabled={leagueId === null}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Handicap
-          </Button>
+          <div className="relative" ref={addMenuRef}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAddMenuOpen((open) => !open)}
+              disabled={leagueId === null}
+              aria-haspopup="menu"
+              aria-expanded={addMenuOpen}
+            >
+              Add Handicap
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+            {addMenuOpen && (
+              <div
+                role="menu"
+                aria-label="Add handicap options"
+                className="absolute right-0 top-full z-50 mt-2 w-64 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setAddMenuOpen(false);
+                    handicap.openAddDialog();
+                  }}
+                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent"
+                >
+                  <Plus className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    <span className="block font-medium">
+                      Add single handicap
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      Enter one average and its values
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setAddMenuOpen(false);
+                    handicap.openBulkDialog();
+                  }}
+                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent"
+                >
+                  <ListPlus className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>
+                    <span className="block font-medium">Bulk add / import</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Add multiple handicap rules from pasted data or a file
+                    </span>
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

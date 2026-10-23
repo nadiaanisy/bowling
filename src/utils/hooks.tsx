@@ -23,7 +23,7 @@ import {
   RangeFilters,
   SortDirection,
   SortField,
-} from '../functions/handicap';
+} from './constants/handicap';
 
 const BOWLING_SESSION_STORAGE_KEYS = [
   'bowling-auth',
@@ -130,6 +130,7 @@ export const useCustomHook = () => {
   const [loadError, setLoadError] = useState('');
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const [bulkInput, setBulkInput] = useState('');
+  const [bulkFileName, setBulkFileName] = useState('');
   const [bulkError, setBulkError] = useState('');
   const [selectedRuleIds, setSelectedRuleIds] = useState<
     Array<string | number>
@@ -143,8 +144,8 @@ export const useCustomHook = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [menHandicap, setMenHandicap] = useState('');
   const [womenHandicap, setWomenHandicap] = useState('');
-  const [menMaxHandicap, setMenMaxHandicap] = useState('40');
-  const [womenMaxHandicap, setWomenMaxHandicap] = useState('50');
+  const [menMaxHandicap, setMenMaxHandicap] = useState('0');
+  const [womenMaxHandicap, setWomenMaxHandicap] = useState('0');
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState<SortField>('average');
@@ -153,6 +154,8 @@ export const useCustomHook = () => {
   const [historyRows, setHistoryRows] = useState<HandicapChangeHistory[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState('');
+  const [backupMenuOpen, setBackupMenuOpen] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -457,6 +460,8 @@ export const useCustomHook = () => {
     setBulkDialogOpen,
     bulkInput,
     setBulkInput,
+    bulkFileName,
+    setBulkFileName,
     bulkError,
     setBulkError,
     selectedRuleIds,
@@ -495,5 +500,9 @@ export const useCustomHook = () => {
     setHistoryLoading,
     historyError,
     setHistoryError,
+    backupMenuOpen,
+    setBackupMenuOpen,
+    addMenuOpen,
+    setAddMenuOpen,
   };
 };
