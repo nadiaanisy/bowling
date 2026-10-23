@@ -6,10 +6,11 @@ import {
 import { FormDialog } from './FormDialog';
 import { MaximumHandicap } from './MaxHandicap';
 import { DeleteDialog } from './DeleteDialog';
-import HistoryEntry from './HistoryEntry';
 import { BulkAddDialog } from './BulkAddDialog';
 import { HandicapTable } from './HandicapTable';
+import { HandicapHeader } from './HandicapHeader';
 import { useCustomHook } from '../../utils/hooks';
+import { HandicapActions } from './HandicapActions';
 import { getHandicapChangeHistory } from '../../utils/api/get';
 import {
   Card,
@@ -18,8 +19,8 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/card';
-import { Input } from '../../components/input';
-import { Label } from '../../components/label';
+import { HandicapHistoryPanel } from './HandicapHistoryPanel';
+import { HandicapTableFilters } from './HandicapTableFilters';
 import { Button } from '../../components/button';
 import { useHandicap } from '../../functions/handicap';
 import {
@@ -28,17 +29,6 @@ import {
   SortDirection,
   SortField,
 } from '../../utils/constants/handicap';
-import {
-  Plus,
-  Trash2,
-  RotateCcw,
-  History,
-  RefreshCw,
-  Download,
-  FileJson,
-  ChevronDown,
-  ListPlus,
-} from 'lucide-react';
 
 interface HandicapProps {
   leagueId: string | number | null;
@@ -60,15 +50,9 @@ export default function Handicap({ leagueId }: HandicapProps) {
     setHistoryLoading,
     historyError,
     setHistoryError,
-    backupMenuOpen,
-    setBackupMenuOpen,
-    addMenuOpen,
-    setAddMenuOpen,
   } = useCustomHook();
 
   const handicap = useHandicap(leagueId);
-  const backupMenuRef = useRef<HTMLDivElement>(null);
-  const addMenuRef = useRef<HTMLDivElement>(null);
 
   const refreshHistory = async () => {
     if (leagueId === null) return;
@@ -86,48 +70,6 @@ export default function Handicap({ leagueId }: HandicapProps) {
       setHistoryLoading(false);
     }
   };
-
-  // Close Add Handicap menu when clicking outside
-  useEffect(() => {
-    const handleAddOutside = (event: PointerEvent) => {
-      const target = event.target;
-
-      if (
-        target instanceof Node &&
-        addMenuRef.current &&
-        !addMenuRef.current.contains(target)
-      ) {
-        setAddMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('pointerdown', handleAddOutside, true);
-
-    return () => {
-      document.removeEventListener('pointerdown', handleAddOutside, true);
-    };
-  }, []);
-
-  // Close Export / Backup menu when clicking outside
-  useEffect(() => {
-    const handleBackupOutside = (event: PointerEvent) => {
-      const target = event.target;
-
-      if (
-        target instanceof Node &&
-        backupMenuRef.current &&
-        !backupMenuRef.current.contains(target)
-      ) {
-        setBackupMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('pointerdown', handleBackupOutside, true);
-
-    return () => {
-      document.removeEventListener('pointerdown', handleBackupOutside, true);
-    };
-  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -367,166 +309,20 @@ export default function Handicap({ leagueId }: HandicapProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
-        <div>
-          <h1>Handicap Setup</h1>
-          <p className="text-muted-foreground">
-            Configure average-based handicap values separately for men and
-            women.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <div className="relative" ref={backupMenuRef}>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setBackupMenuOpen((open) => !open)}
-              disabled={leagueId === null}
-              aria-haspopup="menu"
-              aria-expanded={backupMenuOpen}
-            >
-              Export / Backup
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-            {backupMenuOpen && (
-              <div
-                role="menu"
-                aria-label="Export and backup options"
-                className="absolute right-0 top-full z-50 mt-2 w-64 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-              >
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setBackupMenuOpen(false);
-                    exportRulesCsv();
-                  }}
-                  disabled={handicap.isLoading}
-                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
-                >
-                  <Download className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block font-medium">
-                      Export rules (CSV)
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      Handicap averages and values
-                    </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setBackupMenuOpen(false);
-                    exportHistoryCsv();
-                  }}
-                  disabled={historyLoading}
-                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
-                >
-                  <History className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block font-medium">
-                      Export history (CSV)
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      Recorded changes and timestamps
-                    </span>
-                  </span>
-                </button>
-                <div className="my-1 border-t" />
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setBackupMenuOpen(false);
-                    exportJsonBackup();
-                  }}
-                  disabled={handicap.isLoading || historyLoading}
-                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
-                >
-                  <FileJson className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block font-medium">
-                      Download JSON backup
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      Rules, maximum settings, and history
-                    </span>
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-          {handicap.selectedRuleIds.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={() => handicap.setBulkDeleteDialogOpen(true)}
-              disabled={handicap.isSaving}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Bulk Delete ({handicap.selectedRuleIds.length})
-            </Button>
-          )}
-          <div className="relative" ref={addMenuRef}>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setAddMenuOpen((open) => !open)}
-              disabled={leagueId === null}
-              aria-haspopup="menu"
-              aria-expanded={addMenuOpen}
-            >
-              Add Handicap
-              <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
-            {addMenuOpen && (
-              <div
-                role="menu"
-                aria-label="Add handicap options"
-                className="absolute right-0 top-full z-50 mt-2 w-64 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-              >
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setAddMenuOpen(false);
-                    handicap.openAddDialog();
-                  }}
-                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent"
-                >
-                  <Plus className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block font-medium">
-                      Add single handicap
-                    </span>
-                    <span className="block text-xs text-muted-foreground">
-                      Enter one average and its values
-                    </span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setAddMenuOpen(false);
-                    handicap.openBulkDialog();
-                  }}
-                  className="flex w-full items-start gap-3 rounded-sm px-3 py-2 text-left text-sm hover:bg-accent"
-                >
-                  <ListPlus className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    <span className="block font-medium">Bulk add / import</span>
-                    <span className="block text-xs text-muted-foreground">
-                      Add multiple handicap rules from pasted data or a file
-                    </span>
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <HandicapHeader />
+        <HandicapActions
+          leagueSelected={leagueId !== null}
+          selectedCount={handicap.selectedRuleIds.length}
+          isSaving={handicap.isSaving}
+          isLoading={handicap.isLoading}
+          historyLoading={historyLoading}
+          onAddSingle={handicap.openAddDialog}
+          onBulkAdd={handicap.openBulkDialog}
+          onBulkDelete={() => handicap.setBulkDeleteDialogOpen(true)}
+          onExportRules={exportRulesCsv}
+          onExportHistory={exportHistoryCsv}
+          onExportBackup={exportJsonBackup}
+        />
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
@@ -538,140 +334,21 @@ export default function Handicap({ leagueId }: HandicapProps) {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="mb-5 shrink-0 space-y-4">
-              <div className="grid gap-3 md:grid-cols-[minmax(220px,1fr)_180px_150px_auto] md:items-end">
-                <div className="space-y-1.5">
-                  <Label htmlFor="handicap-search">Search rules</Label>
-                  <Input
-                    id="handicap-search"
-                    value={search}
-                    onChange={(event) => updateSearch(event.target.value)}
-                    placeholder="Search average or handicap value"
-                    disabled={handicap.isLoading || leagueId === null}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="handicap-sort-field">Sort by</Label>
-                  <select
-                    id="handicap-sort-field"
-                    value={sortField}
-                    onChange={(event) =>
-                      updateSortField(event.target.value as SortField)
-                    }
-                    disabled={handicap.isLoading || leagueId === null}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="average">Average</option>
-                    <option value="men_handicap">Men HDC</option>
-                    <option value="women_handicap">Women HDC</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="handicap-sort-direction">Direction</Label>
-                  <select
-                    id="handicap-sort-direction"
-                    value={sortDirection}
-                    onChange={(event) =>
-                      updateSortDirection(event.target.value as SortDirection)
-                    }
-                    disabled={handicap.isLoading || leagueId === null}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                  </select>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={resetTableControls}
-                  disabled={handicap.isLoading || leagueId === null}
-                >
-                  <RotateCcw className="mr-2 h-4 w-4" /> Reset
-                </Button>
-              </div>
-              <div>
-                <p className="mb-2 text-sm font-medium">
-                  Range filters (inclusive)
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {(
-                    [
-                      {
-                        title: 'Average',
-                        minKey: 'averageMin',
-                        maxKey: 'averageMax',
-                      },
-                      {
-                        title: "Men's handicap",
-                        minKey: 'menMin',
-                        maxKey: 'menMax',
-                      },
-                      {
-                        title: "Women's handicap",
-                        minKey: 'womenMin',
-                        maxKey: 'womenMax',
-                      },
-                    ] as const
-                  ).map(({ title, minKey, maxKey }) => (
-                    <div
-                      key={title}
-                      className="space-y-2 rounded-md border p-3"
-                    >
-                      <p className="text-sm font-medium">{title}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="space-y-1">
-                          <Label htmlFor={`handicap-${minKey}`}>Min</Label>
-                          <Input
-                            id={`handicap-${minKey}`}
-                            type="number"
-                            min="0"
-                            step="any"
-                            value={ranges[minKey]}
-                            onChange={(event) =>
-                              updateRange(minKey, event.target.value)
-                            }
-                            placeholder="No min"
-                            disabled={handicap.isLoading || leagueId === null}
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor={`handicap-${maxKey}`}>Max</Label>
-                          <Input
-                            id={`handicap-${maxKey}`}
-                            type="number"
-                            min="0"
-                            step="any"
-                            value={ranges[maxKey]}
-                            onChange={(event) =>
-                              updateRange(maxKey, event.target.value)
-                            }
-                            placeholder="No max"
-                            disabled={handicap.isLoading || leagueId === null}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {hasInvalidRange && (
-                  <p className="mt-2 text-sm text-destructive" role="alert">
-                    A minimum cannot be greater than its maximum. Correct the
-                    range to see results.
-                  </p>
-                )}
-                <p
-                  className="mt-2 text-sm text-muted-foreground"
-                  aria-live="polite"
-                >
-                  Showing {visibleRules.length} of {handicap.rules.length}{' '}
-                  handicap rules.
-                  {!hasInvalidRange && visibleRules.length === 0
-                    ? ' Adjust your search or filters to see rules.'
-                    : ''}
-                </p>
-              </div>
-            </div>
+            <HandicapTableFilters
+              search={search}
+              onSearchChange={updateSearch}
+              sortField={sortField}
+              onSortFieldChange={updateSortField}
+              sortDirection={sortDirection}
+              onSortDirectionChange={updateSortDirection}
+              ranges={ranges}
+              onRangeChange={updateRange}
+              onReset={resetTableControls}
+              disabled={handicap.isLoading || leagueId === null}
+              invalidRange={hasInvalidRange}
+              visibleCount={visibleRules.length}
+              totalCount={handicap.rules.length}
+            />
             {handicap.loadError ? (
               <div className="rounded-md border border-destructive/30 p-4 text-sm text-destructive">
                 <div>{handicap.loadError}</div>
@@ -707,77 +384,13 @@ export default function Handicap({ leagueId }: HandicapProps) {
 
         <div className="flex min-w-0 flex-col gap-4">
           <MaximumHandicap leagueId={leagueId} />
-          <Card className="flex min-h-0 min-w-0 flex-col">
-            <CardHeader className="shrink-0 space-y-2 p-4 pb-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <History className="h-4 w-4 shrink-0" />
-                    Hdc - History
-                  </CardTitle>
-                  <CardDescription className="mt-1 text-xs">
-                    Recent handicap and maximum-setting changes.
-                  </CardDescription>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => void refreshHistory()}
-                  disabled={historyLoading || leagueId === null}
-                >
-                  <RefreshCw
-                    className={`h-3.5 w-3.5 ${historyLoading ? 'animate-spin' : ''}`}
-                  />
-                  <span className="sr-only">Refresh history</span>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="flex min-h-0 flex-col px-4 pb-4 pt-0">
-              {leagueId === null ? (
-                <p className="py-4 text-center text-xs text-muted-foreground">
-                  Select a league to view its change history.
-                </p>
-              ) : historyLoading ? (
-                <p
-                  className="py-4 text-center text-xs text-muted-foreground"
-                  role="status"
-                >
-                  Loading change history…
-                </p>
-              ) : historyError ? (
-                <div
-                  className="rounded-md border border-destructive/30 p-4 text-sm text-destructive"
-                  role="alert"
-                >
-                  <p>{historyError}</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={() => void refreshHistory()}
-                  >
-                    Retry
-                  </Button>
-                </div>
-              ) : historyRows.length === 0 ? (
-                <p className="py-4 text-center text-xs text-muted-foreground">
-                  No changes have been recorded for this league yet.
-                </p>
-              ) : (
-                <div className="h-[50vh] min-h-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
-                  {historyRows.map((entry) => (
-                    <HistoryEntry key={entry.id} entry={entry} />
-                  ))}
-                  <p className="pt-1 text-xs text-muted-foreground">
-                    Showing the latest {historyRows.length} change
-                    {historyRows.length === 1 ? '' : 's'}.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <HandicapHistoryPanel
+            leagueId={leagueId}
+            loading={historyLoading}
+            error={historyError}
+            rows={historyRows}
+            onRefresh={() => void refreshHistory()}
+          />
         </div>
       </div>
 
