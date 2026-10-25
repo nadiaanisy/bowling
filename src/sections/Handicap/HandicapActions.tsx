@@ -1,7 +1,10 @@
 import { HandicapAddMenu } from './HandicapAddMenu';
 import { HandicapExportMenu } from './HandicapExportMenu';
 import { Button } from '../../components/button';
-import { Trash2 } from 'lucide-react';
+import {
+  Pencil,
+  Trash2
+} from 'lucide-react';
 
 interface HandicapActionsProps {
   leagueSelected: boolean;
@@ -12,6 +15,7 @@ interface HandicapActionsProps {
   onAddSingle: () => void;
   onBulkAdd: () => void;
   onBulkDelete: () => void;
+  onBulkEdit: () => void;
   onExportRules: () => void;
   onExportHistory: () => void;
   onExportBackup: () => void;
@@ -30,14 +34,24 @@ export function HandicapActions(props: HandicapActionsProps) {
         onExportBackup={props.onExportBackup}
       />
       {props.selectedCount > 0 && (
-        <Button
-          variant="outline"
-          onClick={props.onBulkDelete}
-          disabled={props.isSaving}
-        >
-          <Trash2 className="mr-2 h-4 w-4" />
-          Bulk Delete ({props.selectedCount})
-        </Button>
+        <>
+          <Button
+            variant="outline"
+            onClick={props.onBulkEdit}
+            disabled={props.isSaving || props.isLoading}
+          >
+            <Pencil className="mr-2 h-4 w-4" />
+            Bulk Edit ({props.selectedCount})
+          </Button>
+          <Button
+            variant="outline"
+            onClick={props.onBulkDelete}
+            disabled={props.isSaving || props.isLoading}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Bulk Delete ({props.selectedCount})
+          </Button>
+        </>
       )}
       <HandicapAddMenu
         disabled={!props.leagueSelected}

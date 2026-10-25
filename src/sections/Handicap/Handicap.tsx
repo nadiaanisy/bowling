@@ -8,6 +8,7 @@ import { MaximumHandicap } from './MaxHandicap';
 import { DeleteDialog } from './DeleteDialog';
 import { BulkAddDialog } from './BulkAddDialog';
 import { HandicapTable } from './HandicapTable';
+import { BulkEditDialog } from './BulkEditDialog';
 import { HandicapHeader } from './HandicapHeader';
 import { useCustomHook } from '../../utils/hooks';
 import { HandicapActions } from './HandicapActions';
@@ -319,6 +320,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
           onAddSingle={handicap.openAddDialog}
           onBulkAdd={handicap.openBulkDialog}
           onBulkDelete={() => handicap.setBulkDeleteDialogOpen(true)}
+          onBulkEdit={handicap.openBulkEdit}
           onExportRules={exportRulesCsv}
           onExportHistory={exportHistoryCsv}
           onExportBackup={exportJsonBackup}
@@ -429,6 +431,22 @@ export default function Handicap({ leagueId }: HandicapProps) {
         onWomenHandicapChange={handicap.setWomenHandicap}
         isSaving={handicap.isSaving}
         onSubmit={handicap.handleSave}
+      />
+
+      <BulkEditDialog
+        open={handicap.bulkEditOpen}
+        onOpenChange={handicap.setBulkEditOpen}
+        rules={handicap.rules.filter((rule) =>
+          handicap.selectedRuleIds.includes(rule.id),
+        )}
+        menValue={handicap.bulkEditMenValue}
+        onMenValueChange={handicap.setBulkEditMenValue}
+        womenValue={handicap.bulkEditWomenValue}
+        onWomenValueChange={handicap.setBulkEditWomenValue}
+        error={handicap.bulkEditError}
+        onErrorChange={handicap.setBulkEditError}
+        isSaving={handicap.isSaving}
+        onConfirm={() => void handicap.confirmBulkEdit()}
       />
 
       <DeleteDialog

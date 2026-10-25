@@ -2,7 +2,8 @@ import {
   FormEvent,
   useCallback,
   useEffect,
-  useMemo
+  useMemo,
+  useState
 } from 'react';
 import { useCustomHook } from '../utils/hooks';
 import {
@@ -75,6 +76,11 @@ export function useHandicap(leagueId: string | number | null) {
     bulkFileName,
     setBulkFileName,
   } = useCustomHook();
+
+  const [bulkEditOpen, setBulkEditOpen] = useState(false);
+  const [bulkEditMenValue, setBulkEditMenValue] = useState('');
+  const [bulkEditWomenValue, setBulkEditWomenValue] = useState('');
+  const [bulkEditError, setBulkEditError] = useState('');
 
   /* Loads handicap rules and league configuration, resetting state when no league is selected. */
   const loadRules = useCallback(async () => {
@@ -405,6 +411,118 @@ export function useHandicap(leagueId: string | number | null) {
     }
   };
 
+  /* Opens bulk edit with both optional values cleared. */
+  const openBulkEdit = () => {
+    setBulkEditMenValue('');
+    setBulkEditWomenValue('');
+    setBulkEditError('');
+    setBulkEditOpen(true);
+  };
+
+  /* Applies one or both supplied values to selected rules. Blank fields stay unchanged. */
+  const confirmBulkEdit = async () => {
+    setBulkEditError('');
+    if (leagueId === null) {
+      setBulkEditError('Please select a league first.');
+      return;
+    }
+    if (selectedRuleIds.length === 0) {
+      setBulkEditError('Select at least one handicap rule.');
+      return;
+    }
+    const hasMenValue = bulkEditMenValue.trim() !== '';
+    const hasWomenValue = bulkEditWomenValue.trim() !== '';
+    if (!hasMenValue && !hasWomenValue) {
+      setBulkEditError("Enter a men's handicap, a women's handicap, or both.");
+      return;
+    }
+    if (
+      (hasMenValue && !isValidNumber(bulkEditMenValue, 0)) ||
+      (hasWomenValue && !isValidNumber(bulkEditWomenValue, 0))
+    ) {
+      setBulkEditError('Entered values must be non-negative whole numbers.');
+      return;
+    }
+
+    const selectedRules = rules.filter((rule) =>
+      selectedRuleIds.includes(rule.id),
+    );
+    if (selectedRules.length === 0) {
+      setBulkEditError(
+        'No selected rules were found. Refresh the table and try again.',
+      );
+      return;
+    }
+
+    // Never silently convert an unedited null value to zero.
+    const hasMissingPreservedValue = selectedRules.some(
+      (rule) =>
+        (!hasMenValue && rule.men_handicap === null) ||
+        (!hasWomenValue && rule.women_handicap === null),
+    );
+    if (hasMissingPreservedValue) {
+      setBulkEditError(
+        'Some selected rules have a blank value in a field you left unchanged. Enter a value for that field too, or edit those rules individually first.',
+      );
+      return;
+    }
+
+    const nextMenValue = hasMenValue ? Number(bulkEditMenValue) : null;
+    const nextWomenValue = hasWomenValue ? Number(bulkEditWomenValue) : null;
+    const changedRules = selectedRules.filter(
+      (rule) =>
+        (nextMenValue !== null && Number(rule.men_handicap) !== nextMenValue) ||
+        (nextWomenValue !== null &&
+          Number(rule.women_handicap) !== nextWomenValue),
+    );
+    if (changedRules.length === 0) {
+      setBulkEditError(
+        'The selected rules already have these values. No changes are needed.',
+      );
+      return;
+    }
+
+    setIsSaving(true);
+    let updatedCount = 0;
+    try {
+      for (const rule of changedRules) {
+        const updated = await updateHandicapSetting(
+          rule.id,
+          leagueId,
+          Number(rule.average),
+          nextMenValue !== null ? nextMenValue : Number(rule.men_handicap),
+          nextWomenValue !== null
+            ? nextWomenValue
+            : Number(rule.women_handicap),
+        );
+        setRules((current) =>
+          current
+            .map((item) => (item.id === updated.id ? updated : item))
+            .sort((a, b) => a.average - b.average),
+        );
+        updatedCount += 1;
+      }
+
+      toast.success(
+        `${updatedCount} handicap rule${updatedCount === 1 ? '' : 's'} updated successfully.`,
+        successToastStyle,
+      );
+      setSelectedRuleIds([]);
+      setBulkEditOpen(false);
+      setBulkEditMenValue('');
+      setBulkEditWomenValue('');
+    } catch (error) {
+      await loadRules();
+      setBulkEditOpen(false);
+      toast.error(
+        `${updatedCount} of ${changedRules.length} updates completed before an error. The table was refreshed to show the current saved data. ${error instanceof Error ? error.message : 'Unable to complete bulk edit.'}`,
+        errorToastStyle,
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   /* Toggles selection of a single handicap rule. */
   const toggleRuleSelection = (id: string | number) =>
     setSelectedRuleIds((current) =>
@@ -508,6 +626,16 @@ export function useHandicap(leagueId: string | number | null) {
   return {
     rules,
     selectedRuleIds,
+    bulkEditOpen,
+    setBulkEditOpen,
+    bulkEditMenValue,
+    setBulkEditMenValue,
+    bulkEditWomenValue,
+    setBulkEditWomenValue,
+    bulkEditError,
+    setBulkEditError,
+    openBulkEdit,
+    confirmBulkEdit,
     isLoading,
     isSaving,
     loadError,

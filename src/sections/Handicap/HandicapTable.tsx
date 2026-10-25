@@ -40,96 +40,125 @@ export function HandicapTable({
 
   return (
     <div className="flex h-full min-h-0 min-w-0 flex-col">
-      <div className="shrink-0 overflow-x-auto">
-        <Table>
+      {/* Header is outside the scrolling viewport, so scrolling starts at row 1. */}
+      <div className="shrink-0 overflow-x-hidden">
+        <Table className="w-full table-fixed">
+          <colgroup>
+            <col className="w-[48px]" />
+            <col />
+            <col />
+            <col />
+            <col className="w-[132px]" />
+          </colgroup>
           <TableHeader>
-            <TableRow>
-              <TableHead className="w-[48px]">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="h-11 px-4 bg-background align-middle">
                 <input
                   type="checkbox"
                   aria-label="Select all handicap rules"
                   checked={allSelected}
                   onChange={onToggleAll}
                   disabled={isLoading || rules.length === 0 || isSaving}
-                  className="h-4 w-4"
+                  className="h-4 w-4 align-middle"
                 />
               </TableHead>
-              <TableHead>Average</TableHead>
-              <TableHead>Men HDC</TableHead>
-              <TableHead>Women HDC</TableHead>
-              <TableHead className="w-[140px] text-right">Actions</TableHead>
+              <TableHead className="h-11 bg-background px-4 text-center align-middle">
+                Average
+              </TableHead>
+              <TableHead className="h-11 bg-background px-4 text-center align-middle">
+                Men HDC
+              </TableHead>
+              <TableHead className="h-11 bg-background px-4 text-center align-middle">
+                Women HDC
+              </TableHead>
+              <TableHead className="h-11 bg-background px-3 text-center align-middle">
+                Actions
+              </TableHead>
             </TableRow>
           </TableHeader>
         </Table>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    Loading handicap settings...
+
+      {/* Only this area scrolls; the header remains fixed above it. */}
+      <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
+        <Table className="w-full table-fixed">
+          <colgroup>
+            <col className="w-[48px]" />
+            <col />
+            <col />
+            <col />
+            <col className="w-[132px]" />
+          </colgroup>
+          <TableBody>
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="py-10 text-center text-muted-foreground"
+                >
+                  Loading handicap settings...
+                </TableCell>
+              </TableRow>
+            ) : rules.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="py-10 text-center text-muted-foreground"
+                >
+                  No handicap rules configured yet.
+                </TableCell>
+              </TableRow>
+            ) : (
+              rules.map((rule) => (
+                <TableRow key={rule.id} className="h-12">
+                  <TableCell className="px-3 py-2 text-center align-middle">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select handicap ${rule.average}`}
+                      checked={selectedRuleIds.includes(rule.id)}
+                      onChange={() => onToggleRule(rule.id)}
+                      disabled={isSaving}
+                      className="h-4 w-4 align-middle"
+                    />
                   </TableCell>
-                </TableRow>
-              ) : rules.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="py-10 text-center text-muted-foreground"
-                  >
-                    No handicap rules configured yet.
+                  <TableCell className="px-4 py-2 text-center align-middle font-medium tabular-nums">
+                    {rule.average}
                   </TableCell>
-                </TableRow>
-              ) : (
-                rules.map((rule) => (
-                  <TableRow key={rule.id}>
-                    <TableCell>
-                      <input
-                        type="checkbox"
-                        aria-label={`Select handicap ${rule.average}`}
-                        checked={selectedRuleIds.includes(rule.id)}
-                        onChange={() => onToggleRule(rule.id)}
+                  <TableCell className="px-4 py-2 text-center align-middle tabular-nums">
+                    {rule.men_handicap}
+                  </TableCell>
+                  <TableCell className="px-4 py-2 text-center align-middle tabular-nums">
+                    {rule.women_handicap ?? '—'}
+                  </TableCell>
+                  <TableCell className="px-3 py-2 align-middle">
+                    <div className="flex items-center justify-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-9 p-0"
                         disabled={isSaving}
-                        className="h-4 w-4"
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {rule.average}
-                    </TableCell>
-                    <TableCell>{rule.men_handicap}</TableCell>
-                    <TableCell>{rule.women_handicap ?? '—'}</TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isSaving}
-                          onClick={() => onEdit(rule)}
-                          aria-label={`Edit handicap ${rule.average}`}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={isSaving}
-                          onClick={() => onDelete(rule)}
-                          aria-label={`Delete handicap ${rule.average}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                        onClick={() => onEdit(rule)}
+                        aria-label={`Edit handicap ${rule.average}`}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 w-9 p-0"
+                        disabled={isSaving}
+                        onClick={() => onDelete(rule)}
+                        aria-label={`Delete handicap ${rule.average}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );

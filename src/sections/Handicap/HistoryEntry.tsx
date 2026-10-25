@@ -2,7 +2,11 @@ import { HandicapChangeHistory } from '../../utils/interfaces';
 import { formatHistoryValue } from '../../functions/handicap';
 import { HISTORY_LABELS } from '../../utils/constants/handicap';
 
-export default function ({ entry }: { entry: HandicapChangeHistory }) {
+export default function HistoryEntry({
+  entry,
+}: {
+  entry: HandicapChangeHistory;
+}) {
   const before = entry.before_values ?? {};
   const after = entry.after_values ?? {};
   const changedKeys = Array.from(
@@ -36,7 +40,15 @@ export default function ({ entry }: { entry: HandicapChangeHistory }) {
           className="text-xs text-muted-foreground"
           dateTime={entry.changed_at}
         >
-          {new Date(entry.changed_at).toLocaleString()}
+          {new Date(entry.changed_at).toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+          })}
         </time>
       </summary>
       <div className="mt-3 space-y-2 text-sm">
