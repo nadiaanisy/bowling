@@ -1,6 +1,5 @@
 import {
   Calculator,
-  Calendar,
   LayoutDashboard,
   Users
 } from 'lucide-react';
@@ -12,7 +11,7 @@ export const menuItems: {
 }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'hdc', label: 'Handicap', icon: Calculator },
-  // { id: 'teams', label: 'Teams', icon: Users },
+  { id: 'teams', label: 'Teams', icon: Users },
   //   { id: 'players', label: 'Players', icon: UserCircle },
   // { id: 'timetable', label: 'Timetable', icon: Calendar },
   //   { id: 'scores', label: 'Scores', icon: Trophy },

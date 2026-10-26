@@ -1,37 +1,5 @@
-// import type { Dispatch, SetStateAction } from 'react';
 import { LucideIcon } from 'lucide-react';
 
-// export interface ContextType {
-//   isAuthenticated: boolean;
-//   userData: User | null;
-//   listOfLeaguesByUser: League[];
-//   isLoadingLeagues: boolean;
-//   leagueLoadError: string | null;
-//   needsLeagueSetup: boolean;
-//   selectedLeague: string | null;
-//   hasBlock: boolean;
-//   isLoadingSkeleton: boolean;
-//   dashboardData: DashboardData | null;
-
-//   login: (username: string, password: string) => Promise<boolean>;
-//   retryLoadLeagues: () => Promise<void>;
-//   logout: () => void;
-//   sessionExpired: boolean;
-//   changeLeague: () => void;
-//   selectLeague: (league: {
-//     id: string | number;
-//     hasBlocks?: boolean;
-//   }) => Promise<boolean>;
-
-//   setIsAuthenticated: (value: boolean) => void;
-//   setUserData: (data: User | null) => void;
-//   setListOfLeaguesByUser: Dispatch<SetStateAction<League[]>>;
-//   setSelectedLeague: (leagueId: string | null) => void;
-//   setHasBlock: (hasBlock: boolean) => void;
-//   setIsLoadingLeagues: (isLoading: boolean) => void;
-//   setIsLoadingSkeleton: (isLoading: boolean) => void;
-//   setDashboardData: (data: DashboardData | null) => void;
-// }
 export interface Feature {
   id: string;
   icon: LucideIcon;
@@ -239,6 +207,7 @@ export interface LeagueMember {
   notes?: string | null;
   created_at?: string;
   updated_at?: string;
+  archived_at?: string | null;
 }
 
 export interface LeagueTeamWithMembers extends LeagueTeam {

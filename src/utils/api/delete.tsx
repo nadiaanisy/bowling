@@ -82,47 +82,51 @@ export const deleteHandicapSettings = async (
   }
 };
 
-/* Deletes multiple teams from a league. */
+/* Deletes multiple teams from a league and returns the IDs actually deleted. */
 export const deleteTeamsFromLeague = async (
   teamIds: Array<string | number>,
   leagueId: string | number,
-): Promise<number | null> => {
-  if (teamIds.length === 0) return 0;
+): Promise<Array<string | number>> => {
+  const uniqueIds = Array.from(
+    new Map(teamIds.map((id) => [String(id), id])).values(),
+  );
+
+  if (uniqueIds.length === 0) return [];
 
   try {
     const { data: deletedTeams, error } = await deleteHelper(table.teams)
-      .in('id', teamIds)
+      .in('id', uniqueIds)
       .eq('league_id', leagueId)
       .select('id');
 
     if (error) {
       toast.error('Error deleting teams: ' + error.message, errorToastStyle);
-      return 0;
+      return [];
     }
 
-    return deletedTeams?.length ?? 0;
+    return (deletedTeams ?? []).map((team) => team.id as string | number);
   } catch (err) {
     catchError('Error deleting teams: ', err);
-    return null;
+    return [];
   }
 };
-
 /* Deletes a single team from a league. */
 export const deleteTeamFromLeague = async (
   teamId: string | number,
   leagueId: string | number,
 ): Promise<boolean | null> => {
   try {
-    const { error } = await deleteHelper(table.teams)
+    const { data, error } = await deleteHelper(table.teams)
       .eq('id', teamId)
-      .eq('league_id', leagueId);
+      .eq('league_id', leagueId)
+      .select('id');
 
     if (error) {
       toast.error('Error deleting team: ' + error.message, errorToastStyle);
       return false;
     }
 
-    return true;
+    return (data?.length ?? 0) > 0;
   } catch (err) {
     catchError('Error deleting team: ', err);
     return null;
@@ -160,6 +164,7 @@ export const deletePlayerFromTeam = async (
     const { data: deletedPlayers, error } = await deleteHelper(table.players)
       .eq('id', playerId)
       .eq('team_id', teamId)
+      .eq('league_id', leagueId)
       .select('id');
 
     if (error) {
@@ -174,13 +179,17 @@ export const deletePlayerFromTeam = async (
   }
 };
 
-/* Deletes multiple players from a team after verifying the team belongs to the league. */
+/* Deletes multiple players from a team and returns the IDs actually deleted. */
 export const deletePlayersFromTeam = async (
   playerIds: Array<string | number>,
   teamId: string | number,
   leagueId: string | number,
-): Promise<number | null> => {
-  if (playerIds.length === 0) return 0;
+): Promise<Array<string | number>> => {
+  const uniqueIds = Array.from(
+    new Map(playerIds.map((id) => [String(id), id])).values(),
+  );
+
+  if (uniqueIds.length === 0) return [];
 
   try {
     const { data: team, error: teamError } = await getHelper(table.teams, 'id')
@@ -193,7 +202,7 @@ export const deletePlayersFromTeam = async (
         'Error verifying team: ' + teamError.message,
         errorToastStyle,
       );
-      return 0;
+      return [];
     }
 
     if (!team) {
@@ -201,23 +210,24 @@ export const deletePlayersFromTeam = async (
         'The team does not belong to the selected league.',
         errorToastStyle,
       );
-      return 0;
+      return [];
     }
 
     const { data: deletedPlayers, error } = await deleteHelper(table.players)
-      .in('id', playerIds)
+      .in('id', uniqueIds)
       .eq('team_id', teamId)
+      .eq('league_id', leagueId)
       .select('id');
 
     if (error) {
       toast.error('Error deleting players: ' + error.message, errorToastStyle);
-      return 0;
+      return [];
     }
 
-    return deletedPlayers?.length ?? 0;
+    return (deletedPlayers ?? []).map((player) => player.id as string | number);
   } catch (err) {
     catchError('Error deleting players: ', err);
-    return null;
+    return [];
   }
 };
 

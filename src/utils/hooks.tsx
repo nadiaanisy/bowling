@@ -16,6 +16,8 @@ import {
   HandicapChangeHistory,
   HandicapSetting,
   League,
+  LeagueMember,
+  LeagueTeamWithMembers,
   User,
 } from './interfaces';
 import {
@@ -156,6 +158,83 @@ export const useCustomHook = () => {
   const [historyError, setHistoryError] = useState('');
   const [backupMenuOpen, setBackupMenuOpen] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+
+  /* Teams.tsx */
+  const [newTeamName, setNewTeamName] = useState('');
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [bulkTeamDialogOpen, setBulkTeamDialogOpen] = useState(false);
+  const [multipleTeamNames, setMultipleTeamNames] = useState('');
+  const [creatingTeams, setCreatingTeams] = useState(false);
+  const [deletingTeam, setDeletingTeam] = useState(false);
+  const [updatingTeam, setUpdatingTeam] = useState(false);
+  const [editingTeamId, setEditingTeamId] = useState<string | number | null>(
+    null,
+  );
+  const [editingTeamName, setEditingTeamName] = useState('');
+  const [editingTeamNotes, setEditingTeamNotes] = useState('');
+  const [selectedTeams, setSelectedTeams] = useState<Array<string | number>>(
+    [],
+  );
+  const [bulkTeamDeleteMode, setBulkTeamDeleteMode] = useState(false);
+  const [deletingPlayer, setDeletingPlayer] = useState(false);
+  const [creatingPlayer, setCreatingPlayer] = useState(false);
+  const [updatingPlayer, setUpdatingPlayer] = useState(false);
+  const [editingPlayerId, setEditingPlayerId] = useState<
+    string | number | null
+  >(null);
+  const [editingPlayerName, setEditingPlayerName] = useState('');
+  const [editingPlayerStatus, setEditingPlayerStatus] = useState('');
+  const [editingPlayerType, setEditingPlayerType] = useState<
+    'regular' | 'substitute'
+  >('regular');
+  const [editingPlayerNotes, setEditingPlayerNotes] = useState('');
+  const [teams, setTeams] = useState<LeagueTeamWithMembers[]>([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [teamsLoadError, setTeamsLoadError] = useState<string | null>(null);
+  const [teamsReloadKey, setTeamsReloadKey] = useState(0);
+  const [selectedTeam, setSelectedTeam] = useState<string | number | null>(
+    null,
+  );
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const [multiplePlayerNames, setMultiplePlayerNames] = useState('');
+  const [playerType, setPlayerType] = useState<'regular' | 'substitute'>(
+    'regular',
+  );
+
+  const [addMode, setAddMode] = useState<'single' | 'multiple'>('single');
+  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [selectedPlayers, setSelectedPlayers] = useState<
+    Record<string, Array<string | number>>
+  >({});
+  const [bulkDeleteMode, setBulkDeleteMode] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [bulkPlayerTypeValue, setBulkPlayerTypeValue] = useState<
+    Record<string, 'regular' | 'substitute'>
+  >({});
+  const [bulkTransferTeamId, setBulkTransferTeamId] = useState<
+    Record<string, string>
+  >({});
+  const [bulkUpdatingPlayers, setBulkUpdatingPlayers] = useState(false);
+  const [openTeamMenu, setOpenTeamMenu] = useState<string | null>(null);
+  const [pendingDeleteType, setPendingDeleteType] = useState<
+    'team' | 'teams' | 'player' | 'players' | null
+  >(null);
+  const [archivingTeamId, setArchivingTeamId] = useState<
+    string | number | null
+  >(null);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archivedTeamsRefreshKey, setArchivedTeamsRefreshKey] = useState(0);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [playerToArchive, setPlayerToArchive] = useState<LeagueMember | null>(
+    null,
+  );
+  const [archivingPlayerId, setArchivingPlayerId] = useState<
+    string | number | null
+  >(null);
+  const [archivedPlayersRefreshKey, setArchivedPlayersRefreshKey] = useState(0);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -504,5 +583,95 @@ export const useCustomHook = () => {
     setBackupMenuOpen,
     addMenuOpen,
     setAddMenuOpen,
+
+    /* Teams.tsx */
+    newTeamName,
+    setNewTeamName,
+    creatingTeam,
+    setCreatingTeam,
+    deletingTeam,
+    setDeletingTeam,
+    updatingTeam,
+    setUpdatingTeam,
+    editingTeamId,
+    setEditingTeamId,
+    editingTeamName,
+    setEditingTeamName,
+    editingTeamNotes,
+    setEditingTeamNotes,
+    selectedTeams,
+    setSelectedTeams,
+    bulkTeamDeleteMode,
+    setBulkTeamDeleteMode,
+    deletingPlayer,
+    setDeletingPlayer,
+    creatingPlayer,
+    setCreatingPlayer,
+    updatingPlayer,
+    setUpdatingPlayer,
+    editingPlayerId,
+    setEditingPlayerId,
+    editingPlayerName,
+    setEditingPlayerName,
+    editingPlayerStatus,
+    setEditingPlayerStatus,
+    editingPlayerType,
+    setEditingPlayerType,
+    editingPlayerNotes,
+    setEditingPlayerNotes,
+    teams,
+    setTeams,
+    isLoadingTeams,
+    setIsLoadingTeams,
+    teamsLoadError,
+    setTeamsLoadError,
+    teamsReloadKey,
+    retryTeams: () => setTeamsReloadKey((key) => key + 1),
+    selectedTeam,
+    setSelectedTeam,
+    newPlayerName,
+    setNewPlayerName,
+    multiplePlayerNames,
+    setMultiplePlayerNames,
+    playerType,
+    setPlayerType,
+    addMode,
+    setAddMode,
+    expandedTeams,
+    setExpandedTeams,
+    selectedPlayers,
+    setSelectedPlayers,
+    bulkDeleteMode,
+    setBulkDeleteMode,
+    bulkPlayerTypeValue,
+    setBulkPlayerTypeValue,
+    bulkTransferTeamId,
+    setBulkTransferTeamId,
+    bulkUpdatingPlayers,
+    setBulkUpdatingPlayers,
+    openTeamMenu,
+    setOpenTeamMenu,
+    pendingDeleteType,
+    setPendingDeleteType,
+    bulkTeamDialogOpen,
+    setBulkTeamDialogOpen,
+    multipleTeamNames,
+    setMultipleTeamNames,
+    creatingTeams,
+    setCreatingTeams,
+    archivingTeamId,
+    setArchivingTeamId,
+    archiveDialogOpen,
+    setArchiveDialogOpen,
+    archivedTeamsRefreshKey,
+    setArchivedTeamsRefreshKey,
+    archiveError,
+    setArchiveError,
+    playerToArchive,
+    setPlayerToArchive,
+    archivingPlayerId,
+    setArchivingPlayerId,
+    archivedPlayersRefreshKey,
+    setArchivedPlayersRefreshKey,
   };
 };

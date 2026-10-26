@@ -239,29 +239,64 @@ export const updateTeamInLeague = async (
   }
 };
 
-/* Transfers multiple players to another team within the same league. */
+/* Transfers multiple players between teams within the same league. */
 export const bulkTransferPlayersToTeam = async (
   playerIds: Array<string | number>,
+  fromTeamId: string | number,
   toTeamId: string | number,
   leagueId: string | number,
 ): Promise<LeagueMember[]> => {
-  if (playerIds.length === 0) return [];
+  const uniqueIds = Array.from(
+    new Map(playerIds.map((id) => [String(id), id])).values(),
+  );
+
+  if (uniqueIds.length === 0) return [];
+
+  if (String(fromTeamId) === String(toTeamId)) {
+    toast.error('Choose a different destination team.', errorToastStyle);
+    return [];
+  }
 
   try {
-    const { data: team, error: teamError } = await getHelper(table.teams, 'id')
-      .eq('id', toTeamId)
+    const { data: sourceTeam, error: sourceTeamError } = await getHelper(
+      table.teams,
+      'id',
+    )
+      .eq('id', fromTeamId)
       .eq('league_id', leagueId)
       .maybeSingle();
 
-    if (teamError) {
+    if (sourceTeamError) {
       toast.error(
-        'Error verifying destination team: ' + teamError.message,
+        'Error verifying source team: ' + sourceTeamError.message,
         errorToastStyle,
       );
       return [];
     }
 
-    if (!team) {
+    if (!sourceTeam) {
+      toast.error(
+        'The source team does not belong to the selected league.',
+        errorToastStyle,
+      );
+      return [];
+    }
+
+    const { data: destinationTeam, error: destinationTeamError } =
+      await getHelper(table.teams, 'id')
+        .eq('id', toTeamId)
+        .eq('league_id', leagueId)
+        .maybeSingle();
+
+    if (destinationTeamError) {
+      toast.error(
+        'Error verifying destination team: ' + destinationTeamError.message,
+        errorToastStyle,
+      );
+      return [];
+    }
+
+    if (!destinationTeam) {
       toast.error(
         'The destination team does not belong to the selected league.',
         errorToastStyle,
@@ -273,7 +308,8 @@ export const bulkTransferPlayersToTeam = async (
       team_id: toTeamId,
       updated_at: new Date().toISOString(),
     })
-      .in('id', playerIds)
+      .in('id', uniqueIds)
+      .eq('team_id', fromTeamId)
       .eq('league_id', leagueId)
       .select(
         'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
@@ -287,7 +323,7 @@ export const bulkTransferPlayersToTeam = async (
       return [];
     }
 
-    return (data || []) as unknown as LeagueMember[];
+    return (data ?? []) as unknown as LeagueMember[];
   } catch (err) {
     catchError('Error transferring players: ', err);
     return [];
@@ -300,32 +336,36 @@ export const bulkUpdatePlayersType = async (
   teamId: string | number,
   leagueId: string | number,
   type: 'regular' | 'substitute',
-): Promise<number> => {
-  if (playerIds.length === 0) return 0;
+): Promise<Array<string | number>> => {
+  const uniqueIds = Array.from(
+    new Map(playerIds.map((id) => [String(id), id])).values(),
+  );
+
+  if (uniqueIds.length === 0) return [];
 
   try {
     const { data, error } = await updateHelper(table.players, {
       type,
       updated_at: new Date().toISOString(),
     })
-      .in('id', playerIds)
+      .in('id', uniqueIds)
       .eq('team_id', teamId)
       .eq('league_id', leagueId)
       .select('id');
 
     if (error) {
       toast.error('Error updating players: ' + error.message, errorToastStyle);
-      return 0;
+      return [];
     }
 
-    return data?.length ?? 0;
+    return (data ?? []).map((player) => player.id as string | number);
   } catch (err) {
     catchError('Error updating players: ', err);
-    return 0;
+    return [];
   }
 };
 
-/* Updates a player's details after verifying the team belongs to the league. */
+/* Updates a player's details after verifying the team and player name. */
 export const updatePlayerInTeam = async (
   playerId: string | number,
   teamId: string | number,
@@ -359,8 +399,52 @@ export const updatePlayerInTeam = async (
       return null;
     }
 
+    const trimmedName = values.name.trim();
+
+    if (!trimmedName) {
+      toast.error('Please enter a player name.', errorToastStyle);
+      return null;
+    }
+
+    const { data: existingPlayers, error: playersError } = await getHelper(
+      table.players,
+      'id, name',
+    )
+      .eq('team_id', teamId)
+      .eq('league_id', leagueId);
+
+    if (playersError) {
+      toast.error(
+        'Unable to check existing player names: ' + playersError.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    const normalizedName = trimmedName.toLocaleLowerCase();
+
+    const playersForDuplicateCheck = (existingPlayers ??
+      []) as unknown as Array<{
+      id: string | number;
+      name: string | null;
+    }>;
+
+    const duplicate = playersForDuplicateCheck.some(
+      (player) =>
+        String(player.id) !== String(playerId) &&
+        (player.name ?? '').trim().toLocaleLowerCase() === normalizedName,
+    );
+
+    if (duplicate) {
+      toast.error(
+        'Another player with this name already exists in the team.',
+        errorToastStyle,
+      );
+      return null;
+    }
+
     const { data, error } = await updateHelper(table.players, {
-      name: values.name.trim(),
+      name: trimmedName,
       type: values.type || 'regular',
       status: values.status?.trim() || null,
       notes: values.notes?.trim() || null,
@@ -368,6 +452,7 @@ export const updatePlayerInTeam = async (
     })
       .eq('id', playerId)
       .eq('team_id', teamId)
+      .eq('league_id', leagueId)
       .select(
         'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
       )
@@ -379,6 +464,7 @@ export const updatePlayerInTeam = async (
     }
 
     const updatedPlayer = data as unknown as LeagueMember;
+
     return {
       ...updatedPlayer,
       status: updatedPlayer.status?.trim().toLowerCase() || 'active',

@@ -12,6 +12,8 @@ import { insertHelper } from '../supabase/supabaseHelper';
 import { errorToastStyle } from '../../functions/toast-styles';
 import { toast } from 'sonner';
 
+const normalizeName = (name: string): string => name.trim().toLocaleLowerCase();
+
 /* Creates a new user account and handles duplicate usernames and errors. */
 export const addUser = async (
   name: string,
@@ -279,9 +281,59 @@ export const addPlayerToTeam = async (
   type: 'regular' | 'substitute' = 'regular',
 ): Promise<LeagueMember | null> => {
   try {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      toast.error('Please enter a player name.', errorToastStyle);
+      return null;
+    }
+
+    const { data: team, error: teamError } = await supabase
+      .from(table.teams)
+      .select('id')
+      .eq('id', teamId)
+      .eq('league_id', leagueId)
+      .maybeSingle();
+
+    if (teamError || !team) {
+      toast.error(
+        'The selected team does not belong to this league.',
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    const { data: existingPlayers, error: playersError } = await supabase
+      .from(table.players)
+      .select('name')
+      .eq('team_id', teamId)
+      .eq('league_id', leagueId);
+
+    if (playersError) {
+      toast.error(
+        'Unable to check existing player names: ' + playersError.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    if (
+      (existingPlayers ?? []).some(
+        (player) =>
+          normalizeName(player.name ?? '') === normalizeName(trimmedName),
+      )
+    ) {
+      toast.error(
+        'A player with this name already exists in the team.',
+        errorToastStyle,
+      );
+      return null;
+    }
+
     const createdAt = new Date().toISOString();
+
     const { data, error } = await insertHelper(table.players, {
-      name,
+      name: trimmedName,
       team_id: teamId,
       league_id: leagueId,
       type,
@@ -314,8 +366,69 @@ export const addPlayersToTeam = async (
   type: 'regular' | 'substitute' = 'regular',
 ): Promise<LeagueMember[]> => {
   try {
+    const uniqueNames = new Map<string, string>();
+
+    for (const rawName of names) {
+      const name = rawName.trim();
+      if (!name) continue;
+
+      const key = normalizeName(name);
+      if (!uniqueNames.has(key)) uniqueNames.set(key, name);
+    }
+
+    if (uniqueNames.size === 0) {
+      toast.error('Enter at least one player name.', errorToastStyle);
+      return [];
+    }
+
+    const { data: team, error: teamError } = await supabase
+      .from(table.teams)
+      .select('id')
+      .eq('id', teamId)
+      .eq('league_id', leagueId)
+      .maybeSingle();
+
+    if (teamError || !team) {
+      toast.error(
+        'The selected team does not belong to this league.',
+        errorToastStyle,
+      );
+      return [];
+    }
+
+    const { data: existingPlayers, error: playersError } = await supabase
+      .from(table.players)
+      .select('name')
+      .eq('team_id', teamId)
+      .eq('league_id', leagueId);
+
+    if (playersError) {
+      toast.error(
+        'Unable to check existing player names: ' + playersError.message,
+        errorToastStyle,
+      );
+      return [];
+    }
+
+    const existingNames = new Set(
+      (existingPlayers ?? []).map((player) => normalizeName(player.name ?? '')),
+    );
+
+    const namesToInsert = Array.from(uniqueNames.entries())
+      .filter(([key]) => !existingNames.has(key))
+      .map(([, name]) => name);
+
+    if (namesToInsert.length === 0) {
+      toast.error(
+        'All entered player names already exist in this team.',
+        errorToastStyle,
+      );
+      return [];
+    }
+
     const createdAt = new Date().toISOString();
-    const players = names.map((name) => ({
+
+    const players = namesToInsert.map((name) => ({
       name,
       team_id: teamId,
       league_id: leagueId,
@@ -324,6 +437,7 @@ export const addPlayersToTeam = async (
       created_at: createdAt,
       updated_at: createdAt,
     }));
+
     const { data, error } = await insertHelper(table.players, players).select(
       'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
     );
@@ -333,7 +447,7 @@ export const addPlayersToTeam = async (
       return [];
     }
 
-    return (data || []) as unknown as LeagueMember[];
+    return (data ?? []) as unknown as LeagueMember[];
   } catch (err) {
     catchError('Error creating players: ', err);
     return [];
@@ -346,9 +460,42 @@ export const addTeam = async (
   leagueId: string | number,
 ): Promise<LeagueTeam | null> => {
   try {
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      toast.error('Please enter a team name.', errorToastStyle);
+      return null;
+    }
+
+    const { data: existingTeams, error: teamsError } = await supabase
+      .from(table.teams)
+      .select('name')
+      .eq('league_id', leagueId);
+
+    if (teamsError) {
+      toast.error(
+        'Unable to check existing team names: ' + teamsError.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    if (
+      (existingTeams ?? []).some(
+        (team) => normalizeName(team.name ?? '') === normalizeName(trimmedName),
+      )
+    ) {
+      toast.error(
+        'A team with this name already exists in the league.',
+        errorToastStyle,
+      );
+      return null;
+    }
+
     const createdAt = new Date().toISOString();
+
     const { data, error } = await insertHelper(table.teams, {
-      name,
+      name: trimmedName,
       league_id: leagueId,
       created_at: createdAt,
     })
@@ -373,9 +520,53 @@ export const addTeams = async (
   leagueId: string | number,
 ): Promise<LeagueTeam[]> => {
   try {
+    const uniqueNames = new Map<string, string>();
+
+    for (const rawName of names) {
+      const name = rawName.trim();
+      if (!name) continue;
+
+      const key = normalizeName(name);
+      if (!uniqueNames.has(key)) uniqueNames.set(key, name);
+    }
+
+    if (uniqueNames.size === 0) {
+      toast.error('Enter at least one team name.', errorToastStyle);
+      return [];
+    }
+
+    const { data: existingTeams, error: teamsError } = await supabase
+      .from(table.teams)
+      .select('name')
+      .eq('league_id', leagueId);
+
+    if (teamsError) {
+      toast.error(
+        'Unable to check existing team names: ' + teamsError.message,
+        errorToastStyle,
+      );
+      return [];
+    }
+
+    const existingNames = new Set(
+      (existingTeams ?? []).map((team) => normalizeName(team.name ?? '')),
+    );
+
+    const namesToInsert = Array.from(uniqueNames.entries())
+      .filter(([key]) => !existingNames.has(key))
+      .map(([, name]) => name);
+
+    if (namesToInsert.length === 0) {
+      toast.error(
+        'All entered team names already exist in this league.',
+        errorToastStyle,
+      );
+      return [];
+    }
+
     const createdAt = new Date().toISOString();
 
-    const teams = names.map((name) => ({
+    const teams = namesToInsert.map((name) => ({
       name,
       league_id: leagueId,
       created_at: createdAt,
@@ -387,11 +578,10 @@ export const addTeams = async (
 
     if (error) {
       toast.error('Error creating teams: ' + error.message, errorToastStyle);
-
       return [];
     }
 
-    return (data || []) as unknown as LeagueTeam[];
+    return (data ?? []) as unknown as LeagueTeam[];
   } catch (err) {
     catchError('Error creating teams: ', err);
     return [];
