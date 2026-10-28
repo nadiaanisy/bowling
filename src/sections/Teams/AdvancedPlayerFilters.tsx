@@ -1,11 +1,5 @@
 import { useMemo } from 'react';
-
-export type AdvancedPlayerFiltersValue = {
-  playerName: string;
-  teamId: string;
-  status: string;
-  playerType: string;
-};
+import { AdvancedPlayerFiltersValue } from '../../utils/interfaces';
 
 type Team = {
   id: string | number;

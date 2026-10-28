@@ -1,7 +1,5 @@
 // // import Players from '../src2/sections/Players';
-// import Teams from '../src/sections/Teams';
 // // import Scores from '../src/sections/Scores';
-// import Handicap from '../src/sections/Handicap';
 // import Timetable from '../src/sections/Timetable';
 // // // // import Forecast from "./sections/Forecast";
 // // // // import Timetable from "./sections/Timetable";
@@ -12,6 +10,7 @@ import { Provider } from './utils/provider';
 import { Button } from './components/button';
 import { Toaster } from './components/sooner';
 import Login from './sections/Login/Login';
+import Teams from './sections/Teams/Teams';
 import { menuItems } from './utils/constants/others';
 import Handicap from './sections/Handicap/Handicap';
 import Dashboard from './sections/Dashboard/MainPage';
@@ -72,8 +71,8 @@ function AppContent() {
         return <Dashboard />;
       case 'hdc':
         return <Handicap leagueId={selectedLeague} />;
-        // case 'teams':
-        //   return <Teams />;
+      case 'teams':
+        return <Teams />;
         // case "players":
         //   return <Players />;
         // case 'timetable':
