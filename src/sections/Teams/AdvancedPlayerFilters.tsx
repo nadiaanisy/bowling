@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
-import { AdvancedPlayerFiltersValue } from '../../utils/interfaces';
+import { AdvancedPlayerFiltersValue } from '../../utils/type';
+import { X } from 'lucide-react';
 
 type Team = {
   id: string | number;
@@ -56,41 +57,45 @@ export default function AdvancedPlayerFilters({
   const hasFilters = Object.values(value).some(Boolean);
 
   return (
-    <section className="rounded-xl border border-violet-900/70 bg-[#11131f] p-4 text-slate-100 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <section className="rounded-xl border border-violet-800/90 bg-gradient-to-br from-[#11131f] to-[#0e101b] p-3.5 text-slate-100 shadow-sm">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold text-white">Advanced player search</h2>
           <p className="mt-1 text-sm text-slate-400">
             Filter the roster by player, team, status, or type.
           </p>
         </div>
-
-        {hasFilters && (
-          <button
-            type="button"
-            className="text-sm text-violet-300 hover:text-violet-200"
-            onClick={() =>
-              onChange({
-                playerName: '',
-                teamId: '',
-                status: '',
-                playerType: '',
-              })
-            }
-          >
-            Clear filters
-          </button>
-        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <input
-          aria-label="Player name filter"
-          className={inputClass}
-          placeholder="Player name"
-          value={value.playerName}
-          onChange={(event) => update({ playerName: event.target.value })}
-        />
+      <div className="grid grid-cols-1 gap-2.5">
+        <div className="relative w-full">
+          <input
+            aria-label="Player name filter"
+            className={`${inputClass} h-10 ${hasFilters ? 'pr-10' : ''}`}
+            placeholder="Player name"
+            value={value.playerName}
+            onChange={(event) => update({ playerName: event.target.value })}
+          />
+
+          {hasFilters && (
+            <button
+              type="button"
+              aria-label="Clear all player filters"
+              title="Clear filters"
+              className="absolute inset-y-0 right-0 flex h-10 w-10 items-center justify-center text-slate-400 hover:text-violet-300"
+              onClick={() =>
+                onChange({
+                  playerName: '',
+                  teamId: '',
+                  status: '',
+                  playerType: '',
+                })
+              }
+            >
+              <X className="size-4" />
+            </button>
+          )}
+        </div>
 
         <select
           aria-label="Filter by team"

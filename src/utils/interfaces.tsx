@@ -1,3 +1,7 @@
+import {
+  HandicapChangeAction,
+  HandicapChangeEntityType
+} from './type';
 import { LucideIcon } from 'lucide-react';
 
 export interface Feature {
@@ -117,9 +121,6 @@ export interface LeagueHandicapConfig {
   updated_at?: string;
 }
 
-export type HandicapChangeAction = 'created' | 'updated' | 'deleted';
-export type HandicapChangeEntityType = 'handicap_rule' | 'league_config';
-
 export interface HandicapChangeHistory {
   id: number;
   league_id: string | number;
@@ -150,10 +151,6 @@ export interface HandicapImportPreview {
   invalidCount: number;
   errors: string[];
 }
-
-/*.....*/
-
-export type MatchesByBlock = Record<string, MatchData[]>;
 
 export interface MatchData {
   block_id: string;

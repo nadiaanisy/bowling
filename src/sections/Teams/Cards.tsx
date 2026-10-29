@@ -9,7 +9,6 @@ import { useCustomHook } from '../../utils/hooks';
 import { AddPlayerDialog } from './AddPlayerDialog';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -26,12 +25,15 @@ import {
   toggleTeamSelection,
 } from '../../functions/teams';
 import type { LeagueTeamWithMembers } from '../../utils/interfaces';
-import { archiveTeam } from '../../utils/api/teamArchive';
+import { Button } from '../../components/button';
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../../components/collapsible';
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/dialog';
+import { archiveTeam } from '../../utils/api/teamArchive';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,8 +45,8 @@ import {
   AlertDialogTitle,
 } from '../../components/alert-dialog';
 import {
-  ChevronDown,
-  ChevronUp
+  Users,
+  ListX
 } from 'lucide-react';
 
 export interface CardsProps {
@@ -87,8 +89,6 @@ export interface CardsProps {
   setEditingTeamId: (id: string | number | null) => void;
   setEditingTeamName: (name: string) => void;
   setEditingTeamNotes: (notes: string) => void;
-  expandedTeams: Record<string, boolean>;
-  setExpandedTeams: Dispatch<SetStateAction<Record<string, boolean>>>;
   bulkDeleteMode: Record<string, boolean>;
   setBulkDeleteMode: Dispatch<SetStateAction<Record<string, boolean>>>;
   selectedPlayers: Record<string, Array<string | number>>;
@@ -157,8 +157,6 @@ export function Cards({
   setEditingTeamId,
   setEditingTeamName,
   setEditingTeamNotes,
-  expandedTeams,
-  setExpandedTeams,
   bulkDeleteMode,
   setBulkDeleteMode,
   selectedPlayers,
@@ -194,6 +192,8 @@ export function Cards({
     setArchiveDialogOpen,
     archiveError,
     setArchiveError,
+    playersDialogOpen,
+    setPlayersDialogOpen,
   } = useCustomHook();
 
   const exitBulkMode = () => {
@@ -201,12 +201,6 @@ export function Cards({
     setSelectedPlayers((current) => ({ ...current, [String(team.id)]: [] }));
     setBulkTransferTeamId((current) => ({ ...current, [String(team.id)]: '' }));
   };
-
-  const headerLabel =
-    searchQuery.trim() &&
-    !team.name.toLowerCase().includes(searchQuery.trim().toLowerCase())
-      ? `${visibleMembers.length} of ${team.members.length} ${team.members.length === 1 ? 'player' : 'players'} match`
-      : `${team.members.length} ${team.members.length === 1 ? 'Player' : 'Players'}`;
 
   const handleArchiveTeam = async () => {
     if (selectedLeague === null || archivingTeamId !== null) return;
@@ -292,13 +286,6 @@ export function Cards({
                   setOpenTeamMenu,
                 )
               }
-              onBulkDelete={() => {
-                setBulkDeleteMode((current) => ({
-                  ...current,
-                  [String(team.id)]: true,
-                }));
-                setOpenTeamMenu(null);
-              }}
               onDeleteTeam={() => {
                 setOpenTeamMenu(null);
                 setPendingDeleteType('team');
@@ -386,68 +373,117 @@ export function Cards({
           </div>
         </div>
       </CardHeader>
-      {team.members.length > 0 && (
-        <Collapsible
-          open={expandedTeams[team.id] ?? false}
-          onOpenChange={(open) =>
-            setExpandedTeams((prev) => ({ ...prev, [team.id]: open }))
-          }
+      <div className="border-t border-violet-900/60 px-4 py-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full justify-center gap-2 border-slate-700 bg-[#0b0c14] text-slate-100 hover:border-violet-500 hover:bg-violet-950/40"
+          onClick={() => setPlayersDialogOpen(true)}
         >
-          <div className="border-t border-border px-6 py-3 bg-muted/30">
-            <CollapsibleTrigger className="flex items-center justify-between w-full hover:opacity-70 transition-opacity">
-              <span className="text-sm">{headerLabel}</span>
-              {(expandedTeams[team.id] ?? false) ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </CollapsibleTrigger>
+          <Users className="h-4 w-4" />
+          View players ({team.members.length})
+        </Button>
+      </div>
+
+      <Dialog
+        open={playersDialogOpen}
+        onOpenChange={(open) => {
+          setPlayersDialogOpen(open);
+          if (!open) {
+            setBulkDeleteMode((current) => ({
+              ...current,
+              [String(team.id)]: false,
+            }));
+            setSelectedPlayers((current) => ({
+              ...current,
+              [String(team.id)]: [],
+            }));
+            setBulkTransferTeamId((current) => ({
+              ...current,
+              [String(team.id)]: '',
+            }));
+          }
+        }}
+      >
+        <DialogContent
+          className="max-w-auto overflow-hidden rounded-md border top-[25%] md:top-[20%] left-auto md:left-[35%]"
+          onPointerDownOutside={(event) => event.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>{team.name} — Players</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              View and manage the players on this team.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-sm text-slate-400">
+              {isBulkMode
+                ? `${selectedIds.length} selected`
+                : 'Select players to apply bulk actions.'}
+            </p>
+            {!isBulkMode ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={team.members.length === 0 || deletingPlayer}
+                className="gap-2 border-slate-700 bg-[#0b0c14] text-slate-100 hover:border-violet-500"
+                onClick={() =>
+                  setBulkDeleteMode((current) => ({
+                    ...current,
+                    [String(team.id)]: true,
+                  }))
+                }
+              >
+                <ListX className="h-4 w-4" />
+                Select players
+              </Button>
+            ) : null}
           </div>
-          <CollapsibleContent>
-            <CardContent className="pt-0">
-              <PlayersTable
-                team={team}
-                teams={teams}
-                visibleMembers={visibleMembers}
-                isBulkMode={isBulkMode}
-                selectedIds={selectedIds}
-                hasSelection={hasSelection}
-                selectedLeague={selectedLeague}
-                setTeams={setTeams}
-                deletingPlayer={deletingPlayer}
-                setDeletingPlayer={setDeletingPlayer}
-                updatingPlayer={updatingPlayer}
-                setUpdatingPlayer={setUpdatingPlayer}
-                selectedPlayers={selectedPlayers}
-                setSelectedPlayers={setSelectedPlayers}
-                setBulkDeleteMode={setBulkDeleteMode}
-                setPendingDeleteType={setPendingDeleteType}
-                setConfirmMessage={setConfirmMessage}
-                setConfirmAction={setConfirmAction}
-                setConfirmOpen={setConfirmOpen}
-                editingPlayerId={editingPlayerId}
-                setEditingPlayerId={setEditingPlayerId}
-                editingPlayerName={editingPlayerName}
-                setEditingPlayerName={setEditingPlayerName}
-                editingPlayerStatus={editingPlayerStatus}
-                setEditingPlayerStatus={setEditingPlayerStatus}
-                editingPlayerType={editingPlayerType}
-                setEditingPlayerType={setEditingPlayerType}
-                editingPlayerNotes={editingPlayerNotes}
-                setEditingPlayerNotes={setEditingPlayerNotes}
-                bulkPlayerTypeValue={bulkPlayerTypeValue}
-                setBulkPlayerTypeValue={setBulkPlayerTypeValue}
-                bulkTransferTeamId={bulkTransferTeamId}
-                setBulkTransferTeamId={setBulkTransferTeamId}
-                bulkUpdatingPlayers={bulkUpdatingPlayers}
-                setBulkUpdatingPlayers={setBulkUpdatingPlayers}
-                exitBulkMode={exitBulkMode}
-                onPlayerArchived={onPlayerArchived}
-              />
-            </CardContent>
-          </CollapsibleContent>
-        </Collapsible>
-      )}
+          <div className="min-w-0">
+            <PlayersTable
+              team={team}
+              teams={teams}
+              visibleMembers={visibleMembers}
+              isBulkMode={isBulkMode}
+              selectedIds={selectedIds}
+              hasSelection={hasSelection}
+              selectedLeague={selectedLeague}
+              setTeams={setTeams}
+              deletingPlayer={deletingPlayer}
+              setDeletingPlayer={setDeletingPlayer}
+              updatingPlayer={updatingPlayer}
+              setUpdatingPlayer={setUpdatingPlayer}
+              selectedPlayers={selectedPlayers}
+              setSelectedPlayers={setSelectedPlayers}
+              setBulkDeleteMode={setBulkDeleteMode}
+              setPendingDeleteType={setPendingDeleteType}
+              setConfirmMessage={setConfirmMessage}
+              setConfirmAction={setConfirmAction}
+              setConfirmOpen={setConfirmOpen}
+              editingPlayerId={editingPlayerId}
+              setEditingPlayerId={setEditingPlayerId}
+              editingPlayerName={editingPlayerName}
+              setEditingPlayerName={setEditingPlayerName}
+              editingPlayerStatus={editingPlayerStatus}
+              setEditingPlayerStatus={setEditingPlayerStatus}
+              editingPlayerType={editingPlayerType}
+              setEditingPlayerType={setEditingPlayerType}
+              editingPlayerNotes={editingPlayerNotes}
+              setEditingPlayerNotes={setEditingPlayerNotes}
+              bulkPlayerTypeValue={bulkPlayerTypeValue}
+              setBulkPlayerTypeValue={setBulkPlayerTypeValue}
+              bulkTransferTeamId={bulkTransferTeamId}
+              setBulkTransferTeamId={setBulkTransferTeamId}
+              bulkUpdatingPlayers={bulkUpdatingPlayers}
+              setBulkUpdatingPlayers={setBulkUpdatingPlayers}
+              exitBulkMode={exitBulkMode}
+              onPlayerArchived={onPlayerArchived}
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={archiveDialogOpen}

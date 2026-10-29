@@ -235,6 +235,7 @@ export const useCustomHook = () => {
     string | number | null
   >(null);
   const [archivedPlayersRefreshKey, setArchivedPlayersRefreshKey] = useState(0);
+  const [playersDialogOpen, setPlayersDialogOpen] = useState(false);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -673,5 +674,7 @@ export const useCustomHook = () => {
     setArchivingPlayerId,
     archivedPlayersRefreshKey,
     setArchivedPlayersRefreshKey,
+    playersDialogOpen,
+    setPlayersDialogOpen,
   };
 };

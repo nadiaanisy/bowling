@@ -7,6 +7,7 @@ import type React from 'react';
 import Grid from './Grid';
 import { Cards } from './Cards';
 import Header from './Header';
+import { AdvancedPlayerFiltersValue } from '../../utils/type';
 import { AddTeamsDialog } from './AddTeamsDialog';
 import { EditTeamDialog } from './EditTeamDialog';
 import ManagementCard from './ManagementCard';
@@ -24,9 +25,24 @@ import {
   toggleSelectAllTeams,
 } from '../../functions/teams';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
-import { AdvancedPlayerFiltersValue } from '../../utils/interfaces';
 import ArchivedPlayersPanel from './ArchivedPlayersPanel';
 import AdvancedPlayerFilters from './AdvancedPlayerFilters';
+import { archiveTeams } from '../../utils/api/teamArchive';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '../../components/alert-dialog';
+import { toast } from 'sonner';
+import {
+  Search,
+  X
+} from 'lucide-react';
 
 export default function Teams() {
   const {
@@ -55,8 +71,6 @@ export default function Teams() {
     setDialogOpen,
     addMode,
     setAddMode,
-    expandedTeams,
-    setExpandedTeams,
     selectedPlayers,
     setSelectedPlayers,
     bulkDeleteMode,
@@ -122,6 +136,11 @@ export default function Teams() {
     archivedPlayersRefreshKey,
     setArchivedPlayersRefreshKey,
   } = useCustomHook();
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [bulkArchiveConfirmOpen, setBulkArchiveConfirmOpen] = useState(false);
+  const [bulkArchivingTeams, setBulkArchivingTeams] = useState(false);
+  const pageSize = 12;
 
   const [advancedFilters, setAdvancedFilters] =
     useState<AdvancedPlayerFiltersValue>({
@@ -196,17 +215,19 @@ export default function Teams() {
     selectedTeams.some((id) => String(id) === String(team.id)),
   );
 
-  const teamsWithPlayers = filteredTeams.filter(
-    (team) => team.members.length > 0,
+  const totalPages = Math.max(1, Math.ceil(filteredTeams.length / pageSize));
+  const paginatedTeams = filteredTeams.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
   );
 
-  const canExpandAll = teamsWithPlayers.some(
-    (team) => !(expandedTeams[team.id] ?? false),
-  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, advancedFilters, selectedLeague]);
 
-  const canCollapseAll = teamsWithPlayers.some(
-    (team) => expandedTeams[team.id] ?? false,
-  );
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
 
   // Keep page-local selections and open dialogs isolated to the selected league.
   useEffect(() => {
@@ -215,7 +236,6 @@ export default function Teams() {
     setSelectedTeam(null);
     setSelectedTeams([]);
     setSelectedPlayers({});
-    setExpandedTeams({});
     setBulkDeleteMode({});
     setBulkTeamDeleteMode(false);
     setBulkPlayerTypeValue({});
@@ -238,7 +258,6 @@ export default function Teams() {
     setSelectedTeam,
     setSelectedTeams,
     setSelectedPlayers,
-    setExpandedTeams,
     setBulkDeleteMode,
     setBulkTeamDeleteMode,
     setBulkPlayerTypeValue,
@@ -340,8 +359,6 @@ export default function Teams() {
     setEditingTeamId,
     setEditingTeamName,
     setEditingTeamNotes,
-    expandedTeams,
-    setExpandedTeams,
     bulkDeleteMode,
     setBulkDeleteMode,
     selectedPlayers,
@@ -373,7 +390,7 @@ export default function Teams() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0b0c14] px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
+    <div className="min-h-screen px-4 py-6 text-slate-100 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1440px] space-y-5">
         <Header
           isLoadingTeams={isLoadingTeams}
@@ -388,6 +405,7 @@ export default function Teams() {
               toggleSelectAllTeams(checked, filteredTeams, current),
             );
           }}
+          onArchiveSelected={() => setBulkArchiveConfirmOpen(true)}
           onDeleteSelected={() => {
             setPendingDeleteType('teams');
 
@@ -414,52 +432,110 @@ export default function Teams() {
           teamsCount={teams.length}
         />
 
-        <TeamRosterSummary teams={teams} />
+        <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_364px]">
+          {/* LEFT COLUMN */}
+          <main className="min-w-0 space-y-4">
+            <TeamRosterSummary teams={teams} />
 
-        <ManagementCard
-          existingTeams={teams.map((team) => ({ name: team.name }))}
-          newTeamName={newTeamName}
-          setNewTeamName={setNewTeamName}
-          creatingTeam={creatingTeam}
-          onCreateTeam={() => {
-            void handleCreateTeam(
-              creatingTeam,
-              setCreatingTeam,
-              newTeamName,
-              selectedLeague,
-              teams,
-              setTeams,
-              setNewTeamName,
-            );
-          }}
-          onOpenBulkCreate={() => {
-            setMultipleTeamNames('');
-            setBulkTeamDialogOpen(true);
-          }}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filteredTeamsCount={filteredTeams.length}
-        />
+            <section className="rounded-xl border border-violet-900/70 bg-[#11131f] p-4 shadow-sm">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <h2 className="font-semibold text-white">Teams</h2>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Search and manage team rosters.
+                  </p>
+                </div>
 
-        <AdvancedPlayerFilters
-          teams={teams}
-          value={advancedFilters}
-          onChange={setAdvancedFilters}
-        />
+                <span className="rounded-full border border-violet-900/70 bg-[#1b1c2b] px-2.5 py-1 text-xs font-medium text-slate-300">
+                  {filteredTeams.length}{' '}
+                  {filteredTeams.length === 1 ? 'team' : 'teams'}
+                </span>
+              </div>
 
-        <ArchivedTeamsPanel
-          leagueId={selectedLeague}
-          refreshKey={archivedTeamsRefreshKey}
-          onRestored={() => {
-            retryTeams();
-          }}
-        />
+              <div className="flex items-center gap-2 rounded-md border border-slate-700 bg-[#0b0c14] px-3 focus-within:border-violet-500 focus-within:ring-1 focus-within:ring-violet-500">
+                <Search className="size-4 shrink-0 text-slate-400" />
+                <input
+                  aria-label="Search teams or players"
+                  placeholder="Search teams or players..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="w-full min-w-0 bg-transparent py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    aria-label="Clear team search"
+                    onClick={() => setSearchQuery('')}
+                    className="rounded px-2 py-1 text-sm text-slate-400 hover:text-white"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            </section>
 
-        <ArchivedPlayersPanel
-          leagueId={selectedLeague}
-          refreshKey={archivedPlayersRefreshKey}
-          onRestored={retryTeams}
-        />
+            <Grid
+              teams={teams}
+              filteredTeams={paginatedTeams}
+              isLoadingTeams={isLoadingTeams}
+              teamsLoadError={teamsLoadError}
+              retryTeams={retryTeams}
+              teamCardProps={teamCardProps}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalFilteredTeams={filteredTeams.length}
+              onPageChange={setCurrentPage}
+            />
+          </main>
+
+          {/* RIGHT COLUMN */}
+          <aside className="min-w-0 space-y-4">
+            <ManagementCard
+              existingTeams={teams.map((team) => ({ name: team.name }))}
+              newTeamName={newTeamName}
+              setNewTeamName={setNewTeamName}
+              creatingTeam={creatingTeam}
+              onCreateTeam={() => {
+                void handleCreateTeam(
+                  creatingTeam,
+                  setCreatingTeam,
+                  newTeamName,
+                  selectedLeague,
+                  teams,
+                  setTeams,
+                  setNewTeamName,
+                );
+              }}
+              onOpenBulkCreate={() => {
+                setMultipleTeamNames('');
+                setBulkTeamDialogOpen(true);
+              }}
+            />
+
+            <AdvancedPlayerFilters
+              teams={teams}
+              value={advancedFilters}
+              onChange={setAdvancedFilters}
+            />
+
+            <ArchivedTeamsPanel
+              leagueId={selectedLeague}
+              refreshKey={archivedTeamsRefreshKey}
+              onRestored={retryTeams}
+            />
+
+            <ArchivedPlayersPanel
+              leagueId={selectedLeague}
+              refreshKey={archivedPlayersRefreshKey}
+              onRestored={retryTeams}
+            />
+
+            <TeamActivityPanel
+              leagueId={selectedLeague}
+              refreshKey={archivedTeamsRefreshKey + archivedPlayersRefreshKey}
+            />
+          </aside>
+        </div>
 
         <AddTeamsDialog
           open={bulkTeamDialogOpen}
@@ -492,21 +568,6 @@ export default function Teams() {
               },
             );
           }}
-        />
-
-        <TeamActivityPanel leagueId={selectedLeague} />
-
-        <Grid
-          teams={teams}
-          filteredTeams={filteredTeams}
-          isLoadingTeams={isLoadingTeams}
-          teamsLoadError={teamsLoadError}
-          retryTeams={retryTeams}
-          expandedTeams={expandedTeams}
-          setExpandedTeams={setExpandedTeams}
-          teamCardProps={teamCardProps}
-          canExpandAll={canExpandAll}
-          canCollapseAll={canCollapseAll}
         />
 
         <EditTeamDialog
@@ -545,6 +606,91 @@ export default function Teams() {
             );
           }}
         />
+
+        <AlertDialog
+          open={bulkArchiveConfirmOpen}
+          onOpenChange={(open) => {
+            if (bulkArchivingTeams) return;
+            setBulkArchiveConfirmOpen(open);
+          }}
+        >
+          <AlertDialogContent className="border-slate-700 bg-[#11131f] text-slate-100">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Archive selected teams?</AlertDialogTitle>
+              <AlertDialogDescription className="text-slate-400">
+                Archive {selectedTeamRecords.length} selected team
+                {selectedTeamRecords.length === 1 ? '' : 's'}? They will be
+                hidden from the active roster, while historical scores are
+                preserved.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel
+                disabled={bulkArchivingTeams}
+                className="border-slate-700 bg-transparent text-slate-100 hover:bg-slate-800"
+              >
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                disabled={
+                  bulkArchivingTeams ||
+                  selectedTeamRecords.length === 0 ||
+                  selectedLeague === null
+                }
+                className="bg-amber-600 text-white hover:bg-amber-700"
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (bulkArchivingTeams || selectedLeague === null) return;
+
+                  setBulkArchivingTeams(true);
+                  void archiveTeams(
+                    selectedTeamRecords.map((team) => team.id),
+                    selectedLeague,
+                  )
+                    .then(({ archivedIds, failures }) => {
+                      if (archivedIds.length > 0) {
+                        const archivedIdSet = new Set(archivedIds.map(String));
+                        setTeams((current) =>
+                          current.filter(
+                            (team) => !archivedIdSet.has(String(team.id)),
+                          ),
+                        );
+                        setArchivedTeamsRefreshKey((current) => current + 1);
+                        setSelectedTeams((current) =>
+                          current.filter(
+                            (id) => !archivedIdSet.has(String(id)),
+                          ),
+                        );
+                        toast.success(
+                          `${archivedIds.length} team${archivedIds.length === 1 ? '' : 's'} archived successfully.`,
+                        );
+                      }
+
+                      if (failures.length > 0) {
+                        toast.error(
+                          `${failures.length} team${failures.length === 1 ? '' : 's'} could not be archived. Please review and retry.`,
+                        );
+                      } else {
+                        setBulkArchiveConfirmOpen(false);
+                        setBulkTeamDeleteMode(false);
+                        setSelectedTeams([]);
+                      }
+                    })
+                    .catch((error) => {
+                      toast.error(
+                        error instanceof Error
+                          ? error.message
+                          : 'Unable to archive selected teams.',
+                      );
+                    })
+                    .finally(() => setBulkArchivingTeams(false));
+                }}
+              >
+                {bulkArchivingTeams ? 'Archiving…' : 'Archive selected'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <ConfirmDeleteDialog
           open={confirmOpen}

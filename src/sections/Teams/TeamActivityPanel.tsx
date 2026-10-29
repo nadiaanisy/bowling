@@ -3,13 +3,16 @@ import {
   useEffect,
   useState
 } from 'react';
+import { Button } from '../../components/button';
 import {
   getTeamActivity,
   type TeamActivity,
 } from '../../utils/api/teamArchive';
+import { RefreshCw } from 'lucide-react';
 
 type Props = {
   leagueId: string | number | null;
+  refreshKey?: number;
 };
 
 function describeActivity(activity: TeamActivity): string {
@@ -45,7 +48,7 @@ function describeActivity(activity: TeamActivity): string {
   }
 }
 
-export default function TeamActivityPanel({ leagueId }: Props) {
+export default function TeamActivityPanel({ leagueId, refreshKey = 0 }: Props) {
   const [activities, setActivities] = useState<TeamActivity[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,14 +77,14 @@ export default function TeamActivityPanel({ leagueId }: Props) {
 
   useEffect(() => {
     void loadActivity();
-  }, [loadActivity]);
+  }, [loadActivity, refreshKey]);
 
   return (
-    <section className="rounded-xl border border-violet-900/70 bg-[#11131f] p-4 text-slate-100 shadow-sm">
+    <section className="rounded-xl border border-violet-800/90 bg-gradient-to-br from-[#11131f] to-[#0e101b] p-3.5 text-slate-100 shadow-sm">
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-base font-semibold">Activity history</h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs leading-relaxed text-slate-400">
             Recent recorded changes in this league.
           </p>
         </div>
@@ -89,7 +92,7 @@ export default function TeamActivityPanel({ leagueId }: Props) {
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="rounded-md border px-3 py-2 text-sm hover:bg-gray-50"
+          className="shrink-0 rounded-lg border border-slate-700 bg-[#0b0c14] px-3 py-2 text-xs font-semibold text-slate-100 transition-colors hover:border-violet-600 hover:bg-violet-950/40"
           aria-expanded={expanded}
         >
           {expanded ? 'Hide' : 'View history'}
@@ -99,51 +102,63 @@ export default function TeamActivityPanel({ leagueId }: Props) {
       {expanded && (
         <div className="mt-4 space-y-3">
           <div className="flex justify-end">
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={() => void loadActivity()}
               disabled={loading}
-              className="text-sm underline disabled:opacity-50"
+              className="gap-2 border-slate-700 bg-[#0b0c14] text-slate-100 hover:border-violet-600 hover:bg-violet-950/40"
             >
+              <RefreshCw
+                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+              />
               Refresh
-            </button>
+            </Button>
           </div>
 
           {loading && (
-            <p className="text-sm text-gray-500">Loading activity…</p>
+            <p className="text-xs leading-relaxed text-slate-400">
+              Loading activity…
+            </p>
           )}
 
           {error && (
-            <p role="alert" className="text-sm text-red-600">
+            <p role="alert" className="text-sm text-red-400">
               {error}
             </p>
           )}
 
           {!loading && !error && activities.length === 0 && (
-            <p className="text-sm text-gray-500">
+            <p className="text-xs leading-relaxed text-slate-400">
               No activity has been recorded yet.
             </p>
           )}
 
-          {activities.map((activity) => (
-            <article key={activity.id} className="rounded-md border p-3">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <p className="font-medium">{describeActivity(activity)}</p>
-                <time
-                  className="text-xs text-gray-500"
-                  dateTime={activity.created_at}
-                >
-                  {new Date(activity.created_at).toLocaleString()}
-                </time>
-              </div>
+          <div className="max-h-[15rem] space-y-3 overflow-y-auto overscroll-contain pr-2">
+            {activities.map((activity) => (
+              <article
+                key={activity.id}
+                className="rounded-lg border border-slate-800 bg-[#0b0c14]/70 p-3"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <p className="font-medium">{describeActivity(activity)}</p>
+                  <time
+                    className="text-xs text-slate-500"
+                    dateTime={activity.created_at}
+                  >
+                    {new Date(activity.created_at).toLocaleString()}
+                  </time>
+                </div>
 
-              <p className="mt-1 text-xs text-gray-500">
-                {activity.team_id !== null
-                  ? `Team ID: ${activity.team_id}`
-                  : 'Team no longer associated with this record'}
-              </p>
-            </article>
-          ))}
+                <p className="mt-1 text-xs text-gray-500">
+                  {activity.team_id !== null
+                    ? `Team ID: ${activity.team_id}`
+                    : 'Team no longer associated with this record'}
+                </p>
+              </article>
+            ))}
+          </div>
         </div>
       )}
     </section>

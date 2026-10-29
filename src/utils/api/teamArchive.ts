@@ -149,3 +149,39 @@ export async function getTeamActivity(
 
   return (data ?? []) as TeamActivity[];
 }
+
+/**
+ * Archives multiple teams independently so one failure does not prevent the
+ * remaining selected teams from being processed. Returns successful IDs and
+ * failures for the caller to report.
+ */
+export async function archiveTeams(
+  teamIds: Id[],
+  leagueId: Id,
+): Promise<{
+    archivedIds: Id[];
+    failures: Array<{ teamId: Id; error: unknown }>;
+  }> {
+  const results = await Promise.all(
+    teamIds.map(async (teamId) => {
+      try {
+        await archiveTeam(teamId, leagueId);
+        return { teamId, success: true as const };
+      } catch (error) {
+        return { teamId, success: false as const, error };
+      }
+    }),
+  );
+
+  return {
+    archivedIds: results
+      .filter((result) => result.success)
+      .map((result) => result.teamId),
+    failures: results
+      .filter(
+        (result): result is { teamId: Id; success: false; error: unknown } =>
+          !result.success,
+      )
+      .map(({ teamId, error }) => ({ teamId, error })),
+  };
+}

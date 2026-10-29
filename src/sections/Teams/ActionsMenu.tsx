@@ -5,11 +5,10 @@ import {
 import { Button } from '../../components/button';
 import {
   Archive,
-  ListX,
-  MoreHorizontal,
+  MoreVertical,
   Trash2,
   UserPlus,
-  Pencil,
+  Pencil
 } from 'lucide-react';
 
 interface ActionsMenuProps {
@@ -21,7 +20,6 @@ interface ActionsMenuProps {
   onToggle: () => void;
   onAddPlayer: () => void;
   onEditTeam: () => void;
-  onBulkDelete: () => void;
   onDeleteTeam: () => void;
   onArchiveTeam: () => void;
   archivingTeam: boolean;
@@ -36,7 +34,6 @@ export function ActionsMenu({
   onToggle,
   onAddPlayer,
   onEditTeam,
-  onBulkDelete,
   onDeleteTeam,
   onArchiveTeam,
   archivingTeam,
@@ -67,7 +64,7 @@ export function ActionsMenu({
         aria-label={`More actions for ${teamName}`}
         onClick={onToggle}
       >
-        <MoreHorizontal className="h-4 w-4" />
+        <MoreVertical className="h-4 w-4" />
       </Button>
 
       {open && (
@@ -94,21 +91,6 @@ export function ActionsMenu({
           >
             <Pencil className="h-4 w-4" />
             Edit team
-          </button>
-
-          <button
-            type="button"
-            onClick={onBulkDelete}
-            disabled={isBlindTeam || memberCount === 0 || deletingPlayer}
-            title={
-              isBlindTeam
-                ? 'BLIND is a scoring placeholder and cannot have team members.'
-                : undefined
-            }
-            className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm hover:bg-violet-950 disabled:pointer-events-none disabled:opacity-50"
-          >
-            <ListX className="h-4 w-4" />
-            Bulk delete player
           </button>
 
           <button

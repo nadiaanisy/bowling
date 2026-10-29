@@ -5,13 +5,8 @@ import {
   CardContent,
   CardHeader
 } from '../../components/card';
-import { setAllTeamsExpanded } from '../../functions/teams';
 import { Button } from '../../components/button';
 import { Skeleton } from '../../components/skeleton';
-import {
-  Maximize2,
-  Minimize2
-} from 'lucide-react';
 
 interface GridProps {
   teams: React.ComponentProps<typeof Cards>['teams'];
@@ -19,11 +14,11 @@ interface GridProps {
   isLoadingTeams: boolean;
   teamsLoadError?: string | null;
   retryTeams: () => void;
-  expandedTeams: React.ComponentProps<typeof Cards>['expandedTeams'];
-  setExpandedTeams: React.ComponentProps<typeof Cards>['setExpandedTeams'];
   teamCardProps: Omit<React.ComponentProps<typeof Cards>, 'team'>;
-  canExpandAll: boolean;
-  canCollapseAll: boolean;
+  currentPage: number;
+  totalPages: number;
+  totalFilteredTeams: number;
+  onPageChange: (page: number) => void;
 }
 
 export default function Grid({
@@ -32,11 +27,11 @@ export default function Grid({
   isLoadingTeams,
   teamsLoadError,
   retryTeams,
-  expandedTeams,
-  setExpandedTeams,
   teamCardProps,
-  canExpandAll,
-  canCollapseAll,
+  currentPage,
+  totalPages,
+  totalFilteredTeams,
+  onPageChange,
 }: GridProps) {
   if (teamsLoadError) {
     return (
@@ -104,44 +99,71 @@ export default function Grid({
   }
 
   return (
-    <>
-      <div className="mx-auto flex w-full items-center justify-end gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          disabled={!canExpandAll}
-          onClick={() =>
-            setAllTeamsExpanded(filteredTeams, true, setExpandedTeams)
-          }
-        >
-          <Maximize2 className="h-4 w-4" />
-          Expand all
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          disabled={!canCollapseAll}
-          onClick={() =>
-            setAllTeamsExpanded(filteredTeams, false, setExpandedTeams)
-          }
-        >
-          <Minimize2 className="h-4 w-4" />
-          Collapse all
-        </Button>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-slate-400">
+        <span>
+          Showing {(currentPage - 1) * 16 + 1}–
+          {Math.min(currentPage * 16, totalFilteredTeams)} of{' '}
+          {totalFilteredTeams} teams
+        </span>
+        {totalPages > 1 && (
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={currentPage <= 1}
+              onClick={() => onPageChange(currentPage - 1)}
+            >
+              Previous
+            </Button>
+            <span className="min-w-[5rem] text-center text-xs text-slate-300">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={currentPage >= totalPages}
+              onClick={() => onPageChange(currentPage + 1)}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
-
-      <div className="mx-auto grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="mx-auto grid w-full grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {filteredTeams.map((team) => (
           <div key={team.id} className="min-w-0">
             <Cards {...teamCardProps} team={team} />
           </div>
         ))}
       </div>
-    </>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-1">
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={currentPage <= 1}
+            onClick={() => onPageChange(currentPage - 1)}
+          >
+            Previous
+          </Button>
+          <span className="px-2 text-xs text-slate-300">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={currentPage >= totalPages}
+            onClick={() => onPageChange(currentPage + 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

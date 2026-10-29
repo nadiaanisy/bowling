@@ -195,183 +195,185 @@ export function PlayersTable({
   };
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            {isBulkMode && (
-              <TableHead className="w-8 px-1">
-                <input
-                  type="checkbox"
-                  aria-label={`Select all players in ${team.name}`}
-                  checked={
-                    team.members.length > 0 &&
-                    selectedIds.length === team.members.length
-                  }
-                  onChange={(event) => {
-                    setSelectedPlayers((currentSelection) => ({
-                      ...currentSelection,
-                      [String(team.id)]: selectAllPlayersForTeam(
-                        team,
-                        event.target.checked,
-                      ),
-                    }));
-                  }}
-                />
-              </TableHead>
-            )}
-            <TableHead className={isBulkMode ? 'px-1' : undefined}>
-              Player Name
-            </TableHead>
-            <TableHead className="w-[100px] text-center">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {visibleMembers.length === 0 && (
+      <div className="max-h-[50vh] overflow-auto overscroll-contain rounded-md">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell
-                colSpan={isBulkMode ? 3 : 2}
-                className="py-6 text-center text-sm text-muted-foreground"
-              >
-                No players match your search.
-              </TableCell>
-            </TableRow>
-          )}
-          {visibleMembers.map((player) => (
-            <TableRow key={player.id}>
               {isBulkMode && (
-                <TableCell className="w-8 px-1">
+                <TableHead className="w-8 px-1">
                   <input
                     type="checkbox"
-                    aria-label={`Select ${player.name}`}
-                    checked={selectedIds.some(
-                      (id) => String(id) === String(player.id),
-                    )}
-                    onChange={() =>
-                      setSelectedPlayers(
-                        togglePlayerSelection(
-                          team.id,
-                          player.id,
-                          selectedPlayers,
+                    aria-label={`Select all players in ${team.name}`}
+                    checked={
+                      team.members.length > 0 &&
+                      selectedIds.length === team.members.length
+                    }
+                    onChange={(event) => {
+                      setSelectedPlayers((currentSelection) => ({
+                        ...currentSelection,
+                        [String(team.id)]: selectAllPlayersForTeam(
+                          team,
+                          event.target.checked,
                         ),
+                      }));
+                    }}
+                  />
+                </TableHead>
+              )}
+              <TableHead className={isBulkMode ? 'px-1' : undefined}>
+                Player Name
+              </TableHead>
+              <TableHead className="w-[100px] text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {visibleMembers.length === 0 && (
+              <TableRow>
+                <TableCell
+                  colSpan={isBulkMode ? 3 : 2}
+                  className="py-6 text-center text-sm text-muted-foreground"
+                >
+                  No players match your search.
+                </TableCell>
+              </TableRow>
+            )}
+            {visibleMembers.map((player) => (
+              <TableRow key={player.id}>
+                {isBulkMode && (
+                  <TableCell className="w-8 px-1">
+                    <input
+                      type="checkbox"
+                      aria-label={`Select ${player.name}`}
+                      checked={selectedIds.some(
+                        (id) => String(id) === String(player.id),
+                      )}
+                      onChange={() =>
+                        setSelectedPlayers(
+                          togglePlayerSelection(
+                            team.id,
+                            player.id,
+                            selectedPlayers,
+                          ),
+                        )
+                      }
+                      disabled={deletingPlayer}
+                    />
+                  </TableCell>
+                )}
+                <TableCell className={isBulkMode ? 'px-1' : undefined}>
+                  {player.name}
+                </TableCell>
+                <TableCell className="text-center">
+                  <EditPlayerDialog
+                    player={player}
+                    open={
+                      editingPlayerId !== null &&
+                      String(editingPlayerId) === String(player.id)
+                    }
+                    onOpenChange={(open) => {
+                      if (!open && !updatingPlayer) setEditingPlayerId(null);
+                    }}
+                    onTriggerClick={() =>
+                      handleOpenEditPlayerDialog(
+                        player,
+                        setEditingPlayerId,
+                        setEditingPlayerName,
+                        setEditingPlayerStatus,
+                        setEditingPlayerType,
+                        setEditingPlayerNotes,
                       )
                     }
-                    disabled={deletingPlayer}
-                  />
-                </TableCell>
-              )}
-              <TableCell className={isBulkMode ? 'px-1' : undefined}>
-                {player.name}
-              </TableCell>
-              <TableCell className="text-center">
-                <EditPlayerDialog
-                  player={player}
-                  open={
-                    editingPlayerId !== null &&
-                    String(editingPlayerId) === String(player.id)
-                  }
-                  onOpenChange={(open) => {
-                    if (!open && !updatingPlayer) setEditingPlayerId(null);
-                  }}
-                  onTriggerClick={() =>
-                    handleOpenEditPlayerDialog(
+                    editingPlayerName={editingPlayerName}
+                    setEditingPlayerName={setEditingPlayerName}
+                    editingPlayerStatus={editingPlayerStatus}
+                    setEditingPlayerStatus={setEditingPlayerStatus}
+                    editingPlayerType={editingPlayerType}
+                    setEditingPlayerType={setEditingPlayerType}
+                    editingPlayerNotes={editingPlayerNotes}
+                    setEditingPlayerNotes={setEditingPlayerNotes}
+                    updatingPlayer={updatingPlayer}
+                    hasChanges={hasPlayerChanges(
                       player,
-                      setEditingPlayerId,
-                      setEditingPlayerName,
-                      setEditingPlayerStatus,
-                      setEditingPlayerType,
-                      setEditingPlayerNotes,
-                    )
-                  }
-                  editingPlayerName={editingPlayerName}
-                  setEditingPlayerName={setEditingPlayerName}
-                  editingPlayerStatus={editingPlayerStatus}
-                  setEditingPlayerStatus={setEditingPlayerStatus}
-                  editingPlayerType={editingPlayerType}
-                  setEditingPlayerType={setEditingPlayerType}
-                  editingPlayerNotes={editingPlayerNotes}
-                  setEditingPlayerNotes={setEditingPlayerNotes}
-                  updatingPlayer={updatingPlayer}
-                  hasChanges={hasPlayerChanges(
-                    player,
-                    editingPlayerName,
-                    editingPlayerType,
-                    editingPlayerStatus,
-                    editingPlayerNotes,
-                  )}
-                  onCancel={() => setEditingPlayerId(null)}
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    if (editingPlayerId === null) return;
-
-                    void handleUpdatePlayer(
-                      updatingPlayer,
-                      setUpdatingPlayer,
-                      editingPlayerId,
-                      team.id,
-                      selectedLeague,
                       editingPlayerName,
                       editingPlayerType,
                       editingPlayerStatus,
                       editingPlayerNotes,
-                      player.name,
-                      player.type,
-                      player.status,
-                      player.notes,
-                      setTeams,
-                      () => setEditingPlayerId(null),
-                    );
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  aria-label={`Archive ${player.name}`}
-                  title="Archive player"
-                  disabled={archivingPlayerId !== null}
-                  onClick={() => {
-                    setArchiveError(null);
-                    setPlayerToArchive(player);
-                  }}
-                >
-                  <Archive className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => {
-                    setPendingDeleteType('player');
-                    handleDeletePlayer(
-                      deletingPlayer,
-                      setDeletingPlayer,
-                      player.id,
-                      player.name,
-                      team.name,
-                      team.id,
-                      selectedLeague,
-                      setTeams,
-                      setConfirmMessage,
-                      setConfirmAction,
-                      setConfirmOpen,
-                      () => {
-                        setSelectedPlayers((current) => ({
-                          ...current,
-                          [String(team.id)]: (
-                            current[String(team.id)] ?? []
-                          ).filter((id) => String(id) !== String(player.id)),
-                        }));
-                      },
-                    );
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                    )}
+                    onCancel={() => setEditingPlayerId(null)}
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      if (editingPlayerId === null) return;
+
+                      void handleUpdatePlayer(
+                        updatingPlayer,
+                        setUpdatingPlayer,
+                        editingPlayerId,
+                        team.id,
+                        selectedLeague,
+                        editingPlayerName,
+                        editingPlayerType,
+                        editingPlayerStatus,
+                        editingPlayerNotes,
+                        player.name,
+                        player.type,
+                        player.status,
+                        player.notes,
+                        setTeams,
+                        () => setEditingPlayerId(null),
+                      );
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`Archive ${player.name}`}
+                    title="Archive player"
+                    disabled={archivingPlayerId !== null}
+                    onClick={() => {
+                      setArchiveError(null);
+                      setPlayerToArchive(player);
+                    }}
+                  >
+                    <Archive className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => {
+                      setPendingDeleteType('player');
+                      handleDeletePlayer(
+                        deletingPlayer,
+                        setDeletingPlayer,
+                        player.id,
+                        player.name,
+                        team.name,
+                        team.id,
+                        selectedLeague,
+                        setTeams,
+                        setConfirmMessage,
+                        setConfirmAction,
+                        setConfirmOpen,
+                        () => {
+                          setSelectedPlayers((current) => ({
+                            ...current,
+                            [String(team.id)]: (
+                              current[String(team.id)] ?? []
+                            ).filter((id) => String(id) !== String(player.id)),
+                          }));
+                        },
+                      );
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
       {isBulkMode && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {hasSelection && (

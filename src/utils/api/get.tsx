@@ -1,10 +1,10 @@
+import { MatchesByBlock } from '../type';
 import {
   DashboardData,
   HandicapSetting,
   LeagueHandicapConfig,
   League,
   MatchData,
-  MatchesByBlock,
   PlayerScoreDetails,
   User,
   LeagueTeamWithMembers,
