@@ -5,16 +5,16 @@ import {
   DashboardSummaryCard,
 } from './DashboardCards';
 import {
-  useCustomHook,
-  UseHook
+useCustomHook,
+UseHook
 } from '../../utils/hooks';
 import { getDashboardDataByLeagueId } from '../../utils/api/get';
 import {
-  Card,
-  CardContent
+Card,
+CardContent
 } from '../../components/card';
 import { Button } from '../../components/button';
-import { DEFAULT_MATCHES_PER_WEEK } from '../../utils/constants/others';
+import { DEFAULT_MATCHES_PER_WEEK } from '../../utils/constants/defaultMatchPerWeek';
 import { RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
