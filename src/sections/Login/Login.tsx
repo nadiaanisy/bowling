@@ -1,11 +1,11 @@
 import {
-  useEffect,
-  useRef
+useEffect,
+useRef
 } from 'react';
 import { UseHook } from '../../utils/hooks';
 import {
-  handleLoginSubmit,
-  handleSignupSubmit
+handleLoginSubmit,
+handleSignupSubmit
 } from '../../functions/user';
 import {
   Card,
@@ -164,35 +164,35 @@ export default function Login({ onBack }: LoginProps) {
               onSubmit={(e) =>
                 signupMode
                   ? handleSignupSubmit(
-                    e,
-                    signupName,
-                    Username,
-                    Password,
-                    confirmPassword,
-                    setLoading,
-                    setFieldErrors,
-                    setSignupNameError,
-                    setConfirmPasswordError,
-                    () => {
-                      setSignupMode(false);
-                      setSignupName('');
-                      setSignupNameError('');
-                      setPassword('');
-                      setConfirmPassword('');
-                      setConfirmPasswordError('');
-                      setFieldErrors({ username: '', password: '' });
-                    },
-                    isSubmittingRef,
-                  )
+                      e,
+                      signupName,
+                      Username,
+                      Password,
+                      confirmPassword,
+                      setLoading,
+                      setFieldErrors,
+                      setSignupNameError,
+                      setConfirmPasswordError,
+                      () => {
+                        setSignupMode(false);
+                        setSignupName('');
+                        setSignupNameError('');
+                        setPassword('');
+                        setConfirmPassword('');
+                        setConfirmPasswordError('');
+                        setFieldErrors({ username: '', password: '' });
+                      },
+                      isSubmittingRef,
+                    )
                   : handleLoginSubmit(
-                    e,
-                    login,
-                    Username,
-                    Password,
-                    setLoading,
-                    setFieldErrors,
-                    isSubmittingRef,
-                  )
+                      e,
+                      login,
+                      Username,
+                      Password,
+                      setLoading,
+                      setFieldErrors,
+                      isSubmittingRef,
+                    )
               }
               className="space-y-4"
               noValidate
