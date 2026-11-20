@@ -3,10 +3,10 @@ import { Button } from '../../components/button';
 import { benefits } from '../../utils/constants/landing';
 import { ImageWithFallback } from '../../components/ImageWithFallback';
 import {
-  ArrowRight,
-  Award,
-  CheckCircle2,
-  Zap
+ArrowRight,
+Award,
+CheckCircle2,
+Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
 

@@ -1,14 +1,14 @@
 import {
-  Card,
-  CardContent
+Card,
+CardContent
 } from '../../components/card';
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
 import { features } from '../../utils/constants/landing';
 import {
-  ArrowRight,
-  BookOpen,
-  Sparkles
+ArrowRight,
+BookOpen,
+Sparkles
 } from 'lucide-react';
 import { motion } from 'motion/react';
 

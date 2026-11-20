@@ -1,11 +1,11 @@
 import { Badge } from '../../components/badge';
 import { Button } from '../../components/button';
 import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Trophy,
-  Zap
+ArrowLeft,
+ArrowRight,
+BookOpen,
+Trophy,
+Zap
 } from 'lucide-react';
 
 interface HeaderProps {

@@ -1,12 +1,12 @@
-import CTA from './LM-CTA';
-import FAQ from './LM-FAQ';
-import Hero from './LM-Hero';
-import Footer from './LM-Footer';
-import Header from './LM-Header';
-import Features from './LM-Features';
-import HowItWorks from './LM-HowItWorks';
+import CTA from './CTA';
+import FAQ from './FAQ';
+import Hero from './Hero';
+import Footer from './Footer';
+import Header from './Header';
+import Features from './Features';
+import HowItWorks from './HowItWorks';
+import Capabilities from './Capabilities';
 import { useCustomHook } from '../../utils/hooks';
-import Capabilities from './LM-Capabilities';
 
 interface LearnMoreProps {
   onBack: () => void;

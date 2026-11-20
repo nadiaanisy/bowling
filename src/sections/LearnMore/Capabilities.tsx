@@ -1,20 +1,10 @@
 import {
-  Card,
-  CardContent
+Card,
+CardContent
 } from '../../components/card';
 import { Badge } from '../../components/badge';
 import { capabilities } from '../../utils/constants/landing';
-import {
-  BarChart3,
-  Calendar,
-  RefreshCw,
-  Shuffle,
-  Star,
-  Trophy,
-  UserCircle,
-  Users,
-  Zap,
-} from 'lucide-react';
+import { Star } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function Capabilities() {

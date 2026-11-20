@@ -1,11 +1,11 @@
-import CTA from './L-CTA';
-import Hero from './L-Hero';
-import Footer from './L-Footer';
-import Header from './L-Header';
-import Features from './L-Features';
-import WhyChooseUs from './L-WhyChooseUs';
+import CTA from './CTA';
+import Hero from './Hero';
+import Footer from './Footer';
+import Header from './Header';
+import Features from './Features';
+import WhyChooseUs from './WhyChooseUs';
 import { useCustomHook } from '../../utils/hooks';
-import LearnMore from '../LearnMore/LM-MainPage';
+import LearnMore from '../LearnMore/MainPage';
 
 interface LandingProps {
   onGetStarted: () => void;

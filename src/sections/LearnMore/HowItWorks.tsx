@@ -1,6 +1,6 @@
 import {
-  Card,
-  CardContent
+Card,
+CardContent
 } from '../../components/card';
 import { Badge } from '../../components/badge';
 import { howItWorks } from '../../utils/constants/landing';

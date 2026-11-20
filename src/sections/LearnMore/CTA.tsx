@@ -1,13 +1,13 @@
 import {
-  Card,
-  CardContent
+Card,
+CardContent
 } from '../../components/card';
 import { Button } from '../../components/button';
 import {
-  ArrowLeft,
-  ArrowRight,
-  Trophy,
-  Zap
+ArrowLeft,
+ArrowRight,
+Trophy,
+Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
 

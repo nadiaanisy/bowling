@@ -1,7 +1,7 @@
 import { Button } from '../../components/button';
 import {
-  ArrowRight,
-  Trophy
+ArrowRight,
+Trophy
 } from 'lucide-react';
 
 interface HeaderProps {

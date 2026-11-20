@@ -3,10 +3,10 @@ import { Button } from '../../components/button';
 import { stats } from '../../utils/constants/landing';
 import { ImageWithFallback } from '../../components/ImageWithFallback';
 import {
-  ArrowRight,
-  Award,
-  Sparkles,
-  Zap
+ArrowRight,
+Award,
+Sparkles,
+Zap
 } from 'lucide-react';
 import { motion } from 'motion/react';
 

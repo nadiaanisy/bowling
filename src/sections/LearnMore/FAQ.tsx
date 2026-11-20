@@ -1,13 +1,13 @@
 import {
-  Card,
-  CardContent
+Card,
+CardContent
 } from '../../components/card';
 import { Badge } from '../../components/badge';
 import { faqs } from '../../utils/constants/landing';
 import {
-  ChevronDown,
-  ChevronUp,
-  Sparkles
+ChevronDown,
+ChevronUp,
+Sparkles
 } from 'lucide-react';
 import { motion } from 'motion/react';
 
