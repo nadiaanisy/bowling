@@ -242,37 +242,6 @@ export const addHandicapSettings = async (
   return data as unknown as HandicapSetting[];
 };
 
-/* Creates the default maximum handicap configuration for a league. */
-export const addLeagueHandicapConfig = async (
-  leagueId: string | number,
-  menMaxHandicap = 40,
-  womenMaxHandicap = 50,
-): Promise<boolean> => {
-  try {
-    const now = new Date().toISOString();
-    const { error } = await insertHelper('league_handicap_config', {
-      league_id: leagueId,
-      men_max_handicap: menMaxHandicap,
-      women_max_handicap: womenMaxHandicap,
-      created_at: now,
-      updated_at: now,
-    });
-
-    if (error && error.code !== '23505') {
-      toast.error(
-        'Error creating handicap configuration: ' + error.message,
-        errorToastStyle,
-      );
-      return false;
-    }
-
-    return true;
-  } catch (err) {
-    catchError('Error creating handicap configuration: ', err);
-    return false;
-  }
-};
-
 /* Adds a player to a team within a league. */
 export const addPlayerToTeam = async (
   name: string,

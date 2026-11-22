@@ -170,15 +170,6 @@ export interface HandicapSetting {
   updated_at?: string;
 }
 
-export interface LeagueHandicapConfig {
-  id: string | number;
-  league_id: string | number;
-  men_max_handicap: number;
-  women_max_handicap: number;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export interface HandicapChangeHistory {
   id: number;
   league_id: string | number;

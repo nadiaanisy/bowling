@@ -4,6 +4,8 @@ export const HISTORY_LABELS: Record<string, string> = {
   women_handicap: "Women's handicap",
   men_max_handicap: "Men's maximum handicap",
   women_max_handicap: "Women's maximum handicap",
+  men_maximum: "Men's maximum handicap",
+  ladies_maximum: "Women's maximum handicap",
   league_id: 'League ID',
   id: 'Record ID',
   created_at: 'Created at',

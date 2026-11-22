@@ -28,7 +28,7 @@ export const navigationGroups: NavigationGroup[] = [
     items: [
       {
         id: 'hdc',
-        label: 'Handicap Setup',
+        label: 'Handicap',
         icon: SlidersHorizontal,
         available: true,
       },

@@ -293,8 +293,8 @@ export default function Handicap({ leagueId }: HandicapProps) {
       league_id: leagueId,
       handicap_rules: handicap.rules,
       maximum_handicap_settings: {
-        men_max_handicap: Number(handicap.menMaxHandicap),
-        women_max_handicap: Number(handicap.womenMaxHandicap),
+        men_maximum: Number(handicap.menMaxHandicap),
+        ladies_maximum: Number(handicap.womenMaxHandicap),
       },
       change_history: historyRows,
       notes:
