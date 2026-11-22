@@ -6,7 +6,6 @@ import {
 } from '../interfaces';
 import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
-import { supabase } from '../supabase/supabaseClient';
 import {
 getHelper,
 updateHelper
@@ -261,38 +260,6 @@ export const updateHandicapSetting = async (
   }
 
   return data as unknown as HandicapSetting;
-};
-
-/* Updates or creates a league's maximum handicap configuration. */
-export const saveLeagueHandicapConfig = async (
-  leagueId: string | number,
-  menMaxHandicap: number,
-  womenMaxHandicap: number,
-): Promise<void> => {
-  if (
-    !Number.isInteger(menMaxHandicap) ||
-    menMaxHandicap < 0 ||
-    !Number.isInteger(womenMaxHandicap) ||
-    womenMaxHandicap < 0
-  ) {
-    throw new Error('Maximum handicaps must be non-negative whole numbers.');
-  }
-
-  const now = new Date().toISOString();
-
-  const { error } = await supabase.from('league_handicap_config').upsert(
-    {
-      league_id: leagueId,
-      men_max_handicap: menMaxHandicap,
-      women_max_handicap: womenMaxHandicap,
-      updated_at: now,
-    },
-    { onConflict: 'league_id' },
-  );
-
-  if (error) {
-    throw new Error(`Unable to save maximum handicaps: ${error.message}`);
-  }
 };
 
 /* Updates a team's name and notes after verifying it belongs to the selected league. */
