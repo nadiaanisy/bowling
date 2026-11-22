@@ -1,7 +1,7 @@
 import {
-  Dispatch,
-  ReactNode,
-  SetStateAction
+Dispatch,
+ReactNode,
+SetStateAction
 } from 'react';
 import { errorToastStyle } from './toast-styles';
 import { toast } from 'sonner';
