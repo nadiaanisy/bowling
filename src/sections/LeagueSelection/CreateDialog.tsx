@@ -18,9 +18,9 @@ import {
 } from '../../functions/toast-styles';
 import { toast } from 'sonner';
 import {
-  Loader2,
-  Plus,
-  Layers
+Loader2,
+Plus,
+Layers
 } from 'lucide-react';
 
 interface CreateDialogProps {
@@ -144,6 +144,7 @@ export default function CreateDialog({
               onOpenChange(false);
               setNewLeagueName('');
             }}
+            disabled={creatingLeague}
           >
             Cancel
           </Button>

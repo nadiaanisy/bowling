@@ -1,8 +1,29 @@
 import {
-  HandicapChangeAction,
-  HandicapChangeEntityType
+HandicapChangeEntityType,
+HandicapChangeAction
 } from './type';
 import { LucideIcon } from 'lucide-react';
+
+export interface menu {
+  id: string;
+  label: string;
+  icon: any;
+}
+
+export interface Capability {
+  id: string;
+  value: string;
+  label: string;
+  sublabel: string;
+  icon: LucideIcon;
+  color: string;
+}
+
+export interface FAQItem {
+  id: string;
+  question: string;
+  answer: string;
+}
 
 export interface Feature {
   id: string;
@@ -10,12 +31,6 @@ export interface Feature {
   title: string;
   description: string;
   color: string;
-}
-
-export interface LandingStat {
-  id: string;
-  label: string;
-  value: string;
 }
 
 export interface FeatureDetail {
@@ -37,19 +52,10 @@ export interface HowItWorksStep {
   description: string;
 }
 
-export interface FAQItem {
+export interface LandingStat {
   id: string;
-  question: string;
-  answer: string;
-}
-
-export interface Capability {
-  id: string;
-  value: string;
   label: string;
-  sublabel: string;
-  icon: LucideIcon;
-  color: string;
+  value: string;
 }
 
 export interface User {
@@ -65,28 +71,6 @@ export interface NewUser {
   updated_at?: string;
 }
 
-export interface League {
-  id: string | number;
-  name: string;
-  user_id: string | number;
-  games_per_week?: string | number;
-  players_per_game?: string | number;
-  starting_lane?: string | number;
-  total_lanes?: string | number;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface LeagueSummary {
-  league_id: number;
-  has_blocks: boolean;
-  team_count: number;
-}
-
-export interface BlockWeekCalculation {
-  totalWeeks: number;
-}
-
 export interface DashboardData {
   total_blocks: number;
   total_teams: number;
@@ -100,6 +84,68 @@ export interface DashboardBlockStats {
   completed: number;
   pending: number;
   total: number;
+}
+
+export interface League {
+  id: string | number;
+  name: string;
+  user_id: string | number;
+  season_name?: string | null;
+  league_format?: string;
+  number_of_weeks?: number;
+  number_of_teams?: number;
+  number_of_blocks?: number;
+  games_per_week?: string | number;
+  players_per_game?: string | number;
+  starting_lane?: string | number;
+  total_lanes?: string | number;
+  created_at?: string;
+  updated_at?: string;
+  setup_completed?: boolean;
+  setup_completed_at?: string | null;
+  is_active?: boolean;
+  setup_config?: Record<string, unknown> | null;
+}
+
+export interface MatchData {
+  block_id: string;
+  week_number: number;
+  lane: string;
+  hasScore: boolean;
+  team1: TeamData;
+  team2: TeamData;
+  match_id: number;
+  status: 'completed' | 'pending';
+  block1?: MatchData[];
+  block2?: MatchData[];
+}
+
+export interface TeamData {
+  id: number;
+  name: string;
+  totalHdc: number;
+  scoreEntered: boolean;
+  players: PlayerScoreDetails[];
+}
+
+export interface PlayerScoreDetails {
+  id: number;
+  name: string;
+  [key: `g${number}`]: number | undefined;
+  scratch?: number;
+  hdc?: number;
+  totalWHdc?: number;
+  avg?: number;
+}
+
+export interface LeagueSummary {
+  league_id: number;
+  has_blocks: boolean;
+  team_count: number;
+}
+
+export interface BlockWeekCalculation {
+  totalWeeks: number;
 }
 
 export interface HandicapSetting {
@@ -150,37 +196,6 @@ export interface HandicapImportPreview {
   validCount: number;
   invalidCount: number;
   errors: string[];
-}
-
-export interface MatchData {
-  block_id: string;
-  week_number: number;
-  lane: string;
-  hasScore: boolean;
-  team1: TeamData;
-  team2: TeamData;
-  match_id: number;
-  status: 'completed' | 'pending';
-  block1?: MatchData[];
-  block2?: MatchData[];
-}
-
-export interface TeamData {
-  id: number;
-  name: string;
-  totalHdc: number;
-  scoreEntered: boolean;
-  players: PlayerScoreDetails[];
-}
-
-export interface PlayerScoreDetails {
-  id: number;
-  name: string;
-  [key: `g${number}`]: number | undefined;
-  scratch?: number;
-  hdc?: number;
-  totalWHdc?: number;
-  avg?: number;
 }
 
 export interface LeagueTeam {

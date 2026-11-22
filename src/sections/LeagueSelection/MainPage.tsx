@@ -219,6 +219,11 @@ export default function LeagueSelection({
         }}
         selectedLeagueName={selectedLeagueName}
         selectedLeagueId={selectedLeagueId}
+        selectedLeague={
+          leagues.find(
+            (league) => String(league.id) === String(selectedLeagueId),
+          ) ?? null
+        }
         blockCount={blockCount}
         setBlockCount={setBlockCount}
         gamesPerWeek={gamesPerWeek}

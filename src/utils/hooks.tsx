@@ -5,6 +5,7 @@ useEffect,
 useRef,
 useState
 } from 'react';
+import { BlockSetupDialogFormValues } from './type';
 import {
 checkIfLeagueHasBlocks,
 getLeaguesByUser,
@@ -16,6 +17,7 @@ DashboardData,
 League,
 User
 } from './interfaces';
+import { initialLeagueSetupValues } from './constants/league';
 // // import {
 // //   emptyRanges,
 // //   RangeFilters,
@@ -114,6 +116,28 @@ export const useCustomHook = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [editingLeague, setEditingLeague] = useState<League | null>(null);
+  const [step, setStep] = useState(0);
+  const [values, setValues] = useState<BlockSetupDialogFormValues>({
+    ...initialLeagueSetupValues,
+    season_name: '2026/27',
+    games_per_week: '3',
+    players_per_game: '5',
+    total_lanes: '32',
+    starting_lane: '1',
+  });
+  const [saveError, setSaveError] = useState('');
+  const mainRef = useRef<HTMLElement | null>(null);
+  const [savingStep, setSavingStep] = useState(false);
+  const [savedSteps, setSavedSteps] = useState<number[]>([]);
+  const [previewMode, setPreviewMode] = useState(false);
+  const [previewHasChanges, setPreviewHasChanges] = useState(false);
+  const [resumePending, setResumePending] = useState(false);
+  const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [rejectedInputErrors, setRejectedInputErrors] = useState<
+    Record<string, string>
+  >({});
 
   /* Dashboard.tsx */
   const [loadingBlockCount, setLoadingBlockCount] = useState(0);
@@ -515,6 +539,27 @@ export const useCustomHook = () => {
     setSortOrder,
     editingLeague,
     setEditingLeague,
+    step,
+    setStep,
+    values,
+    setValues,
+    saveError,
+    setSaveError,
+    mainRef,
+    savingStep,
+    setSavingStep,
+    savedSteps,
+    setSavedSteps,
+    previewMode,
+    setPreviewMode,
+    previewHasChanges,
+    setPreviewHasChanges,
+    resumePending,
+    setResumePending,
+    touchedFields,
+    setTouchedFields,
+    rejectedInputErrors,
+    setRejectedInputErrors,
 
     /* Dashboard.tsx */
     loadingBlockCount,

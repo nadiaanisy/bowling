@@ -1,6 +1,6 @@
 import {
-  Card,
-  CardContent
+Card,
+CardContent
 } from '../../components/card';
 import { Badge } from '../../components/badge';
 import type { League } from '../../utils/interfaces';
@@ -109,8 +109,8 @@ export function LeagueCard({
                   type="button"
                   size="icon"
                   onClick={onSetupBlocks}
-                  title={`Set up blocks for ${league.name}`}
-                  aria-label={`Set up blocks for ${league.name}`}
+                  title={`Set up for ${league.name}`}
+                  aria-label={`Set up for ${league.name}`}
                   variant="outline"
                   className="gap-1.5 border-primary/40 text-primary hover:bg-primary/10 hover:border-primary"
                 >

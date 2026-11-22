@@ -8,8 +8,8 @@ import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
 import { supabase } from '../supabase/supabaseClient';
 import {
-  getHelper,
-  updateHelper
+getHelper,
+updateHelper
 } from '../supabase/supabaseHelper';
 import { errorToastStyle } from '../../functions/toast-styles';
 import { toast } from 'sonner';
@@ -44,6 +44,119 @@ export const updateLeagueSetup = async (
     return updatedAt;
   } catch (err) {
     catchError('Error updating league setup: ', err);
+    return null;
+  }
+};
+
+/** Saves the core league structure fields configured in League Setup. */
+export const updateLeagueStructure = async (
+  leagueId: string | number,
+  values: {
+    season_name: string;
+    league_format: string;
+    number_of_weeks: number;
+    number_of_teams: number;
+    number_of_blocks: number;
+  },
+): Promise<string | null> => {
+  try {
+    const updatedAt = new Date().toISOString();
+    const { error } = await updateHelper(table.leagues, {
+      ...values,
+      updated_at: updatedAt,
+      setup_completed: true,
+      setup_completed_at: updatedAt,
+      is_active: true,
+    }).eq('id', leagueId);
+
+    if (error) {
+      toast.error(
+        'Error saving league structure: ' + error.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    return updatedAt;
+  } catch (err) {
+    catchError('Error saving league structure: ', err);
+    return null;
+  }
+};
+
+/** Saves the current setup wizard draft without activating the league. */
+export const saveLeagueStructureDraft = async (
+  leagueId: string | number,
+  values: {
+    season_name: string;
+    league_format: string;
+    number_of_weeks: number;
+    number_of_teams: number;
+    number_of_blocks: number;
+    games_per_week: number;
+    players_per_game: number;
+    starting_lane: number;
+    total_lanes: number;
+  },
+  setupConfig: Record<string, unknown>,
+): Promise<string | null> => {
+  try {
+    const updatedAt = new Date().toISOString();
+    const { data, error } = await updateHelper(table.leagues, {
+      ...values,
+      setup_config: setupConfig,
+      updated_at: updatedAt,
+    })
+      .eq('id', leagueId)
+      .select('id')
+      .maybeSingle();
+
+    if (error) {
+      toast.error(
+        'Error saving league setup: ' + error.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    if (!data) {
+      toast.error(
+        'Error saving league setup: league row was not updated.',
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    return updatedAt;
+  } catch (err) {
+    catchError('Error saving league setup: ', err);
+    return null;
+  }
+};
+
+/** Saves a non-structure setup step as a partial draft on the league row. */
+export const saveLeagueSetupProgress = async (
+  leagueId: string | number,
+  setupConfig: Record<string, unknown>,
+): Promise<string | null> => {
+  try {
+    const updatedAt = new Date().toISOString();
+    const { error } = await updateHelper(table.leagues, {
+      setup_config: setupConfig,
+      updated_at: updatedAt,
+    }).eq('id', leagueId);
+
+    if (error) {
+      toast.error(
+        'Error saving setup progress: ' + error.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    return updatedAt;
+  } catch (err) {
+    catchError('Error saving setup progress: ', err);
     return null;
   }
 };

@@ -1,23 +1,83 @@
 import type {
-  Dispatch,
-  ReactNode,
-  SetStateAction
+Dispatch,
+ReactNode,
+SetStateAction
 } from 'react';
 import {
-  askConfirm,
-  catchError
+askConfirm,
+catchError
 } from './toasts';
+import type {
+  BlockSetupDialogField,
+  BlockSetupDialogGroup,
+} from '../utils/type';
 import {
-  errorToastStyle,
-  successToastStyle
+errorToastStyle,
+successToastStyle
 } from './toast-styles';
 import {
-  addLeague,
-  setupLeagueAtomic
+addLeague,
+setupLeagueAtomic
 } from '../utils/api/add';
 import { deleteLeagueWithData } from '../utils/api/delete';
 import { League } from '../utils/interfaces';
 import { toast } from 'sonner';
+
+/* Resolves the tooltip text for a league setup field. */
+export const getLeagueSetupFieldHelp = (
+  field: BlockSetupDialogField,
+  descriptions: Record<string, string>,
+): string =>
+  descriptions[field.key] ?? field.hint ?? `Information about ${field.label}.`;
+
+type LeagueSetupFieldUpdaterOptions = {
+  key: string;
+  value: string | boolean;
+  previewMode: boolean;
+  groups: BlockSetupDialogGroup[][];
+  setPreviewHasChanges: (changed: boolean) => void;
+  setSavedSteps: Dispatch<SetStateAction<number[]>>;
+  setTouchedFields: Dispatch<SetStateAction<Record<string, boolean>>>;
+  setRejectedInputErrors: Dispatch<SetStateAction<Record<string, string>>>;
+  setValues: Dispatch<SetStateAction<Record<string, string | boolean>>>;
+};
+
+/* Applies a field edit and keeps setup progress and validation state in sync. */
+export const updateLeagueSetupField = ({
+  key,
+  value,
+  previewMode,
+  groups,
+  setPreviewHasChanges,
+  setSavedSteps,
+  setTouchedFields,
+  setRejectedInputErrors,
+  setValues,
+}: LeagueSetupFieldUpdaterOptions): void => {
+  if (previewMode) setPreviewHasChanges(true);
+  const fieldStep = groups.findIndex((group) =>
+    group.some((section) => section.fields.some((field) => field.key === key)),
+  );
+  if (fieldStep >= 0 && fieldStep < 8) {
+    setSavedSteps((current) =>
+      current.filter((savedStep) => savedStep !== fieldStep),
+    );
+  }
+  setTouchedFields((current) => ({
+    ...current,
+    [key]: true,
+    ...(['number_of_teams', 'total_lanes'].includes(key)
+      ? { starting_lane: true }
+      : {}),
+  }));
+  setRejectedInputErrors((current) => {
+    if (!current[key]) return current;
+    const next = { ...current };
+    delete next[key];
+    return next;
+  });
+  setValues((current) => ({ ...current, [key]: value }));
+};
 
 /* Handles selecting a league and updating the selected league details. */
 export const handleLeagueSelect = async (
@@ -55,7 +115,7 @@ export const handleLeagueSetup = async (
     playersPerGame: number,
     startingLane: number,
     totalLanes: number,
-  ) => void,
+  ) => void | Promise<void>,
 ) => {
   if (creatingBlocks) return;
 
@@ -141,12 +201,12 @@ export const handleLeagueSetup = async (
     }
 
     /* --- Update UI --- */
+    await onSuccess?.(updatedAt, games, players, lane, lanes);
     setLeagueBlockStatus((currentStatus) => ({
       ...currentStatus,
       [String(leagueId)]: true,
     }));
     setShowBlockDialog(false);
-    onSuccess?.(updatedAt, games, players, lane, lanes);
 
     toast.success('League setup completed successfully.', successToastStyle);
   } catch (err) {
