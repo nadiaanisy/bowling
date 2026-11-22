@@ -14,8 +14,8 @@ import {
   HandicapChangeHistory,
 } from '../interfaces';
 import {
-  sql_query,
-  table
+sql_query,
+table
 } from '../constants/db';
 import { catchError } from '../../functions/toasts';
 import { supabase } from '../supabase/supabaseClient';
@@ -190,18 +190,24 @@ export const getDashboardDataByLeagueId = async (
     }
 
     // 3. Fetch block count
-    const { count: blockCount, error: blocksError } = await getHelper(
-      table.blocks,
-      sql_query.all,
-      {
-        count: 'exact',
-        head: true,
-      },
-    ).eq('league_id', leagueId);
+    const {
+      data: leagueBlocks,
+      count: blockCount,
+      error: blocksError,
+    } = await getHelper(table.blocks, 'id, number', { count: 'exact' })
+      .eq('league_id', leagueId)
+      .order('number', { ascending: true });
 
     if (blocksError) {
       throw new Error(`Error fetching blocks: ${blocksError.message}`);
     }
+
+    const blockNumberById = new Map(
+      (leagueBlocks ?? []).map((block: any) => [
+        String(block.id),
+        Number(block.number),
+      ]),
+    );
 
     // 4. Fetch all matches grouped by match and block
     const allMatches = await getAllMatchesGroupedByMatchAndBlock(leagueId);
@@ -215,7 +221,7 @@ export const getDashboardDataByLeagueId = async (
     const matchesPerWeek: Record<string, number> = {};
 
     // 6. Calculate match statistics for each block
-    Object.entries(allMatches).forEach(([, matches], index) => {
+    Object.entries(allMatches).forEach(([blockKey, matches], index) => {
       const stats = {
         completed: 0,
         pending: 0,
@@ -241,10 +247,13 @@ export const getDashboardDataByLeagueId = async (
 
         // Count matches per week
         const week = match.week_number ?? 'unknown';
-        matchesPerWeek[week] = (matchesPerWeek[week] ?? 0) + 1;
+        const blockWeek = String(blockKey) + '-week-' + String(week);
+        matchesPerWeek[blockWeek] = (matchesPerWeek[blockWeek] ?? 0) + 1;
       });
 
-      blockStats[String(index + 1)] = stats;
+      const blockId = blockKey.slice('block'.length);
+      const blockNumber = blockNumberById.get(blockId) ?? index + 1;
+      blockStats[String(blockNumber)] = stats;
     });
 
     // 7. Calculate average matches per week
@@ -273,6 +282,30 @@ export const getDashboardDataByLeagueId = async (
         ? Math.round((completedMatches / scheduledMatches) * 100)
         : 0;
 
+    const upcomingMatches = Object.values(allMatches)
+      .flat()
+      .filter(
+        (match) =>
+          match.status === 'pending' &&
+          match.team1.name?.toLowerCase() !== 'blind' &&
+          match.team2.name?.toLowerCase() !== 'blind',
+      )
+      .map((match) => ({
+        match_id: match.match_id,
+        block_number: blockNumberById.get(String(match.block_id)) ?? 1,
+        week_number: match.week_number,
+        lane: match.lane,
+        team1_name: match.team1.name || 'Team 1',
+        team2_name: match.team2.name || 'Team 2',
+      }))
+      .sort(
+        (a, b) =>
+          a.block_number - b.block_number ||
+          a.week_number - b.week_number ||
+          Number.parseInt(a.lane, 10) - Number.parseInt(b.lane, 10),
+      )
+      .slice(0, 4);
+
     // 8. Return dashboard summary
     return {
       total_blocks: blockCount ?? 0,
@@ -281,6 +314,9 @@ export const getDashboardDataByLeagueId = async (
       blocks: blockStats,
       average_matches_per_week: averageMatchesPerWeek,
       completion_percentage: completionPercentage,
+      completed_matches: completedMatches,
+      scheduled_matches: scheduledMatches,
+      upcoming_matches: upcomingMatches,
     };
   } catch (error) {
     // Preserve the original error so the Dashboard can display it

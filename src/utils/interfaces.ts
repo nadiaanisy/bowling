@@ -78,6 +78,18 @@ export interface DashboardData {
   blocks: Record<string, DashboardBlockStats>;
   average_matches_per_week: number;
   completion_percentage: number;
+  completed_matches: number;
+  scheduled_matches: number;
+  upcoming_matches: DashboardUpcomingMatch[];
+}
+
+export interface DashboardUpcomingMatch {
+  match_id: number;
+  block_number: number;
+  week_number: number;
+  lane: string;
+  team1_name: string;
+  team2_name: string;
 }
 
 export interface DashboardBlockStats {

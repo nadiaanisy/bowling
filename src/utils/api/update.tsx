@@ -26,10 +26,10 @@ export const updateLeagueSetup = async (
     const updatedAt = new Date().toISOString();
 
     const { error } = await updateHelper(table.leagues, {
-      games_per_week: String(gamesPerWeek),
-      players_per_game: String(playersPerGame),
-      starting_lane: String(startingLane),
-      total_lanes: String(totalLanes),
+      games_per_week: gamesPerWeek,
+      players_per_game: playersPerGame,
+      starting_lane: startingLane,
+      total_lanes: totalLanes,
       updated_at: updatedAt,
     }).eq('id', leagueId);
 

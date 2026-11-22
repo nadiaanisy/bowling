@@ -9,8 +9,8 @@ import {
 import { HandicapSetting } from '../../utils/interfaces';
 import { Button } from '../../components/button';
 import {
-  Pencil,
-  Trash2
+Pencil,
+Trash2
 } from 'lucide-react';
 
 interface HandicapTableProps {
@@ -52,7 +52,7 @@ export function HandicapTable({
           </colgroup>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="h-11 px-4 bg-background align-middle">
+              <TableHead className="h-11 border-violet-300/10 !bg-[#251a36] px-4 align-middle text-violet-100">
                 <input
                   type="checkbox"
                   aria-label="Select all handicap rules"
@@ -62,16 +62,16 @@ export function HandicapTable({
                   className="h-4 w-4 align-middle"
                 />
               </TableHead>
-              <TableHead className="h-11 bg-background px-4 text-center align-middle">
+              <TableHead className="h-11 border-violet-300/10 !bg-[#251a36] px-4 text-center align-middle text-violet-100">
                 Average
               </TableHead>
-              <TableHead className="h-11 bg-background px-4 text-center align-middle">
+              <TableHead className="h-11 border-violet-300/10 !bg-[#251a36] px-4 text-center align-middle text-violet-100">
                 Men HDC
               </TableHead>
-              <TableHead className="h-11 bg-background px-4 text-center align-middle">
+              <TableHead className="h-11 border-violet-300/10 !bg-[#251a36] px-4 text-center align-middle text-violet-100">
                 Women HDC
               </TableHead>
-              <TableHead className="h-11 bg-background px-3 text-center align-middle">
+              <TableHead className="h-11 border-violet-300/10 !bg-[#251a36] px-3 text-center align-middle text-violet-100">
                 Actions
               </TableHead>
             </TableRow>
@@ -110,7 +110,10 @@ export function HandicapTable({
               </TableRow>
             ) : (
               rules.map((rule) => (
-                <TableRow key={rule.id} className="h-12">
+                <TableRow
+                  key={rule.id}
+                  className="h-12 border-violet-300/10 hover:bg-violet-500/[0.06]"
+                >
                   <TableCell className="px-3 py-2 text-center align-middle">
                     <input
                       type="checkbox"

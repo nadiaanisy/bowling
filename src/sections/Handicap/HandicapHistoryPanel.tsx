@@ -9,8 +9,8 @@ import {
 } from '../../components/card';
 import { Button } from '../../components/button';
 import {
-  History,
-  RefreshCw
+History,
+RefreshCw
 } from 'lucide-react';
 
 type HistoryRow = Awaited<ReturnType<typeof getHandicapChangeHistory>>[number];
@@ -32,7 +32,7 @@ export function HandicapHistoryPanel({
   onRefresh,
 }: HandicapHistoryPanelProps) {
   return (
-    <Card className="flex min-h-0 min-w-0 flex-col">
+    <Card className="flex min-h-0 min-w-0 flex-col border-violet-300/10 bg-[#15121c]">
       <CardHeader className="shrink-0 space-y-2 p-4 pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">

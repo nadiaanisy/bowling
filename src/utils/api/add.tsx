@@ -88,7 +88,7 @@ export const setupLeagueAtomic = async (
   startingLane: number,
   totalLanes: number,
 ): Promise<string> => {
-  const { data, error } = await supabase.rpc('setup_league_atomic', {
+  const { data, error } = await supabase.rpc('setup_league_atomic_typed', {
     p_league_id: Number(leagueId),
     p_block_count: blockCount,
     p_games_per_week: gamesPerWeek,

@@ -53,7 +53,7 @@ export function HandicapTableFilters(props: HandicapTableFiltersProps) {
               props.onSortFieldChange(event.target.value as SortField)
             }
             disabled={props.disabled}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex h-10 w-full rounded-md border border-violet-300/15 bg-[#15121c] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
             <option value="average">Average</option>
             <option value="men_handicap">Men HDC</option>
@@ -69,7 +69,7 @@ export function HandicapTableFilters(props: HandicapTableFiltersProps) {
               props.onSortDirectionChange(event.target.value as SortDirection)
             }
             disabled={props.disabled}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="flex h-10 w-full rounded-md border border-violet-300/15 bg-[#15121c] px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500/50"
           >
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
@@ -88,8 +88,11 @@ export function HandicapTableFilters(props: HandicapTableFiltersProps) {
         <p className="mb-2 text-sm font-medium">Range filters (inclusive)</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {groups.map(({ title, minKey, maxKey }) => (
-            <div key={title} className="space-y-2 rounded-md border p-3">
-              <p className="text-sm font-medium">{title}</p>
+            <div
+              key={title}
+              className="space-y-2 rounded-xl border border-violet-300/10 bg-white/[0.02] p-3"
+            >
+              <p className="text-sm font-medium text-violet-100">{title}</p>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label htmlFor={`handicap-${minKey}`}>Min</Label>

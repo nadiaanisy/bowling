@@ -1,4 +1,5 @@
 import { MatchData } from './interfaces';
+import type { LucideIcon } from 'lucide-react';
 
 // export type Player = {
 //   id: string | number;
@@ -22,6 +23,17 @@ import { MatchData } from './interfaces';
 // };
 
 export type MatchesByBlock = Record<string, MatchData[]>;
+export type NavigationItem = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  available?: boolean;
+};
+
+export type NavigationGroup = {
+  label: string;
+  items: NavigationItem[];
+};
 
 export type BlockSetupDialogField = {
   key: string;

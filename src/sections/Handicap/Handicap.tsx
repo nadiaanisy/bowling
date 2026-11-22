@@ -1,7 +1,7 @@
 import {
-  useEffect,
-  useMemo,
-  useRef
+useEffect,
+useMemo,
+useRef
 } from 'react';
 import { FormDialog } from './FormDialog';
 import { MaximumHandicap } from './MaxHandicap';
@@ -10,7 +10,7 @@ import { BulkAddDialog } from './BulkAddDialog';
 import { HandicapTable } from './HandicapTable';
 import { BulkEditDialog } from './BulkEditDialog';
 import { HandicapHeader } from './HandicapHeader';
-import { useCustomHook } from '../../utils/hooks';
+import { UseHook } from '../../utils/hooks';
 import { HandicapActions } from './HandicapActions';
 import { getHandicapChangeHistory } from '../../utils/api/get';
 import {
@@ -51,7 +51,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
     setHistoryLoading,
     historyError,
     setHistoryError,
-  } = useCustomHook();
+  } = UseHook();
 
   const handicap = useHandicap(leagueId);
 
@@ -328,14 +328,14 @@ export default function Handicap({ leagueId }: HandicapProps) {
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-        <Card className="flex h-[92vh] min-w-0 flex-col xl:row-span-2">
+        <Card className="min-w-0 border-violet-300/10 bg-[#15121c]">
           <CardHeader>
             <CardTitle>Handicap Table</CardTitle>
             <CardDescription>
               Each average has a separate men's and women's handicap value.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <CardContent className="space-y-1 overflow-hidden">
             <HandicapTableFilters
               search={search}
               onSearchChange={updateSearch}
@@ -364,7 +364,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
                 </Button>
               </div>
             ) : (
-              <div className="min-h-0 flex-1 overflow-auto overscroll-contain">
+              <div className="min-h-[180px] max-h-[55vh] overflow-auto overscroll-contain rounded-lg">
                 <HandicapTable
                   rules={visibleRules}
                   selectedRuleIds={handicap.selectedRuleIds}

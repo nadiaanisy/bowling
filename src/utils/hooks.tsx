@@ -13,17 +13,19 @@ loginUser
 } from './api/get';
 import { Context } from './provider';
 import {
-DashboardData,
-League,
-User
+  DashboardData,
+  HandicapChangeHistory,
+  HandicapSetting,
+  League,
+  User,
 } from './interfaces';
 import { initialLeagueSetupValues } from './constants/league';
-// // import {
-// //   emptyRanges,
-// //   RangeFilters,
-// //   SortDirection,
-// //   SortField,
-// // } from './constants/handicap';
+import {
+  emptyRanges,
+  RangeFilters,
+  SortDirection,
+  SortField,
+} from './constants/handicap';
 
 const BOWLING_SESSION_STORAGE_KEYS = [
   'bowling-auth',
@@ -147,37 +149,37 @@ export const useCustomHook = () => {
   const [dashboardReloadKey, setDashboardReloadKey] = useState(0);
 
   /* Handicap.tsx */
-  // //   const [rules, setRules] = useState<HandicapSetting[]>([]);
+  const [rules, setRules] = useState<HandicapSetting[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  // //   const [loadError, setLoadError] = useState('');
-  // //   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  // //   const [bulkInput, setBulkInput] = useState('');
-  // //   const [bulkFileName, setBulkFileName] = useState('');
-  // //   const [bulkError, setBulkError] = useState('');
-  // //   const [selectedRuleIds, setSelectedRuleIds] = useState<
-  // //     Array<string | number>
-  // //   >([]);
-  // //   const [editingRule, setEditingRule] = useState<HandicapSetting | null>(null);
-  // //   const [ruleToDelete, setRuleToDelete] = useState<HandicapSetting | null>(
-  // //     null,
-  // //   );
-  // //   const [average, setAverage] = useState('');
-  // //   const [handicap, setHandicap] = useState('');
-  // //   const [isSaving, setIsSaving] = useState(false);
-  // //   const [menHandicap, setMenHandicap] = useState('');
-  // //   const [womenHandicap, setWomenHandicap] = useState('');
-  // //   const [menMaxHandicap, setMenMaxHandicap] = useState('0');
-  // //   const [womenMaxHandicap, setWomenMaxHandicap] = useState('0');
-  // //   const [isSavingConfig, setIsSavingConfig] = useState(false);
-  // //   const [search, setSearch] = useState('');
-  // //   const [sortField, setSortField] = useState<SortField>('average');
-  // //   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  // //   const [ranges, setRanges] = useState<RangeFilters>(emptyRanges);
-  // //   const [historyRows, setHistoryRows] = useState<HandicapChangeHistory[]>([]);
-  // //   const [historyLoading, setHistoryLoading] = useState(false);
-  // //   const [historyError, setHistoryError] = useState('');
-  // //   const [backupMenuOpen, setBackupMenuOpen] = useState(false);
-  // //   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkInput, setBulkInput] = useState('');
+  const [bulkFileName, setBulkFileName] = useState('');
+  const [bulkError, setBulkError] = useState('');
+  const [selectedRuleIds, setSelectedRuleIds] = useState<
+    Array<string | number>
+  >([]);
+  const [editingRule, setEditingRule] = useState<HandicapSetting | null>(null);
+  const [ruleToDelete, setRuleToDelete] = useState<HandicapSetting | null>(
+    null,
+  );
+  const [average, setAverage] = useState('');
+  const [handicap, setHandicap] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [menHandicap, setMenHandicap] = useState('');
+  const [womenHandicap, setWomenHandicap] = useState('');
+  const [menMaxHandicap, setMenMaxHandicap] = useState('0');
+  const [womenMaxHandicap, setWomenMaxHandicap] = useState('0');
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [search, setSearch] = useState('');
+  const [sortField, setSortField] = useState<SortField>('average');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [ranges, setRanges] = useState<RangeFilters>(emptyRanges);
+  const [historyRows, setHistoryRows] = useState<HandicapChangeHistory[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState('');
+  const [backupMenuOpen, setBackupMenuOpen] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
 
   // //   /* Teams.tsx */
   // //   const [newTeamName, setNewTeamName] = useState('');
@@ -570,61 +572,61 @@ export const useCustomHook = () => {
     setDashboardReloadKey,
     retryDashboard: () => setDashboardReloadKey((key) => key + 1),
 
-    // //     /* Handicap.tsx */
-    // //     rules,
-    // //     setRules,
+    /* Handicap.tsx */
+    rules,
+    setRules,
     isLoading,
     setIsLoading,
-    // //     loadError,
-    // //     setLoadError,
-    // //     bulkDialogOpen,
-    // //     setBulkDialogOpen,
-    // //     bulkInput,
-    // //     setBulkInput,
-    // //     bulkFileName,
-    // //     setBulkFileName,
-    // //     bulkError,
-    // //     setBulkError,
-    // //     selectedRuleIds,
-    // //     setSelectedRuleIds,
-    // //     editingRule,
-    // //     setEditingRule,
-    // //     ruleToDelete,
-    // //     setRuleToDelete,
-    // //     average,
-    // //     setAverage,
-    // //     handicap,
-    // //     setHandicap,
-    // //     isSaving,
-    // //     setIsSaving,
-    // //     menHandicap,
-    // //     setMenHandicap,
-    // //     womenHandicap,
-    // //     setWomenHandicap,
-    // //     menMaxHandicap,
-    // //     setMenMaxHandicap,
-    // //     womenMaxHandicap,
-    // //     setWomenMaxHandicap,
-    // //     isSavingConfig,
-    // //     setIsSavingConfig,
-    // //     search,
-    // //     setSearch,
-    // //     sortField,
-    // //     setSortField,
-    // //     sortDirection,
-    // //     setSortDirection,
-    // //     ranges,
-    // //     setRanges,
-    // //     historyRows,
-    // //     setHistoryRows,
-    // //     historyLoading,
-    // //     setHistoryLoading,
-    // //     historyError,
-    // //     setHistoryError,
-    // //     backupMenuOpen,
-    // //     setBackupMenuOpen,
-    // //     addMenuOpen,
-    // //     setAddMenuOpen,
+    loadError,
+    setLoadError,
+    bulkDialogOpen,
+    setBulkDialogOpen,
+    bulkInput,
+    setBulkInput,
+    bulkFileName,
+    setBulkFileName,
+    bulkError,
+    setBulkError,
+    selectedRuleIds,
+    setSelectedRuleIds,
+    editingRule,
+    setEditingRule,
+    ruleToDelete,
+    setRuleToDelete,
+    average,
+    setAverage,
+    handicap,
+    setHandicap,
+    isSaving,
+    setIsSaving,
+    menHandicap,
+    setMenHandicap,
+    womenHandicap,
+    setWomenHandicap,
+    menMaxHandicap,
+    setMenMaxHandicap,
+    womenMaxHandicap,
+    setWomenMaxHandicap,
+    isSavingConfig,
+    setIsSavingConfig,
+    search,
+    setSearch,
+    sortField,
+    setSortField,
+    sortDirection,
+    setSortDirection,
+    ranges,
+    setRanges,
+    historyRows,
+    setHistoryRows,
+    historyLoading,
+    setHistoryLoading,
+    historyError,
+    setHistoryError,
+    backupMenuOpen,
+    setBackupMenuOpen,
+    addMenuOpen,
+    setAddMenuOpen,
 
     // //     /* Teams.tsx */
     // //     newTeamName,

@@ -19,7 +19,7 @@ export function MaximumHandicap({ leagueId }: MaximumHandicapProps) {
   const handicap = useHandicap(leagueId);
 
   return (
-    <Card>
+    <Card className="border-violet-300/10 bg-[#15121c]">
       <CardHeader>
         <CardTitle>Maximum Handicap</CardTitle>
         <CardDescription>
