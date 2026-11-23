@@ -259,11 +259,13 @@ export const usePlayersSection = () => {
   const [loadError, setLoadError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState('');
-  const [teamFilter, setTeamFilter] = useState(PLAYER_DEFAULT_FILTERS.team);
-  const [typeFilter, setTypeFilter] = useState(
+  const [teamFilter, setTeamFilter] = useState<string>(
+    PLAYER_DEFAULT_FILTERS.team,
+  );
+  const [typeFilter, setTypeFilter] = useState<string>(
     PLAYER_DEFAULT_FILTERS.rosterType,
   );
-  const [statusFilter, setStatusFilter] = useState(
+  const [statusFilter, setStatusFilter] = useState<string>(
     PLAYER_DEFAULT_FILTERS.status,
   );
   const [selectedIds, setSelectedIds] = useState<Array<string | number>>([]);
