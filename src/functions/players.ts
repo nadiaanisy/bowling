@@ -3,6 +3,11 @@ Dispatch,
 SetStateAction
 } from 'react';
 import {
+BowlerCategory,
+PendingPlayerAction,
+PlayerRow
+} from '../utils/type';
+import {
 addPlayerToTeam,
 addPlayersToTeam
 } from '../utils/api/add';
@@ -13,19 +18,10 @@ import {
   touchTeamUpdatedAt,
   updatePlayerInTeam,
 } from '../utils/api/update';
-import type {
-LeagueMember,
-LeagueTeamWithMembers
-} from '../utils/interfaces';
+import type { LeagueTeamWithMembers } from '../utils/interfaces';
 import { archivePlayer } from '../utils/api/teamArchive';
 import type { PlayerRosterType } from '../utils/constants/players';
 import { toast } from 'sonner';
-
-export type PlayerRow = LeagueMember & { teamName: string };
-export type PendingPlayerAction = {
-  action: 'archive' | 'delete';
-  players: PlayerRow[];
-} | null;
 
 export const toActivePlayerRows = (
   teams: LeagueTeamWithMembers[],
@@ -72,12 +68,22 @@ export const positiveSetupNumber = (
   return Number.isFinite(value) && value > 0 ? value : null;
 };
 
+export const nonNegativeSetupNumber = (
+  config: Record<string, unknown>,
+  key: string,
+) => {
+  const value = Number(config[key]);
+  return Number.isSafeInteger(value) && value >= 0 ? value : null;
+};
+
 export const resetPlayerForm = (setters: {
   setName: (value: string) => void;
   setTeamId: (value: string) => void;
   setRosterType: (value: PlayerRosterType) => void;
   setStatus: (value: string) => void;
   setNotes: (value: string) => void;
+  setAverage: (value: string) => void;
+  setGender: (value: string) => void;
   setBulkNames: (value: string) => void;
   setBulkMode: (value: boolean) => void;
   setEditing: (value: PlayerRow | null) => void;
@@ -87,6 +93,8 @@ export const resetPlayerForm = (setters: {
   setters.setRosterType('regular');
   setters.setStatus('active');
   setters.setNotes('');
+  setters.setAverage('');
+  setters.setGender('');
   setters.setBulkNames('');
   setters.setBulkMode(false);
   setters.setEditing(null);
@@ -129,6 +137,8 @@ export const openEditPlayerForm = (
   );
   setters.setStatus(player.status ?? 'active');
   setters.setNotes(player.notes ?? '');
+  setters.setAverage(player.average == null ? '' : String(player.average));
+  setters.setGender(player.gender ?? '');
   setters.setBulkMode(false);
   setters.setDialogOpen(true);
 };
@@ -146,6 +156,8 @@ export async function savePlayerRecord(args: {
   rosterType: PlayerRosterType;
   status: string;
   notes: string;
+  average: string;
+  gender: string;
   setDialogOpen: (open: boolean) => void;
   resetForm: () => void;
   onSaved: () => void;
@@ -163,6 +175,8 @@ export async function savePlayerRecord(args: {
     rosterType,
     status,
     notes,
+    average,
+    gender,
     setDialogOpen,
     resetForm,
     onSaved,
@@ -174,6 +188,13 @@ export async function savePlayerRecord(args: {
   }
   if (rosterType === 'substitute' && config.allow_substitutes !== true) {
     toast.error('Substitute players are disabled in League Setup.');
+    return;
+  }
+  let parsedAverage: number | null;
+  try {
+    parsedAverage = parseAverageInput(average);
+  } catch (error) {
+    toast.error(error instanceof Error ? error.message : 'Invalid average.');
     return;
   }
   const target = teams.find((team) => String(team.id) === teamId);
@@ -217,7 +238,14 @@ export async function savePlayerRecord(args: {
         editing.id,
         sourceTeamId,
         leagueId,
-        { name: name.trim(), type: rosterType, status, notes: notes.trim() },
+        {
+          name: name.trim(),
+          type: rosterType,
+          status,
+          notes: notes.trim(),
+          average: parsedAverage,
+          gender: gender || null,
+        },
       );
       if (!updated) return;
       if (sourceTeamId !== teamId) {
@@ -233,7 +261,10 @@ export async function savePlayerRecord(args: {
       await touchTeamUpdatedAt(sourceTeamId, leagueId);
       toast.success('Player updated.');
     } else {
-      const added = await addPlayerToTeam(name, teamId, leagueId, rosterType);
+      const added = await addPlayerToTeam(name, teamId, leagueId, rosterType, {
+        average: parsedAverage,
+        gender: gender || null,
+      });
       if (!added) return;
       await touchTeamUpdatedAt(teamId, leagueId);
       toast.success('Player added.');
@@ -288,16 +319,21 @@ export async function addPlayerRecordsInBulk(args: {
     toast.error('Substitute players are disabled in League Setup.');
     return;
   }
-  const names = Array.from(
-    new Set(
-      bulkNames
-        .split(/\r?\n/)
-        .map((name) => name.trim())
-        .filter(Boolean),
-    ),
-  );
+  let playersToAdd: Array<{
+    name: string;
+    average: number | null;
+    gender: string | null;
+  }>;
+  try {
+    playersToAdd = parseBulkPlayerLines(bulkNames);
+  } catch (error) {
+    toast.error(
+      error instanceof Error ? error.message : 'Check the bulk player list.',
+    );
+    return;
+  }
   const target = teams.find((team) => String(team.id) === teamId);
-  if (!target || !names.length) {
+  if (!target || !playersToAdd.length) {
     toast.error('Choose a team and enter at least one name.');
     return;
   }
@@ -306,13 +342,18 @@ export async function addPlayerRecordsInBulk(args: {
     rosterMax === null
       ? Number.POSITIVE_INFINITY
       : Math.max(0, rosterMax - used);
-  if (names.length > remaining) {
+  if (playersToAdd.length > remaining) {
     toast.error(`Only ${remaining} roster slot(s) remain for ${target.name}.`);
     return;
   }
   setSaving(true);
   try {
-    const added = await addPlayersToTeam(names, teamId, leagueId, rosterType);
+    const added = await addPlayersToTeam(
+      playersToAdd,
+      teamId,
+      leagueId,
+      rosterType,
+    );
     if (!added.length) return;
     await touchTeamUpdatedAt(teamId, leagueId);
     await touchLeagueUpdatedAt(leagueId);
@@ -393,4 +434,72 @@ export async function runPlayerActions(args: {
     );
   setSelectedIds([]);
   setPendingAction(null);
+}
+
+export function getBowlerCategory(
+  average: number | null | undefined,
+  setupConfig: Record<string, unknown>,
+): BowlerCategory {
+  if (
+    average === null ||
+    average === undefined ||
+    !Number.isFinite(Number(average))
+  ) {
+    return 'unclassified';
+  }
+
+  const threshold = Number(setupConfig.open_average_threshold);
+  if (
+    setupConfig.allow_open_bowlers === true &&
+    Number.isFinite(threshold) &&
+    threshold > 0 &&
+    Number(average) < threshold
+  ) {
+    return 'open';
+  }
+
+  return 'graded';
+}
+
+export function parseAverageInput(value: string): number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = Number(trimmed);
+  if (!Number.isSafeInteger(parsed) || parsed < 0) {
+    throw new Error(
+      'Average must be a whole number greater than or equal to 0.',
+    );
+  }
+  return parsed;
+}
+
+export function parseBulkPlayerLines(value: string): Array<{
+  name: string;
+  average: number | null;
+  gender: string | null;
+}> {
+  const rows = value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return rows.map((row, index) => {
+    const [rawName, rawAverage = '', rawGender = ''] = row
+      .split('|')
+      .map((part) => part.trim());
+    if (!rawName)
+      throw new Error(`Line ${index + 1}: player name is required.`);
+    let average: number | null;
+    try {
+      average = parseAverageInput(rawAverage);
+    } catch {
+      throw new Error(
+        `Line ${index + 1}: average must be a whole number of 0 or higher.`,
+      );
+    }
+    const gender = rawGender.toLocaleLowerCase();
+    if (gender && !['male', 'female'].includes(gender)) {
+      throw new Error(`Line ${index + 1}: gender must be Male or Female.`);
+    }
+    return { name: rawName, average, gender: gender || null };
+  });
 }

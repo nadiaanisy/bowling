@@ -15,6 +15,7 @@ export const PLAYER_SETUP_RULE_KEYS = {
   maxRosterSize: 'max_roster_size',
   gradedBowlersMin: 'graded_bowlers_min',
   openBowlersMax: 'open_bowlers_max',
+  openBowlersPerWeek: 'open_bowlers_per_week',
   openAverageThreshold: 'open_average_threshold',
   minimumPlayersStart: 'minimum_players_start',
   allowOpenBowlers: 'allow_open_bowlers',

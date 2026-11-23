@@ -3,6 +3,12 @@ PlayerRuleRow as Rule,
 PlayerStatCard as Stat
 } from './PlayerCards';
 import { usePlayersSection } from '../../utils/hooks';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../../components/tabs';
 import { Input } from '../../components/input';
 import { Label } from '../../components/label';
 import { Button } from '../../components/button';
@@ -14,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../../components/dialog';
+import { getBowlerCategory } from '../../functions/players';
 import { Textarea } from '../../components/textarea';
 import {
   AlertDialog,
@@ -28,13 +35,13 @@ import {
 import {
   PLAYER_CARD_CLASS as cardClass,
   PLAYER_INPUT_CLASS as inputClass,
+  PlayerRosterType,
 } from '../../utils/constants/players';
 import {
   PLAYER_ROSTER_TYPE_OPTIONS,
   PLAYER_SETUP_RULE_KEYS,
   PLAYER_STATUS_OPTIONS,
 } from '../../utils/constants/players';
-import type { PlayerRosterType } from '../../utils/constants/players';
 import ArchivedPlayersPanel from '../Teams/ArchivedPlayersPanel';
 import {
   Archive,
@@ -48,6 +55,8 @@ import {
   UserRoundCheck,
   UserRoundPlus,
   X,
+  UserPlus,
+  Users,
 } from 'lucide-react';
 
 export default function Players() {
@@ -80,9 +89,14 @@ export default function Players() {
     setStatus,
     notes,
     setNotes,
+    average,
+    setAverage,
+    gender,
+    setGender,
     bulkNames,
     setBulkNames,
     bulkMode,
+    setBulkMode,
     saving,
     pendingAction,
     setPendingAction,
@@ -91,16 +105,16 @@ export default function Players() {
     players,
     filteredPlayers,
     activeCount,
-    regularCount,
-    substituteCount,
+    gradedCount,
+    openCount,
     rosterMax,
     gradedMin,
     openMax,
+    openPerWeek,
     threshold,
     minimumPlayers,
     resetForm,
     openAdd,
-    openBulkAdd,
     openEdit,
     savePlayer,
     saveBulk,
@@ -177,16 +191,12 @@ export default function Players() {
           tone="green"
         />
         <Stat
-          label="Regular Roster"
-          value={regularCount}
+          label="Graded Bowlers"
+          value={gradedCount}
           icon={<CircleUserRound />}
           tone="blue"
         />
-        <Stat
-          label="Substitutes"
-          value={substituteCount}
-          icon={<UserRoundPlus />}
-        />
+        <Stat label="Open Bowlers" value={openCount} icon={<UserRoundPlus />} />
       </div>
       <div className="grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1.75fr)_minmax(320px,0.85fr)]">
         <section className={`${cardClass} min-w-0 overflow-hidden`}>
@@ -197,24 +207,13 @@ export default function Players() {
                 Search, filter and maintain this league’s player records.
               </p>
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={openAdd}
-                disabled={!teams.length}
-                className="gap-2 bg-violet-600 text-white hover:bg-violet-500"
-              >
-                <Plus className="h-4 w-4" />
-                Add Player
-              </Button>
-              <Button
-                variant="outline"
-                onClick={openBulkAdd}
-                disabled={!teams.length}
-                className="border-white/10 bg-white/[0.03]"
-              >
-                Bulk Add
-              </Button>
-            </div>
+            <Button
+              onClick={openAdd}
+              className="gap-2 bg-violet-600 text-white hover:bg-violet-500"
+            >
+              <Plus className="h-4 w-4" />
+              Add Player
+            </Button>
           </div>
           <div className="space-y-3 px-4 pb-4 sm:px-5">
             <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-[#0b0912] px-3">
@@ -304,7 +303,7 @@ export default function Players() {
                   <th className="px-3 py-3">Player</th>
                   <th className="px-3 py-3">Team</th>
                   <th className="px-3 py-3">Bowler data</th>
-                  <th className="px-3 py-3">Roster type</th>
+                  <th className="px-3 py-3">Player Type</th>
                   <th className="px-3 py-3">Status</th>
                   <th className="rounded-r-lg px-3 py-3 text-right">Actions</th>
                 </tr>
@@ -365,11 +364,23 @@ export default function Players() {
                         <div className="text-xs text-slate-500">ID: {p.id}</div>
                       </td>
                       <td className="px-3 py-3 text-slate-300">{p.teamName}</td>
-                      <td
-                        className="px-3 py-3 text-slate-500"
-                        title="Average and bowler category are not stored on the current player record"
-                      >
-                        Not recorded
+                      <td className="px-3 py-3">
+                        {p.average == null ? (
+                          <span className="text-slate-500">
+                            Awaiting game average
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2">
+                            <span className="font-medium text-white">
+                              {p.average}
+                            </span>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs capitalize ${getBowlerCategory(p.average, config) === 'open' ? 'bg-blue-500/15 text-blue-200' : 'bg-violet-500/15 text-violet-200'}`}
+                            >
+                              {getBowlerCategory(p.average, config)}
+                            </span>
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-3">
                         <span className="rounded-full bg-violet-500/15 px-2.5 py-1 text-xs capitalize text-violet-200">
@@ -431,8 +442,8 @@ export default function Players() {
             </table>
             <p className="px-1 pt-3 text-xs text-slate-500">
               Showing {filteredPlayers.length} of {players.length} players.
-              Average and graded/open category are not available in the current
-              player schema.
+              Bowler category is derived from player average and this league’s
+              open average threshold.
             </p>
           </div>
         </section>
@@ -446,15 +457,21 @@ export default function Players() {
             </p>
             <Rule
               label="Maximum roster size"
-              value={rosterMax ? `${rosterMax} players` : 'Not set'}
+              value={rosterMax !== null ? `${rosterMax} players` : 'Not set'}
             />
             <Rule
               label="Minimum graded bowlers"
-              value={gradedMin ? `${gradedMin} players` : 'Not set'}
+              value={gradedMin !== null ? `${gradedMin} players` : 'Not set'}
             />
             <Rule
               label="Maximum open bowlers"
-              value={openMax ? `${openMax} per team` : 'Not set'}
+              value={openMax !== null ? `${openMax} per team` : 'Not set'}
+            />
+            <Rule
+              label="Open bowlers allowed per week"
+              value={
+                openPerWeek !== null ? `${openPerWeek} per week` : 'Not set'
+              }
             />
             <Rule
               label="Open bowlers allowed"
@@ -469,11 +486,15 @@ export default function Players() {
             />
             <Rule
               label="Open bowler threshold"
-              value={threshold ? `${threshold} average` : 'Not set'}
+              value={threshold !== null ? `${threshold} average` : 'Not set'}
             />
             <Rule
               label="Minimum players to start"
-              value={minimumPlayers ? `${minimumPlayers} players` : 'Not set'}
+              value={
+                minimumPlayers !== null
+                  ? `${minimumPlayers} players`
+                  : 'Not set'
+              }
             />
             {config[PLAYER_SETUP_RULE_KEYS.allowSubstitutes] !== true && (
               <p className="mt-3 rounded-lg border border-amber-400/20 bg-amber-500/10 p-3 text-xs text-amber-100">
@@ -481,24 +502,45 @@ export default function Players() {
               </p>
             )}
             <p className="mt-3 rounded-lg border border-violet-300/10 bg-violet-500/[0.06] p-3 text-xs text-slate-400">
-              The current player schema stores regular/substitute roster type,
-              but does not store average or graded/open category.
+              Player Type means Regular or Substitute. Graded/Open is derived
+              from average and the league threshold.
             </p>
           </section>
           <section className={`${cardClass} p-4`}>
             <h2 className="font-semibold text-white">Roster readiness</h2>
             <p className="mb-3 mt-1 text-xs text-slate-400">
-              Roster counts compared with league limits.
+              Roster counts compared with league limits. Players without a
+              recorded average remain unclassified until game results are
+              available.
             </p>
             {teams.length ? (
-              <div className="space-y-2">
+              <div className="max-h-72 space-y-2 overflow-y-auto overscroll-contain pr-2">
                 {teams.map((team) => {
                   const count = team.members.filter(
                     (p) => !p.archived_at,
                   ).length;
+                  const members = team.members.filter((p) => !p.archived_at);
+                  const gradedCount = members.filter(
+                    (p) => getBowlerCategory(p.average, config) === 'graded',
+                  ).length;
+                  const openCount = members.filter(
+                    (p) => getBowlerCategory(p.average, config) === 'open',
+                  ).length;
+                  const unclassifiedCount = members.filter(
+                    (p) =>
+                      getBowlerCategory(p.average, config) === 'unclassified',
+                  ).length;
                   const full = rosterMax !== null && count >= rosterMax;
-                  const ready =
+                  const tooManyOpen = openMax !== null && openCount > openMax;
+                  const hasMinimumPlayers =
                     minimumPlayers === null || count >= minimumPlayers;
+                  const hasMinimumGraded =
+                    gradedMin === null || gradedCount >= gradedMin;
+                  const ready =
+                    hasMinimumPlayers &&
+                    hasMinimumGraded &&
+                    !tooManyOpen &&
+                    unclassifiedCount === 0;
                   return (
                     <div
                       key={team.id}
@@ -510,7 +552,9 @@ export default function Players() {
                         </p>
                         <p className="text-xs text-slate-400">
                           {count}
-                          {rosterMax ? ` / ${rosterMax}` : ''} players
+                          {rosterMax !== null ? ` / ${rosterMax}` : ''} players
+                          · {gradedCount} graded · {openCount} open ·{' '}
+                          {unclassifiedCount} awaiting average
                         </p>
                       </div>
                       <span
@@ -518,9 +562,15 @@ export default function Players() {
                       >
                         {full
                           ? 'Limit reached'
-                          : ready
-                            ? 'Ready'
-                            : 'Needs players'}
+                          : tooManyOpen
+                            ? 'Too many open'
+                            : unclassifiedCount > 0
+                              ? 'Averages pending'
+                              : !hasMinimumGraded
+                                ? 'Needs graded bowlers'
+                                : ready
+                                  ? 'Ready'
+                                  : 'Needs players'}
                       </span>
                     </div>
                   );
@@ -549,7 +599,7 @@ export default function Players() {
           }
         }}
       >
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto border-violet-300/20 bg-[#15121c] text-slate-100">
+        <DialogContent className="fixed left-1/2 top-1/2 max-h-[90vh] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto border-violet-300/20 bg-[#15121c] text-slate-100">
           <DialogHeader>
             <DialogTitle>
               {editing
@@ -566,129 +616,191 @@ export default function Players() {
             onSubmit={bulkMode ? saveBulk : savePlayer}
             className="space-y-4"
           >
-            {bulkMode ? (
-              <div className="space-y-2">
-                <Label htmlFor="bulk-player-names">
-                  Player names (one per line)
-                </Label>
-                <Textarea
-                  id="bulk-player-names"
-                  rows={6}
-                  value={bulkNames}
-                  onChange={(e) => setBulkNames(e.target.value)}
-                  placeholder={'Alicia Tan\nBen Lim'}
-                  className="border-white/10 bg-[#0b0912]"
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="player-name">Player name</Label>
-                <Input
-                  id="player-name"
-                  autoFocus
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="border-white/10 bg-[#0b0912]"
-                  required
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="player-team">Team</Label>
-              <select
-                id="player-team"
-                value={teamId}
-                onChange={(e) => setTeamId(e.target.value)}
-                className={inputClass}
-                required
-              >
-                <option value="">Choose a team</option>
-                {teams.map((team) => (
-                  <option key={team.id} value={String(team.id)}>
-                    {team.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="player-type">Roster type</Label>
-              <select
-                id="player-type"
-                value={rosterType}
-                onChange={(e) =>
-                  setRosterType(e.target.value as PlayerRosterType)
-                }
-                className={inputClass}
-              >
-                <option value="regular">Regular</option>
-                <option
-                  value="substitute"
-                  disabled={
-                    config[PLAYER_SETUP_RULE_KEYS.allowSubstitutes] !== true
-                  }
+            <Tabs
+              value={bulkMode ? 'bulk' : 'single'}
+              onValueChange={(value) => setBulkMode(value === 'bulk')}
+              className="space-y-4"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="single">
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Single Player
+                </TabsTrigger>
+                <TabsTrigger value="bulk">
+                  <Users className="h-4 w-4 mr-2" />
+                  Bulk Add
+                </TabsTrigger>
+              </TabsList>
+              {!teams.length && (
+                <p
+                  role="status"
+                  className="rounded-lg border border-amber-400/20 bg-amber-500/10 p-3 text-sm text-amber-100"
                 >
-                  Substitute
-                  {config[PLAYER_SETUP_RULE_KEYS.allowSubstitutes] !== true
-                    ? ' (disabled in setup)'
-                    : ''}
-                </option>
-              </select>
-            </div>
-            {editing && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="player-status">Status</Label>
-                  <select
-                    id="player-status"
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className={inputClass}
+                  Create a team in Teams before adding players to this league.
+                </p>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="player-team">Team</Label>
+                <select
+                  id="player-team"
+                  value={teamId}
+                  onChange={(e) => setTeamId(e.target.value)}
+                  className={inputClass}
+                  required
+                >
+                  <option value="">Choose a team</option>
+                  {teams.map((team) => (
+                    <option key={team.id} value={String(team.id)}>
+                      {team.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="player-type">Player Type</Label>
+                <select
+                  id="player-type"
+                  value={rosterType}
+                  onChange={(e) =>
+                    setRosterType(e.target.value as PlayerRosterType)
+                  }
+                  className={inputClass}
+                >
+                  <option value="regular">Regular</option>
+                  <option
+                    value="substitute"
+                    disabled={
+                      config[PLAYER_SETUP_RULE_KEYS.allowSubstitutes] !== true
+                    }
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
+                    Substitute
+                    {config[PLAYER_SETUP_RULE_KEYS.allowSubstitutes] !== true
+                      ? ' (disabled in setup)'
+                      : ''}
+                  </option>
+                </select>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="player-notes">Notes</Label>
-                  <Textarea
-                    id="player-notes"
-                    rows={3}
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                  <Label htmlFor="player-average">Bowling average</Label>
+                  <Input
+                    id="player-average"
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    value={average}
+                    onChange={(event) => setAverage(event.target.value)}
+                    placeholder="e.g. 185"
                     className="border-white/10 bg-[#0b0912]"
                   />
+                  <p className="text-xs text-slate-500">
+                    Optional. The average can be filled from game results when
+                    available.
+                  </p>
                 </div>
-              </>
-            )}
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setDialogOpen(false)}
-                disabled={saving}
-                className="border-white/10"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={
-                  saving ||
-                  !teamId ||
-                  (!bulkMode && !name.trim()) ||
-                  (bulkMode && !bulkNames.trim())
-                }
-                className="bg-violet-600 text-white hover:bg-violet-500"
-              >
-                {saving
-                  ? 'Saving…'
-                  : editing
-                    ? 'Save changes'
-                    : bulkMode
-                      ? 'Add players'
-                      : 'Add player'}
-              </Button>
-            </DialogFooter>
+                <div className="space-y-2">
+                  <Label htmlFor="player-gender">Gender</Label>
+                  <select
+                    id="player-gender"
+                    value={gender}
+                    onChange={(event) => setGender(event.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="">Not set</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+              </div>
+              <TabsContent value="bulk" className="mt-0">
+                <div className="space-y-2">
+                  <Label htmlFor="bulk-player-names">Player list</Label>
+                  <Textarea
+                    id="bulk-player-names"
+                    rows={6}
+                    value={bulkNames}
+                    onChange={(e) => setBulkNames(e.target.value)}
+                    placeholder={
+                      'John Doe | 185 | Female\nJane Smith | 210 | Male'
+                    }
+                    className="max-h-[200px] resize-none overflow-y-auto"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    One player per line: Name | Average | Gender. Average and
+                    gender are optional until known.
+                  </p>
+                </div>
+              </TabsContent>
+              <TabsContent value="single" className="mt-0">
+                <div className="space-y-2">
+                  <Label htmlFor="player-name">Player name</Label>
+                  <Input
+                    id="player-name"
+                    autoFocus
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="border-white/10 bg-[#0b0912]"
+                    required={!bulkMode}
+                  />
+                </div>
+              </TabsContent>
+              {editing && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="player-status">Status</Label>
+                    <select
+                      id="player-status"
+                      value={status}
+                      onChange={(e) => setStatus(e.target.value)}
+                      className={inputClass}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="player-notes">Notes</Label>
+                    <Textarea
+                      id="player-notes"
+                      rows={3}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="border-white/10 bg-[#0b0912]"
+                    />
+                  </div>
+                </>
+              )}
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  disabled={saving}
+                  className="border-white/10"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={
+                    saving ||
+                    !teamId ||
+                    (!bulkMode && !name.trim()) ||
+                    (bulkMode && !bulkNames.trim())
+                  }
+                  className="bg-violet-600 text-white hover:bg-violet-500"
+                >
+                  {saving
+                    ? 'Saving…'
+                    : editing
+                      ? 'Save changes'
+                      : bulkMode
+                        ? 'Add players'
+                        : 'Add player'}
+                </Button>
+              </DialogFooter>
+            </Tabs>
           </form>
         </DialogContent>
       </Dialog>

@@ -192,6 +192,8 @@ export default function Teams() {
     setAddMode,
     playerType,
     setPlayerType,
+    allowSubstitutes:
+      setupConfig[TEAM_SETUP_RULE_KEYS.allowSubstitutes] === true,
     newPlayerName,
     setNewPlayerName,
     multiplePlayerNames,
@@ -426,6 +428,22 @@ export default function Teams() {
                 suffix=" players"
               />
               <SetupRule
+                label="Maximum open bowlers per team"
+                value={getTeamSetupRuleValue(
+                  setupConfig,
+                  TEAM_SETUP_RULE_KEYS.openBowlersMax,
+                )}
+                suffix=" players"
+              />
+              <SetupRule
+                label="Open bowlers per week"
+                value={getTeamSetupRuleValue(
+                  setupConfig,
+                  TEAM_SETUP_RULE_KEYS.openBowlersPerWeek,
+                )}
+                suffix=" players"
+              />
+              <SetupRule
                 label="Open bowlers allowed"
                 value={
                   setupConfig[TEAM_SETUP_RULE_KEYS.openBowlersAllowed] === true
@@ -435,6 +453,22 @@ export default function Teams() {
                 positive={
                   setupConfig[TEAM_SETUP_RULE_KEYS.openBowlersAllowed] === true
                 }
+              />
+              <SetupRule
+                label="Open average threshold"
+                value={getTeamSetupRuleValue(
+                  setupConfig,
+                  TEAM_SETUP_RULE_KEYS.openAverageThreshold,
+                )}
+                suffix=" average"
+              />
+              <SetupRule
+                label="Minimum players to start"
+                value={getTeamSetupRuleValue(
+                  setupConfig,
+                  TEAM_SETUP_RULE_KEYS.minimumPlayersStart,
+                )}
+                suffix=" players"
               />
             </section>
 
@@ -472,6 +506,8 @@ export default function Teams() {
           setTeamNames={setMultipleTeamNames}
           creatingTeams={creatingTeams}
           existingTeams={teams}
+          registeredTeamsCount={registeredTeamsCount}
+          maxTeams={maxTeams}
           onSubmit={(event) => {
             event.preventDefault();
 

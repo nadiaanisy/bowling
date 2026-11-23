@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import type { FormEvent } from 'react';
+import { PlayerProfileInput } from '../../utils/type';
 import {
   Tabs,
   TabsContent,
@@ -23,10 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/select';
+import { parseAverageInput } from '../../functions/players';
 import { Textarea } from '../../components/textarea';
+import { toast } from 'sonner';
 import {
-  UserPlus,
-  Users
+UserPlus,
+Users
 } from 'lucide-react';
 
 interface AddPlayerDialogProps {
@@ -35,6 +39,7 @@ interface AddPlayerDialogProps {
   onOpenChange: (open: boolean) => void;
   playerType: 'regular' | 'substitute';
   setPlayerType: (type: 'regular' | 'substitute') => void;
+  allowSubstitutes: boolean;
   addMode: 'single' | 'multiple';
   setAddMode: (mode: 'single' | 'multiple') => void;
   newPlayerName: string;
@@ -42,7 +47,7 @@ interface AddPlayerDialogProps {
   multiplePlayerNames: string;
   setMultiplePlayerNames: (names: string) => void;
   creatingPlayer: boolean;
-  onSubmitSingle: (event: FormEvent) => void;
+  onSubmitSingle: (event: FormEvent, profile: PlayerProfileInput) => void;
   onSubmitMultiple: (event: FormEvent) => void;
 }
 
@@ -52,6 +57,7 @@ export function AddPlayerDialog({
   onOpenChange,
   playerType,
   setPlayerType,
+  allowSubstitutes,
   addMode,
   setAddMode,
   newPlayerName,
@@ -62,6 +68,9 @@ export function AddPlayerDialog({
   onSubmitSingle,
   onSubmitMultiple,
 }: AddPlayerDialogProps) {
+  const [average, setAverage] = useState('');
+  const [gender, setGender] = useState('');
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -75,23 +84,6 @@ export function AddPlayerDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mb-4 space-y-2">
-          <Label htmlFor="player-type">Player type</Label>
-          <Select
-            value={playerType}
-            onValueChange={(value) =>
-              setPlayerType(value as 'regular' | 'substitute')
-            }
-          >
-            <SelectTrigger id="player-type">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="regular">Regular</SelectItem>
-              <SelectItem value="substitute">Substitute</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
         <Tabs
           value={addMode}
           onValueChange={(v) => setAddMode(v as 'single' | 'multiple')}
@@ -103,12 +95,52 @@ export function AddPlayerDialog({
             </TabsTrigger>
             <TabsTrigger value="multiple">
               <Users className="h-4 w-4 mr-2" />
-              Multiple Players
+              Bulk Add
             </TabsTrigger>
           </TabsList>
 
+          <div className="my-4 space-y-2">
+            <Label htmlFor="player-type">Player Type</Label>
+            <Select
+              value={playerType}
+              onValueChange={(value) =>
+                setPlayerType(value as 'regular' | 'substitute')
+              }
+            >
+              <SelectTrigger id="player-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="regular">Regular</SelectItem>
+                <SelectItem value="substitute" disabled={!allowSubstitutes}>
+                  Substitute
+                  {allowSubstitutes ? '' : ' (disabled in League Setup)'}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <TabsContent value="single">
-            <form onSubmit={onSubmitSingle}>
+            <form
+              onSubmit={(event) => {
+                let parsedAverage: number | null;
+                try {
+                  parsedAverage = parseAverageInput(average);
+                } catch (error) {
+                  event.preventDefault();
+                  toast.error(
+                    error instanceof Error
+                      ? error.message
+                      : 'Enter a valid average.',
+                  );
+                  return;
+                }
+                onSubmitSingle(event, {
+                  average: parsedAverage,
+                  gender: gender || null,
+                });
+              }}
+            >
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="playerName">Player Name</Label>
@@ -118,6 +150,42 @@ export function AddPlayerDialog({
                     value={newPlayerName}
                     onChange={(e) => setNewPlayerName(e.target.value)}
                   />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="team-player-average">Bowling average</Label>
+                    <Input
+                      id="team-player-average"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={average}
+                      onChange={(event) => setAverage(event.target.value)}
+                      placeholder="e.g. 185"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Optional. Add it later when game results provide an
+                      average.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="team-player-gender">Gender</Label>
+                    <Select
+                      value={gender || 'unspecified'}
+                      onValueChange={(value) =>
+                        setGender(value === 'unspecified' ? '' : value)
+                      }
+                    >
+                      <SelectTrigger id="team-player-gender">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unspecified">Not set</SelectItem>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
               <DialogFooter className="mt-4">
@@ -140,14 +208,17 @@ export function AddPlayerDialog({
                   </Label>
                   <Textarea
                     id="multiplePlayerNames"
-                    placeholder={'John Doe\nJane Smith\nMike Johnson'}
+                    placeholder={
+                      'John Doe | 185 | Female\nJane Smith | 210 | Male'
+                    }
                     value={multiplePlayerNames}
                     onChange={(e) => setMultiplePlayerNames(e.target.value)}
                     rows={6}
                     className="max-h-[200px] resize-none overflow-y-auto"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Enter each player name on a new line
+                    One player per line: Name | Average | Gender. Average and
+                    gender are optional until known.
                   </p>
                 </div>
               </div>

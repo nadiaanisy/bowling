@@ -7,7 +7,11 @@ import {
   useState,
 } from 'react';
 import type { FormEvent } from 'react';
-import { BlockSetupDialogFormValues } from './type';
+import {
+  BlockSetupDialogFormValues,
+  PendingPlayerAction,
+  PlayerRow,
+} from './type';
 import {
   checkIfLeagueHasBlocks,
   getLeaguesByUser,
@@ -38,15 +42,13 @@ import {
   openAddPlayerForm,
   openBulkAddPlayerForm,
   openEditPlayerForm,
+  nonNegativeSetupNumber,
   positiveSetupNumber,
   resetPlayerForm,
   runPlayerActions,
   savePlayerRecord,
   toActivePlayerRows,
-} from '../functions/players';
-import type {
-PlayerRow,
-PendingPlayerAction
+  getBowlerCategory,
 } from '../functions/players';
 import {
   emptyRanges,
@@ -276,6 +278,8 @@ export const usePlayersSection = () => {
   const [rosterType, setRosterType] = useState<PlayerRosterType>('regular');
   const [status, setStatus] = useState<string>(PLAYER_DEFAULT_STATUS);
   const [notes, setNotes] = useState('');
+  const [average, setAverage] = useState('');
+  const [gender, setGender] = useState('');
   const [bulkNames, setBulkNames] = useState('');
   const [bulkMode, setBulkMode] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -290,10 +294,12 @@ export const usePlayersSection = () => {
   const activeCount = players.filter(
     (player) => (player.status ?? 'active') === 'active',
   ).length;
-  const regularCount = players.filter(
-    (player) => (player.type ?? 'regular') === 'regular',
+  const gradedCount = players.filter(
+    (player) => getBowlerCategory(player.average, config) === 'graded',
   ).length;
-  const substituteCount = players.length - regularCount;
+  const openCount = players.filter(
+    (player) => getBowlerCategory(player.average, config) === 'open',
+  ).length;
   const rosterMax = positiveSetupNumber(
     config,
     PLAYER_SETUP_RULE_KEYS.maxRosterSize,
@@ -302,9 +308,13 @@ export const usePlayersSection = () => {
     config,
     PLAYER_SETUP_RULE_KEYS.gradedBowlersMin,
   );
-  const openMax = positiveSetupNumber(
+  const openMax = nonNegativeSetupNumber(
     config,
     PLAYER_SETUP_RULE_KEYS.openBowlersMax,
+  );
+  const openPerWeek = nonNegativeSetupNumber(
+    config,
+    PLAYER_SETUP_RULE_KEYS.openBowlersPerWeek,
   );
   const threshold = positiveSetupNumber(
     config,
@@ -320,6 +330,8 @@ export const usePlayersSection = () => {
     setRosterType,
     setStatus,
     setNotes,
+    setAverage,
+    setGender,
     setBulkNames,
     setBulkMode,
     setEditing,
@@ -347,6 +359,8 @@ export const usePlayersSection = () => {
       rosterType,
       status,
       notes,
+      average,
+      gender,
       setDialogOpen,
       resetForm,
       onSaved: reload,
@@ -435,6 +449,10 @@ export const usePlayersSection = () => {
     setStatus,
     notes,
     setNotes,
+    average,
+    setAverage,
+    gender,
+    setGender,
     bulkNames,
     setBulkNames,
     bulkMode,
@@ -449,11 +467,12 @@ export const usePlayersSection = () => {
     players,
     filteredPlayers,
     activeCount,
-    regularCount,
-    substituteCount,
+    gradedCount,
+    openCount,
     rosterMax,
     gradedMin,
     openMax,
+    openPerWeek,
     threshold,
     minimumPlayers,
     resetForm,

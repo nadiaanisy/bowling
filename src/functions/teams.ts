@@ -4,6 +4,8 @@ ReactNode,
 SetStateAction
 } from 'react';
 import { askConfirm } from './toasts';
+import { parseBulkPlayerLines } from './players';
+import { PlayerProfileInput } from '../utils/type';
 import {
 errorToastStyle,
 successToastStyle
@@ -186,6 +188,7 @@ export const handleCreatePlayer = async (
   playerType: 'regular' | 'substitute',
   setTeams: Dispatch<SetStateAction<LeagueTeamWithMembers[]>>,
   setPlayerName: (name: string) => void,
+  profile: PlayerProfileInput = { average: null, gender: null },
 ) => {
   if (creatingPlayer) return;
 
@@ -214,7 +217,13 @@ export const handleCreatePlayer = async (
 
   setCreatingPlayer(true);
   try {
-    const player = await addPlayerToTeam(name, teamId, leagueId, playerType);
+    const player = await addPlayerToTeam(
+      name,
+      teamId,
+      leagueId,
+      playerType,
+      profile,
+    );
     if (!player) return;
     await touchTeamUpdatedAt(teamId, leagueId);
     await touchLeagueUpdatedAt(leagueId);
@@ -250,16 +259,31 @@ export const handleCreatePlayers = async (
 ) => {
   if (creatingPlayer) return;
 
-  const names = Array.from(
-    new Set(
-      playerNames
-        .split(/\r?\n/)
-        .map((name) => name.trim())
-        .filter(Boolean),
-    ),
-  );
+  let playerRows: Array<{
+    name: string;
+    average: number | null;
+    gender: string | null;
+  }>;
+  try {
+    playerRows = parseBulkPlayerLines(playerNames);
+  } catch (error) {
+    toast.error(
+      error instanceof Error ? error.message : 'Check the player list.',
+      errorToastStyle,
+    );
+    return;
+  }
+  const uniquePlayers = new Map<
+    string,
+    { name: string; average: number | null; gender: string | null }
+  >();
+  for (const player of playerRows) {
+    const key = player.name.toLocaleLowerCase();
+    if (!uniquePlayers.has(key)) uniquePlayers.set(key, player);
+  }
+  const playersToAdd = Array.from(uniquePlayers.values());
 
-  if (names.length === 0) {
+  if (playersToAdd.length === 0) {
     toast.error('Enter at least one player name.', errorToastStyle);
     return;
   }
@@ -272,9 +296,9 @@ export const handleCreatePlayers = async (
   const existingNames = new Set(
     existingMembers.map((member) => member.name.trim().toLowerCase()),
   );
-  const duplicateNames = names.filter((name) =>
-    existingNames.has(name.toLowerCase()),
-  );
+  const duplicateNames = playersToAdd
+    .map((player) => player.name)
+    .filter((name) => existingNames.has(name.toLowerCase()));
   if (duplicateNames.length > 0) {
     toast.error(
       `${duplicateNames.join(', ')} already exist in team "${teamName}".`,
@@ -285,7 +309,12 @@ export const handleCreatePlayers = async (
 
   setCreatingPlayer(true);
   try {
-    const players = await addPlayersToTeam(names, teamId, leagueId, playerType);
+    const players = await addPlayersToTeam(
+      playersToAdd,
+      teamId,
+      leagueId,
+      playerType,
+    );
     if (players.length === 0) return;
     await touchTeamUpdatedAt(teamId, leagueId);
     await touchLeagueUpdatedAt(leagueId);

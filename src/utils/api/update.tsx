@@ -4,8 +4,10 @@ import {
   LeagueMember,
   LeagueTeam,
 } from '../interfaces';
+import { recordTeamActivity } from './teamArchive';
 import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
+import { getBowlerCategory } from '../../functions/players';
 import {
 getHelper,
 updateHelper
@@ -329,7 +331,12 @@ export const updateTeamInLeague = async (
       return null;
     }
 
-    return data as unknown as LeagueTeam;
+    const updatedTeam = data as unknown as LeagueTeam;
+    await recordTeamActivity(leagueId, teamId, 'team.updated', {
+      team_name: updatedTeam.name,
+      previous_name: (team as { name?: string | null }).name ?? null,
+    });
+    return updatedTeam;
   } catch (err) {
     catchError('Error updating team: ', err);
     return null;
@@ -389,6 +396,57 @@ export const bulkTransferPlayersToTeam = async (
         const remaining = Math.max(0, rosterLimit - (count ?? 0));
         toast.error(
           `Only ${remaining} roster slot(s) remain on the destination team.`,
+          errorToastStyle,
+        );
+        return [];
+      }
+    }
+
+    const setupConfig = leagueConfig?.setup_config ?? {};
+    const openThreshold = Number(setupConfig.open_average_threshold);
+    const maxOpen = Number(setupConfig.open_bowlers_max);
+    if (
+      setupConfig.allow_open_bowlers === true &&
+      Number.isFinite(openThreshold) &&
+      openThreshold > 0 &&
+      Number.isSafeInteger(maxOpen) &&
+      maxOpen >= 0
+    ) {
+      const [
+        { data: movingPlayers, error: movingError },
+        { data: destinationPlayers, error: destinationError },
+      ] = await Promise.all([
+        getHelper(table.players, 'id, average')
+          .in('id', uniqueIds)
+          .eq('team_id', fromTeamId)
+          .eq('league_id', leagueId)
+          .is('archived_at', null),
+        getHelper(table.players, 'average')
+          .eq('team_id', toTeamId)
+          .eq('league_id', leagueId)
+          .is('archived_at', null),
+      ]);
+      if (movingError || destinationError) {
+        throw new Error(
+          `Unable to check Open Bowler limits: ${movingError?.message ?? destinationError?.message}`,
+        );
+      }
+      const movingPlayerRows = (movingPlayers ?? []) as unknown as Array<{
+        average: number | null;
+      }>;
+      const destinationPlayerRows = (destinationPlayers ??
+        []) as unknown as Array<{ average: number | null }>;
+      const movingOpenCount = movingPlayerRows.filter(
+        (player) =>
+          player.average != null && Number(player.average) < openThreshold,
+      ).length;
+      const destinationOpenCount = destinationPlayerRows.filter(
+        (player) =>
+          player.average != null && Number(player.average) < openThreshold,
+      ).length;
+      if (destinationOpenCount + movingOpenCount > maxOpen) {
+        toast.error(
+          `The destination team has only ${Math.max(0, maxOpen - destinationOpenCount)} Open Bowler slot(s) remaining.`,
           errorToastStyle,
         );
         return [];
@@ -460,7 +518,18 @@ export const bulkTransferPlayersToTeam = async (
       return [];
     }
 
-    return (data ?? []) as unknown as LeagueMember[];
+    const transferredPlayers = (data ?? []) as unknown as LeagueMember[];
+    await Promise.all(
+      transferredPlayers.map((player) =>
+        recordTeamActivity(leagueId, toTeamId, 'player.transferred', {
+          player_id: player.id,
+          player_name: player.name,
+          from_team_id: fromTeamId,
+          to_team_id: toTeamId,
+        }),
+      ),
+    );
+    return transferredPlayers;
   } catch (err) {
     catchError('Error transferring players: ', err);
     return [];
@@ -511,14 +580,27 @@ export const bulkUpdatePlayersType = async (
       .in('id', uniqueIds)
       .eq('team_id', teamId)
       .eq('league_id', leagueId)
-      .select('id');
+      .select('id, name');
 
     if (error) {
       toast.error('Error updating players: ' + error.message, errorToastStyle);
       return [];
     }
 
-    return (data ?? []).map((player) => player.id as string | number);
+    const updatedPlayers = (data ?? []) as Array<{
+      id: string | number;
+      name?: string | null;
+    }>;
+    await Promise.all(
+      updatedPlayers.map((player) =>
+        recordTeamActivity(leagueId, teamId, 'player.updated', {
+          player_id: player.id,
+          player_name: player.name ?? null,
+          player_type: type,
+        }),
+      ),
+    );
+    return updatedPlayers.map((player) => player.id);
   } catch (err) {
     catchError('Error updating players: ', err);
     return [];
@@ -535,30 +617,51 @@ export const updatePlayerInTeam = async (
     type?: 'regular' | 'substitute';
     status?: string;
     notes?: string;
+    average?: number | null;
+    gender?: string | null;
   },
 ): Promise<LeagueMember | null> => {
   try {
-    if (values.type === 'substitute') {
-      const { data: leagueConfigData, error: configError } = await getHelper(
-        table.leagues,
-        'setup_config',
-      )
-        .eq('id', leagueId)
-        .maybeSingle();
-      if (configError)
-        throw new Error(
-          `Unable to load League Setup rules: ${configError.message}`,
-        );
-      const leagueConfig = leagueConfigData as unknown as {
-        setup_config: Record<string, unknown> | null;
-      } | null;
-      if (leagueConfig?.setup_config?.allow_substitutes !== true) {
-        toast.error(
-          'Substitute players are disabled in League Setup.',
-          errorToastStyle,
-        );
-        return null;
-      }
+    const { data: leagueConfigData, error: configError } = await getHelper(
+      table.leagues,
+      'setup_config',
+    )
+      .eq('id', leagueId)
+      .maybeSingle();
+    if (configError)
+      throw new Error(
+        `Unable to load League Setup rules: ${configError.message}`,
+      );
+    const setupConfig =
+      (
+        leagueConfigData as unknown as {
+          setup_config: Record<string, unknown> | null;
+        } | null
+      )?.setup_config ?? {};
+    if (
+      values.type === 'substitute' &&
+      setupConfig.allow_substitutes !== true
+    ) {
+      toast.error(
+        'Substitute players are disabled in League Setup.',
+        errorToastStyle,
+      );
+      return null;
+    }
+    if (
+      values.average !== undefined &&
+      values.average !== null &&
+      (!Number.isSafeInteger(values.average) || values.average < 0)
+    ) {
+      toast.error(
+        'Average must be a whole number greater than or equal to 0.',
+        errorToastStyle,
+      );
+      return null;
+    }
+    if (values.gender && !['male', 'female'].includes(values.gender)) {
+      toast.error('Choose Male or Female for player gender.', errorToastStyle);
+      return null;
     }
 
     const { data: team, error: teamError } = await getHelper(table.teams, 'id')
@@ -591,7 +694,7 @@ export const updatePlayerInTeam = async (
 
     const { data: existingPlayers, error: playersError } = await getHelper(
       table.players,
-      'id, name',
+      'id, name, average, archived_at',
     )
       .eq('team_id', teamId)
       .eq('league_id', leagueId);
@@ -610,6 +713,8 @@ export const updatePlayerInTeam = async (
       []) as unknown as Array<{
       id: string | number;
       name: string | null;
+      average: number | null;
+      archived_at: string | null;
     }>;
 
     const duplicate = playersForDuplicateCheck.some(
@@ -626,18 +731,56 @@ export const updatePlayerInTeam = async (
       return null;
     }
 
-    const { data, error } = await updateHelper(table.players, {
+    const threshold = Number(setupConfig.open_average_threshold);
+    const currentPlayer = playersForDuplicateCheck.find(
+      (player) => String(player.id) === String(playerId),
+    );
+    const effectiveAverage =
+      values.average === undefined
+        ? (currentPlayer?.average ?? null)
+        : values.average;
+    // Keep average optional until it can be derived from recorded games.
+    if (getBowlerCategory(effectiveAverage, setupConfig) === 'open') {
+      const maximumOpen = Number(setupConfig.open_bowlers_max);
+      if (Number.isSafeInteger(maximumOpen) && maximumOpen >= 0) {
+        const existingPlayerRows = (existingPlayers ?? []) as unknown as Array<{
+          id: string | number;
+          average: number | null;
+          archived_at: string | null;
+        }>;
+        const otherOpenPlayers = existingPlayerRows.filter(
+          (player) =>
+            String(player.id) !== String(playerId) &&
+            !player.archived_at &&
+            player.average != null &&
+            Number(player.average) < threshold,
+        ).length;
+        if (otherOpenPlayers >= maximumOpen) {
+          toast.error(
+            `This team has reached the limit of ${maximumOpen} Open Bowlers.`,
+            errorToastStyle,
+          );
+          return null;
+        }
+      }
+    }
+
+    const playerUpdate: Record<string, unknown> = {
       name: trimmedName,
       type: values.type || 'regular',
       status: values.status?.trim() || null,
       notes: values.notes?.trim() || null,
       updated_at: new Date().toISOString(),
-    })
+    };
+    if ('average' in values) playerUpdate.average = values.average ?? null;
+    if ('gender' in values) playerUpdate.gender = values.gender ?? null;
+
+    const { data, error } = await updateHelper(table.players, playerUpdate)
       .eq('id', playerId)
       .eq('team_id', teamId)
       .eq('league_id', leagueId)
       .select(
-        'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
+        'id, name, team_id, league_id, type, status, average, games, gender, notes, position, created_at, updated_at, archived_at',
       )
       .single();
 
@@ -647,6 +790,13 @@ export const updatePlayerInTeam = async (
     }
 
     const updatedPlayer = data as unknown as LeagueMember;
+    await recordTeamActivity(leagueId, teamId, 'player.updated', {
+      player_id: updatedPlayer.id,
+      player_name: updatedPlayer.name,
+      player_type: updatedPlayer.type,
+      average: updatedPlayer.average ?? null,
+      gender: updatedPlayer.gender ?? null,
+    });
 
     return {
       ...updatedPlayer,

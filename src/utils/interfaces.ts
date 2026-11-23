@@ -216,6 +216,8 @@ export interface LeagueMember {
   team_id?: string | number;
   league_id?: string | number;
   type?: 'regular' | 'substitute';
+  average?: number | null;
+  games?: number | null;
   gender?: 'male' | 'female' | string | null;
   status?: string;
   position?: string | null;

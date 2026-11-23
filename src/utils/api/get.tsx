@@ -475,7 +475,7 @@ export const getTeamsWithMembersByLeague = async (
   try {
     const { data, error } = await getHelper(
       table.teams,
-      'id, name, league_id, notes, created_at, updated_at, members:players!players_team_id_fkey(id, name, team_id, league_id, type, status, notes, position, created_at, updated_at, archived_at)',
+      'id, name, league_id, notes, created_at, updated_at, members:players!players_team_id_fkey(id, name, team_id, league_id, type, status, average, games, gender, notes, position, created_at, updated_at, archived_at)',
     )
       .eq('league_id', leagueId)
       .is('archived_at', null)

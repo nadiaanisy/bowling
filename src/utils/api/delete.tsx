@@ -1,9 +1,10 @@
+import { recordTeamActivity } from './teamArchive';
 import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
 import { supabase } from '../supabase/supabaseClient';
 import {
-  deleteHelper,
-  getHelper
+deleteHelper,
+getHelper
 } from '../supabase/supabaseHelper';
 import { errorToastStyle } from '../../functions/toast-styles';
 import { toast } from 'sonner';
@@ -94,16 +95,40 @@ export const deleteTeamsFromLeague = async (
   if (uniqueIds.length === 0) return [];
 
   try {
+    const { data: teamsBeforeDeleteData } = await getHelper(
+      table.teams,
+      'id, name',
+    )
+      .in('id', uniqueIds)
+      .eq('league_id', leagueId);
+    const teamsBeforeDelete = (teamsBeforeDeleteData ??
+      []) as unknown as Array<{
+      id: string | number;
+      name: string | null;
+    }>;
     const { data: deletedTeams, error } = await deleteHelper(table.teams)
       .in('id', uniqueIds)
       .eq('league_id', leagueId)
-      .select('id');
+      .select('id, name');
 
     if (error) {
       toast.error('Error deleting teams: ' + error.message, errorToastStyle);
       return [];
     }
 
+    await Promise.all(
+      (deletedTeams ?? []).map((team) =>
+        recordTeamActivity(leagueId, null, 'team.deleted', {
+          team_id: team.id,
+          team_name:
+            team.name ??
+            teamsBeforeDelete.find(
+              (entry) => String(entry.id) === String(team.id),
+            )?.name ??
+            null,
+        }),
+      ),
+    );
     return (deletedTeams ?? []).map((team) => team.id as string | number);
   } catch (err) {
     catchError('Error deleting teams: ', err);
@@ -116,16 +141,33 @@ export const deleteTeamFromLeague = async (
   leagueId: string | number,
 ): Promise<boolean | null> => {
   try {
+    const { data: teamBeforeDeleteData } = await getHelper(
+      table.teams,
+      'id, name',
+    )
+      .eq('id', teamId)
+      .eq('league_id', leagueId)
+      .maybeSingle();
+    const teamBeforeDelete = teamBeforeDeleteData as unknown as {
+      id: string | number;
+      name: string | null;
+    } | null;
     const { data, error } = await deleteHelper(table.teams)
       .eq('id', teamId)
       .eq('league_id', leagueId)
-      .select('id');
+      .select('id, name');
 
     if (error) {
       toast.error('Error deleting team: ' + error.message, errorToastStyle);
       return false;
     }
 
+    if (data?.[0]) {
+      await recordTeamActivity(leagueId, null, 'team.deleted', {
+        team_id: data[0].id,
+        team_name: data[0].name ?? teamBeforeDelete?.name ?? null,
+      });
+    }
     return (data?.length ?? 0) > 0;
   } catch (err) {
     catchError('Error deleting team: ', err);
@@ -165,13 +207,21 @@ export const deletePlayerFromTeam = async (
       .eq('id', playerId)
       .eq('team_id', teamId)
       .eq('league_id', leagueId)
-      .select('id');
+      .select('id, name');
 
     if (error) {
       toast.error('Error deleting player: ' + error.message, errorToastStyle);
       return false;
     }
 
+    await Promise.all(
+      (deletedPlayers ?? []).map((player) =>
+        recordTeamActivity(leagueId, teamId, 'player.deleted', {
+          player_id: player.id,
+          player_name: player.name,
+        }),
+      ),
+    );
     return (deletedPlayers?.length ?? 0) > 0;
   } catch (err) {
     catchError('Error deleting player: ', err);
@@ -217,13 +267,21 @@ export const deletePlayersFromTeam = async (
       .in('id', uniqueIds)
       .eq('team_id', teamId)
       .eq('league_id', leagueId)
-      .select('id');
+      .select('id, name');
 
     if (error) {
       toast.error('Error deleting players: ' + error.message, errorToastStyle);
       return [];
     }
 
+    await Promise.all(
+      (deletedPlayers ?? []).map((player) =>
+        recordTeamActivity(leagueId, teamId, 'player.deleted', {
+          player_id: player.id,
+          player_name: player.name,
+        }),
+      ),
+    );
     return (deletedPlayers ?? []).map((player) => player.id as string | number);
   } catch (err) {
     catchError('Error deleting players: ', err);

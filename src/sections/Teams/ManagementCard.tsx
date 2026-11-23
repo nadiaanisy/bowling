@@ -57,7 +57,7 @@ export default function ManagementCard({
 
       <CardContent className="space-y-6">
         <section aria-label="Create a team" className="space-y-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+          <div className="flex flex-col gap-3">
             <form
               onSubmit={(event) => {
                 event.preventDefault();
@@ -70,7 +70,7 @@ export default function ManagementCard({
                   onCreateTeam();
                 }
               }}
-              className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row"
+              className="flex min-w-0 flex-col gap-2"
             >
               <Input
                 aria-label="New team name"
@@ -85,35 +85,36 @@ export default function ManagementCard({
                     : ''
                 }
               />
-              <Button
-                type="submit"
-                disabled={
-                  creatingTeam ||
-                  !newTeamName.trim() ||
-                  duplicateTeam ||
-                  teamLimitReached
-                }
-                className="shrink-0 gap-2 sm:min-w-[118px]"
-              >
-                {creatingTeam ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Plus className="h-4 w-4" />
-                )}
-                {creatingTeam ? 'Adding...' : 'Add Team'}
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  type="submit"
+                  disabled={
+                    creatingTeam ||
+                    !newTeamName.trim() ||
+                    duplicateTeam ||
+                    teamLimitReached
+                  }
+                  className="gap-2 sm:min-w-[118px]"
+                >
+                  {creatingTeam ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
+                  {creatingTeam ? 'Adding...' : 'Add Team'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onOpenBulkCreate}
+                  disabled={creatingTeam || teamLimitReached}
+                  className="gap-2 sm:min-w-[120px]"
+                >
+                  <ListPlus className="h-4 w-4" />
+                  Bulk Add
+                </Button>
+              </div>
             </form>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onOpenBulkCreate}
-              disabled={creatingTeam || teamLimitReached}
-              className="shrink-0 gap-2 sm:min-w-[120px]"
-            >
-              <ListPlus className="h-4 w-4" />
-              Bulk Add
-            </Button>
           </div>
 
           {duplicateTeam && (

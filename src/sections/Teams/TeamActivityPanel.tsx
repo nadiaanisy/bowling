@@ -1,7 +1,7 @@
 import {
-  useCallback,
-  useEffect,
-  useState
+useCallback,
+useEffect,
+useState
 } from 'react';
 import { Button } from '../../components/button';
 import {
@@ -19,28 +19,32 @@ function describeActivity(activity: TeamActivity): string {
   const details = activity.details ?? {};
   const playerName =
     typeof details.player_name === 'string' ? details.player_name : 'a player';
+  const teamName =
+    typeof details.team_name === 'string' ? details.team_name : 'Team';
 
   switch (activity.action) {
     case 'team.archived':
-      return 'Team archived';
+      return `${teamName} archived`;
     case 'team.restored':
-      return 'Team restored';
+      return `${teamName} restored`;
     case 'player.archived':
       return `${playerName} archived`;
     case 'player.restored':
       return `${playerName} restored`;
     case 'team.created':
-      return 'Team created';
+      return `${teamName} created`;
     case 'team.updated':
-      return 'Team details updated';
+      return `${teamName} details updated`;
     case 'team.deleted':
-      return 'Team deleted';
+      return `${teamName} deleted`;
     case 'player.created':
-      return 'Player added';
+      return `${playerName} added`;
     case 'player.updated':
-      return 'Player details updated';
+      return `${playerName} details updated`;
     case 'player.transferred':
-      return 'Player transferred';
+      return `${playerName} transferred`;
+    case 'player.deleted':
+      return `${playerName} deleted`;
     default:
       return activity.action
         .replace(/[._]/g, ' ')
@@ -151,11 +155,11 @@ export default function TeamActivityPanel({ leagueId, refreshKey = 0 }: Props) {
                   </time>
                 </div>
 
-                <p className="mt-1 text-xs text-gray-500">
-                  {activity.team_id !== null
-                    ? `Team ID: ${activity.team_id}`
-                    : 'Team no longer associated with this record'}
-                </p>
+                {activity.team_id !== null && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Team ID: {activity.team_id}
+                  </p>
+                )}
               </article>
             ))}
           </div>

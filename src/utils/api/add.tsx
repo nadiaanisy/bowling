@@ -5,8 +5,10 @@ import {
   LeagueTeam,
   NewUser,
 } from '../interfaces';
+import { recordTeamActivity } from './teamArchive';
 import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
+import { getBowlerCategory } from '../../functions/players';
 import { supabase } from '../supabase/supabaseClient';
 import {
 getHelper,
@@ -40,6 +42,48 @@ const validatePlayerRosterRules = (
   }
   const maximum = Number(rules?.max_roster_size);
   return Number.isSafeInteger(maximum) && maximum > 0 ? maximum : null;
+};
+
+const validatePlayerBowlerRules = async (
+  profile: { average: number | null; gender: string | null },
+  setupConfig: Record<string, unknown> | null | undefined,
+  existingPlayers: Array<{
+    average?: number | null;
+    archived_at?: string | null;
+  }>,
+) => {
+  if (
+    profile.average !== null &&
+    (!Number.isSafeInteger(profile.average) || profile.average < 0)
+  ) {
+    throw new Error(
+      'Average must be a whole number greater than or equal to 0.',
+    );
+  }
+  if (profile.gender && !['male', 'female'].includes(profile.gender)) {
+    throw new Error('Choose Male or Female for player gender.');
+  }
+
+  const config = setupConfig ?? {};
+  const threshold = Number(config.open_average_threshold);
+  // An average is optional at registration; it can be filled from game results later.
+  const category = getBowlerCategory(profile.average, config);
+  if (category !== 'open') return;
+  const maximumOpen = Number(config.open_bowlers_max);
+  if (!Number.isSafeInteger(maximumOpen) || maximumOpen < 0) return;
+
+  const openCount = existingPlayers.filter(
+    (player) =>
+      !player.archived_at &&
+      player.average !== null &&
+      player.average !== undefined &&
+      Number(player.average) < threshold,
+  ).length;
+  if (openCount >= maximumOpen) {
+    throw new Error(
+      `This team has reached the limit of ${maximumOpen} Open Bowlers.`,
+    );
+  }
 };
 
 /* Creates a new user account and handles duplicate usernames and errors. */
@@ -316,6 +360,7 @@ export const addPlayerToTeam = async (
   teamId: string | number,
   leagueId: string | number,
   type: 'regular' | 'substitute' = 'regular',
+  profile: { average?: number | null; gender?: string | null } = {},
 ): Promise<LeagueMember | null> => {
   try {
     const trimmedName = name.trim();
@@ -348,7 +393,7 @@ export const addPlayerToTeam = async (
 
     const { data: existingPlayers, error: playersError } = await supabase
       .from(table.players)
-      .select('name, archived_at')
+      .select('name, average, archived_at')
       .eq('team_id', teamId)
       .eq('league_id', leagueId);
 
@@ -359,6 +404,16 @@ export const addPlayerToTeam = async (
       );
       return null;
     }
+
+    const playerProfile = {
+      average: profile.average ?? null,
+      gender: profile.gender ?? null,
+    };
+    await validatePlayerBowlerRules(
+      playerProfile,
+      leagueRules?.setup_config,
+      existingPlayers ?? [],
+    );
 
     const activePlayerCount = (existingPlayers ?? []).filter(
       (player) => !player.archived_at,
@@ -391,12 +446,14 @@ export const addPlayerToTeam = async (
       team_id: teamId,
       league_id: leagueId,
       type,
+      average: playerProfile.average,
+      gender: playerProfile.gender,
       status: 'active',
       created_at: createdAt,
       updated_at: createdAt,
     })
       .select(
-        'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
+        'id, name, team_id, league_id, type, status, average, games, gender, notes, position, created_at, updated_at, archived_at',
       )
       .single();
 
@@ -405,7 +462,15 @@ export const addPlayerToTeam = async (
       return null;
     }
 
-    return data as unknown as LeagueMember;
+    const createdPlayer = data as unknown as LeagueMember;
+    await recordTeamActivity(leagueId, teamId, 'player.created', {
+      player_id: createdPlayer.id,
+      player_name: createdPlayer.name,
+      player_type: type,
+      average: playerProfile.average,
+      gender: playerProfile.gender,
+    });
+    return createdPlayer;
   } catch (err) {
     catchError('Error creating player: ', err);
     return null;
@@ -414,20 +479,32 @@ export const addPlayerToTeam = async (
 
 /* Adds multiple players to a team within a league. */
 export const addPlayersToTeam = async (
-  names: string[],
+  names: Array<
+    string | { name: string; average?: number | null; gender?: string | null }
+  >,
   teamId: string | number,
   leagueId: string | number,
   type: 'regular' | 'substitute' = 'regular',
 ): Promise<LeagueMember[]> => {
   try {
-    const uniqueNames = new Map<string, string>();
+    const uniqueNames = new Map<
+      string,
+      { name: string; average: number | null; gender: string | null }
+    >();
 
-    for (const rawName of names) {
-      const name = rawName.trim();
+    for (const rawPlayer of names) {
+      const player =
+        typeof rawPlayer === 'string' ? { name: rawPlayer } : rawPlayer;
+      const name = player.name.trim();
       if (!name) continue;
 
       const key = normalizeName(name);
-      if (!uniqueNames.has(key)) uniqueNames.set(key, name);
+      if (!uniqueNames.has(key))
+        uniqueNames.set(key, {
+          name,
+          average: player.average ?? null,
+          gender: player.gender ?? null,
+        });
     }
 
     if (uniqueNames.size === 0) {
@@ -458,7 +535,7 @@ export const addPlayersToTeam = async (
 
     const { data: existingPlayers, error: playersError } = await supabase
       .from(table.players)
-      .select('name, archived_at')
+      .select('name, average, archived_at')
       .eq('team_id', teamId)
       .eq('league_id', leagueId);
 
@@ -470,13 +547,49 @@ export const addPlayersToTeam = async (
       return [];
     }
 
+    for (const inputPlayer of Array.from(uniqueNames.values())) {
+      await validatePlayerBowlerRules(
+        inputPlayer,
+        leagueRules?.setup_config,
+        existingPlayers ?? [],
+      );
+    }
+
     const existingNames = new Set(
       (existingPlayers ?? []).map((player) => normalizeName(player.name ?? '')),
     );
 
     const namesToInsert = Array.from(uniqueNames.entries())
       .filter(([key]) => !existingNames.has(key))
-      .map(([, name]) => name);
+      .map(([, player]) => player);
+
+    const setupConfig = leagueRules?.setup_config ?? {};
+    const threshold = Number(setupConfig.open_average_threshold);
+    const maximumOpen = Number(setupConfig.open_bowlers_max);
+    if (
+      setupConfig.allow_open_bowlers === true &&
+      Number.isFinite(threshold) &&
+      threshold > 0 &&
+      Number.isSafeInteger(maximumOpen) &&
+      maximumOpen >= 0
+    ) {
+      const existingOpenCount = (existingPlayers ?? []).filter(
+        (player) =>
+          !player.archived_at &&
+          player.average != null &&
+          Number(player.average) < threshold,
+      ).length;
+      const newOpenCount = namesToInsert.filter(
+        (player) => player.average !== null && player.average < threshold,
+      ).length;
+      if (existingOpenCount + newOpenCount > maximumOpen) {
+        toast.error(
+          `Only ${Math.max(0, maximumOpen - existingOpenCount)} Open Bowler slot(s) remain for this team.`,
+          errorToastStyle,
+        );
+        return [];
+      }
+    }
 
     const activePlayerCount = (existingPlayers ?? []).filter(
       (player) => !player.archived_at,
@@ -503,18 +616,20 @@ export const addPlayersToTeam = async (
 
     const createdAt = new Date().toISOString();
 
-    const players = namesToInsert.map((name) => ({
-      name,
+    const players = namesToInsert.map((player) => ({
+      name: player.name,
       team_id: teamId,
       league_id: leagueId,
       type,
+      average: player.average,
+      gender: player.gender,
       status: 'active',
       created_at: createdAt,
       updated_at: createdAt,
     }));
 
     const { data, error } = await insertHelper(table.players, players).select(
-      'id, name, team_id, league_id, type, status, notes, position, created_at, updated_at',
+      'id, name, team_id, league_id, type, status, average, games, gender, notes, position, created_at, updated_at, archived_at',
     );
 
     if (error) {
@@ -522,7 +637,19 @@ export const addPlayersToTeam = async (
       return [];
     }
 
-    return (data ?? []) as unknown as LeagueMember[];
+    const createdPlayers = (data ?? []) as unknown as LeagueMember[];
+    await Promise.all(
+      createdPlayers.map((player) =>
+        recordTeamActivity(leagueId, teamId, 'player.created', {
+          player_id: player.id,
+          player_name: player.name,
+          player_type: type,
+          average: player.average ?? null,
+          gender: player.gender ?? null,
+        }),
+      ),
+    );
+    return createdPlayers;
   } catch (err) {
     catchError('Error creating players: ', err);
     return [];
@@ -600,7 +727,11 @@ export const addTeam = async (
       return null;
     }
 
-    return data as unknown as LeagueTeam;
+    const createdTeam = data as unknown as LeagueTeam;
+    await recordTeamActivity(leagueId, createdTeam.id, 'team.created', {
+      team_name: createdTeam.name,
+    });
+    return createdTeam;
   } catch (err) {
     catchError('Error creating team: ', err);
     return null;
@@ -693,7 +824,15 @@ export const addTeams = async (
       return [];
     }
 
-    return (data ?? []) as unknown as LeagueTeam[];
+    const createdTeams = (data ?? []) as unknown as LeagueTeam[];
+    await Promise.all(
+      createdTeams.map((team) =>
+        recordTeamActivity(leagueId, team.id, 'team.created', {
+          team_name: team.name,
+        }),
+      ),
+    );
+    return createdTeams;
   } catch (err) {
     catchError('Error creating teams: ', err);
     return [];

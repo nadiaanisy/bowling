@@ -32,6 +32,22 @@ async function writeTeamActivity(
   }
 }
 
+/** Best-effort activity logging so an audit failure never reverses a saved roster change. */
+export async function recordTeamActivity(
+  leagueId: Id,
+  teamId: Id | null,
+  action: string,
+  details: Record<string, unknown> = {},
+): Promise<boolean> {
+  try {
+    await writeTeamActivity(leagueId, teamId, action, details);
+    return true;
+  } catch (error) {
+    console.error('Unable to record team activity:', error);
+    return false;
+  }
+}
+
 async function setTeamArchivedState(
   teamId: Id,
   leagueId: Id,
@@ -47,7 +63,7 @@ async function setTeamArchivedState(
     })
     .eq('id', teamId)
     .eq('league_id', leagueId)
-    .select('id')
+    .select('id, name')
     .maybeSingle();
 
   if (error) {
@@ -62,6 +78,7 @@ async function setTeamArchivedState(
     leagueId,
     teamId,
     archived ? 'team.archived' : 'team.restored',
+    { team_name: data.name },
   );
 }
 
@@ -90,7 +107,7 @@ async function setPlayerArchivedState(
     .eq('id', playerId)
     .eq('team_id', teamId)
     .eq('league_id', leagueId)
-    .select('id')
+    .select('id, name')
     .maybeSingle();
 
   if (error) {
@@ -107,7 +124,7 @@ async function setPlayerArchivedState(
     leagueId,
     teamId,
     archived ? 'player.archived' : 'player.restored',
-    { player_id: playerId },
+    { player_id: playerId, player_name: data.name },
   );
 }
 
@@ -159,9 +176,9 @@ export async function archiveTeams(
   teamIds: Id[],
   leagueId: Id,
 ): Promise<{
-    archivedIds: Id[];
-    failures: Array<{ teamId: Id; error: unknown }>;
-  }> {
+  archivedIds: Id[];
+  failures: Array<{ teamId: Id; error: unknown }>;
+}> {
   const results = await Promise.all(
     teamIds.map(async (teamId) => {
       try {

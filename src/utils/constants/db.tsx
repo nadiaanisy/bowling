@@ -10,6 +10,7 @@ export const table = {
   blocks: 'blocks',
   teams: 'teams',
   players: 'players',
+  teamActivity: 'team_activity',
   timetable: 'timetable',
   weeklyScore: 'weekly_scores',
   handicapSettings: 'handicap_settings',

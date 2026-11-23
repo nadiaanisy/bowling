@@ -1,7 +1,7 @@
 import type {
-  Dispatch,
-  ReactNode,
-  SetStateAction
+Dispatch,
+ReactNode,
+SetStateAction
 } from 'react';
 import { ActionsMenu } from './ActionsMenu';
 import { PlayersTable } from './PlayersTable';
@@ -45,8 +45,8 @@ import {
   AlertDialogTitle,
 } from '../../components/alert-dialog';
 import {
-  Users,
-  ListX
+Users,
+ListX
 } from 'lucide-react';
 
 export interface CardsProps {
@@ -80,6 +80,7 @@ export interface CardsProps {
   setAddMode: (mode: 'single' | 'multiple') => void;
   playerType: 'regular' | 'substitute';
   setPlayerType: (type: 'regular' | 'substitute') => void;
+  allowSubstitutes: boolean;
   newPlayerName: string;
   setNewPlayerName: (name: string) => void;
   multiplePlayerNames: string;
@@ -148,6 +149,7 @@ export function Cards({
   setAddMode,
   playerType,
   setPlayerType,
+  allowSubstitutes,
   newPlayerName,
   setNewPlayerName,
   multiplePlayerNames,
@@ -322,6 +324,7 @@ export function Cards({
               }
               playerType={playerType}
               setPlayerType={setPlayerType}
+              allowSubstitutes={allowSubstitutes}
               addMode={addMode}
               setAddMode={setAddMode}
               newPlayerName={newPlayerName}
@@ -329,7 +332,7 @@ export function Cards({
               multiplePlayerNames={multiplePlayerNames}
               setMultiplePlayerNames={setMultiplePlayerNames}
               creatingPlayer={creatingPlayer}
-              onSubmitSingle={(event) => {
+              onSubmitSingle={(event, profile) => {
                 event.preventDefault();
                 if (selectedTeam === null) return;
 
@@ -347,6 +350,7 @@ export function Cards({
                     setNewPlayerName(name);
                     if (!name) setDialogOpen(false);
                   },
+                  profile,
                 );
               }}
               onSubmitMultiple={(event) => {

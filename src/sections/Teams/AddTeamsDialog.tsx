@@ -1,4 +1,5 @@
 import type React from 'react';
+import { countNewTeamNames } from '../../functions/teams';
 import { Button } from '../../components/button';
 import {
   Dialog,
@@ -10,8 +11,8 @@ import {
 } from '../../components/dialog';
 import { Textarea } from '../../components/textarea';
 import {
-  Loader2,
-  Users
+Loader2,
+Users
 } from 'lucide-react';
 
 interface AddTeamsDialogProps {
@@ -21,6 +22,8 @@ interface AddTeamsDialogProps {
   setTeamNames: (value: string) => void;
   creatingTeams: boolean;
   existingTeams: Array<{ name: string }>;
+  registeredTeamsCount: number;
+  maxTeams: number | null;
   onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
 }
 
@@ -31,6 +34,8 @@ export function AddTeamsDialog({
   setTeamNames,
   creatingTeams,
   existingTeams,
+  registeredTeamsCount,
+  maxTeams,
   onSubmit,
 }: AddTeamsDialogProps) {
   const inputNames = teamNames
@@ -65,10 +70,18 @@ export function AddTeamsDialog({
     existingNames.has(name.toLowerCase()),
   );
 
+  const newTeamCount = countNewTeamNames(teamNames, existingTeams);
+  const remainingTeamSlots =
+    maxTeams === null
+      ? Number.POSITIVE_INFINITY
+      : Math.max(0, maxTeams - registeredTeamsCount);
+  const exceedsTeamLimit = newTeamCount > remainingTeamSlots;
+
   const canSubmit =
     parsedNames.length > 0 &&
     duplicateInputNames.length === 0 &&
     duplicateExistingNames.length === 0 &&
+    !exceedsTeamLimit &&
     !creatingTeams;
 
   return (
@@ -97,6 +110,7 @@ export function AddTeamsDialog({
           <DialogDescription>
             Enter one team name per line. Blank lines will be ignored. Team
             names must be unique and cannot match teams that already exist.
+            {maxTeams !== null && ` ${remainingTeamSlots} team slot(s) remain.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -133,6 +147,17 @@ Team D`}
                 <p className="mt-1">{duplicateExistingNames.join(', ')}</p>
               </div>
             )}
+
+            {exceedsTeamLimit && (
+              <div
+                role="alert"
+                className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+              >
+                You entered {newTeamCount} new teams, but only{' '}
+                {remainingTeamSlots} team slot(s) remain. Remove{' '}
+                {newTeamCount - remainingTeamSlots} name(s) to continue.
+              </div>
+            )}
           </div>
 
           <DialogFooter className="shrink-0">
@@ -151,8 +176,8 @@ Team D`}
               {creatingTeams
                 ? 'Adding Teams...'
                 : `Add ${parsedNames.length || ''} ${
-                  parsedNames.length === 1 ? 'Team' : 'Teams'
-                }`}
+                    parsedNames.length === 1 ? 'Team' : 'Teams'
+                  }`}
             </Button>
           </DialogFooter>
         </form>

@@ -6,5 +6,10 @@ export const TEAM_INPUT_CLASS =
 export const TEAM_SETUP_RULE_KEYS = {
   maxRosterSize: 'max_roster_size',
   gradedBowlersMin: 'graded_bowlers_min',
+  openBowlersMax: 'open_bowlers_max',
+  openBowlersPerWeek: 'open_bowlers_per_week',
   openBowlersAllowed: 'allow_open_bowlers',
+  openAverageThreshold: 'open_average_threshold',
+  minimumPlayersStart: 'minimum_players_start',
+  allowSubstitutes: 'allow_substitutes',
 } as const;
