@@ -1,30 +1,27 @@
 import {
-  FormEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState
+FormEvent,
+useCallback,
+useEffect,
+useMemo,
+useState
 } from 'react';
-import { useCustomHook } from '../utils/hooks';
+import { UseHook } from '../utils/hooks';
 import {
-  errorToastStyle,
-  successToastStyle
+errorToastStyle,
+successToastStyle
 } from './toast-styles';
 import {
-  addHandicapSetting,
-  addHandicapSettings
+addHandicapSetting,
+addHandicapSettings
 } from '../utils/api/add';
-import {
-  getHandicapSettings,
-  getLeagueHandicapConfig
-} from '../utils/api/get';
+import { getHandicapSettings } from '../utils/api/get';
 import {
   deleteHandicapSetting,
   deleteHandicapSettings,
 } from '../utils/api/delete';
 import {
-  saveLeagueHandicapConfig,
   updateHandicapSetting,
+  saveLeagueSetupProgress,
 } from '../utils/api/update';
 import {
   HandicapImportPreview,
@@ -33,8 +30,40 @@ import {
 } from '../utils/interfaces';
 import { toast } from 'sonner';
 
+type HandicapCaps = { enabled: boolean; men: number; women: number };
+
+const getConfiguredCaps = (
+  setupConfig?: Record<string, unknown> | null,
+): HandicapCaps => {
+  const numericCap = (value: unknown) => {
+    const parsed = Number(value ?? 0);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+  };
+  return {
+    enabled:
+      (setupConfig?.enable_handicap === true ||
+        setupConfig?.enable_handicap === 'true') &&
+      setupConfig?.calculation_method !== 'No handicap',
+    men: numericCap(setupConfig?.men_maximum),
+    women: numericCap(setupConfig?.ladies_maximum),
+  };
+};
+
+const getCapError = (men: number, women: number | null, caps: HandicapCaps) => {
+  if (!caps.enabled) return '';
+  if (men > caps.men) {
+    return `Men's handicap ${men} exceeds the league maximum of ${caps.men}.`;
+  }
+  if (women !== null && women > caps.women) {
+    return `Women's handicap ${women} exceeds the league maximum of ${caps.women}.`;
+  }
+  return '';
+};
+
 export function useHandicap(leagueId: string | number | null) {
   const {
+    listOfLeaguesByUser,
+    setListOfLeaguesByUser,
     rules,
     setRules,
     isLoading,
@@ -75,7 +104,15 @@ export function useHandicap(leagueId: string | number | null) {
     setIsSavingConfig,
     bulkFileName,
     setBulkFileName,
-  } = useCustomHook();
+  } = UseHook();
+
+  const selectedLeague = listOfLeaguesByUser.find(
+    (item) => String(item.id) === String(leagueId),
+  );
+  const leagueHandicapCaps = useMemo(
+    () => getConfiguredCaps(selectedLeague?.setup_config),
+    [selectedLeague?.setup_config],
+  );
 
   const [bulkEditOpen, setBulkEditOpen] = useState(false);
   const [bulkEditMenValue, setBulkEditMenValue] = useState('');
@@ -98,14 +135,14 @@ export function useHandicap(leagueId: string | number | null) {
     setLoadError('');
 
     try {
-      const [data, config] = await Promise.all([
-        getHandicapSettings(leagueId),
-        getLeagueHandicapConfig(leagueId),
-      ]);
+      const data = await getHandicapSettings(leagueId);
+      const league = listOfLeaguesByUser.find(
+        (item) => String(item.id) === String(leagueId),
+      );
       setRules([...data].sort((a, b) => a.average - b.average));
       setSelectedRuleIds([]);
-      setMenMaxHandicap(String(config?.men_max_handicap ?? 40));
-      setWomenMaxHandicap(String(config?.women_max_handicap ?? 50));
+      setMenMaxHandicap(String(league?.setup_config?.men_maximum ?? '0'));
+      setWomenMaxHandicap(String(league?.setup_config?.ladies_maximum ?? '0'));
     } catch (error) {
       setRules([]);
       setLoadError(
@@ -118,6 +155,7 @@ export function useHandicap(leagueId: string | number | null) {
     }
   }, [
     leagueId,
+    listOfLeaguesByUser,
     setRules,
     setSelectedRuleIds,
     setLoadError,
@@ -137,8 +175,9 @@ export function useHandicap(leagueId: string | number | null) {
       previewHandicapImport(
         bulkInput,
         rules.map((rule) => Number(rule.average)),
+        leagueHandicapCaps,
       ),
-    [bulkInput, rules],
+    [bulkInput, rules, leagueHandicapCaps],
   );
 
   /* Clears the add/edit form and its current editing target. */
@@ -241,6 +280,12 @@ export function useHandicap(leagueId: string | number | null) {
     const men = Number(menHandicap);
     const women = Number(womenHandicap);
 
+    const capError = getCapError(men, women, leagueHandicapCaps);
+    if (capError) {
+      toast.error(capError, errorToastStyle);
+      return;
+    }
+
     const duplicateAverage = rules.some(
       (rule) => Number(rule.average) === avg && rule.id !== editingRule?.id,
     );
@@ -292,6 +337,7 @@ export function useHandicap(leagueId: string | number | null) {
     const preview = previewHandicapImport(
       bulkInput,
       rules.map((rule) => Number(rule.average)),
+      leagueHandicapCaps,
     );
 
     if (preview.dataRowCount === 0 || preview.rows.length === 0) {
@@ -395,10 +441,53 @@ export function useHandicap(leagueId: string | number | null) {
       return;
     }
 
+    if (leagueHandicapCaps.enabled) {
+      const overMaximum = rules.filter(
+        (rule) =>
+          Number(rule.men_handicap) > men ||
+          (rule.women_handicap !== null && Number(rule.women_handicap) > women),
+      );
+      if (overMaximum.length > 0) {
+        toast.error(
+          `Cannot lower the maximum while existing rules exceed it. Review AVG: ${overMaximum.map((rule) => rule.average).join(', ')}.`,
+          errorToastStyle,
+        );
+        return;
+      }
+    }
+
     setIsSavingConfig(true);
     try {
-      await saveLeagueHandicapConfig(leagueId, men, women);
-      toast.success('Maximum handicap settings saved.', successToastStyle);
+      const league = listOfLeaguesByUser.find(
+        (item) => String(item.id) === String(leagueId),
+      );
+      if (!league) {
+        throw new Error(
+          'Unable to find the selected league settings. Reload the page and try again.',
+        );
+      }
+
+      const setupConfig = {
+        ...(league.setup_config ?? {}),
+        men_maximum: String(men),
+        ladies_maximum: String(women),
+      };
+      const updatedAt = await saveLeagueSetupProgress(leagueId, setupConfig);
+      if (!updatedAt) {
+        return;
+      }
+
+      setListOfLeaguesByUser((current) =>
+        current.map((item) =>
+          String(item.id) === String(leagueId)
+            ? { ...item, setup_config: setupConfig, updated_at: updatedAt }
+            : item,
+        ),
+      );
+      toast.success(
+        'Maximum handicaps saved to League Setup.',
+        successToastStyle,
+      );
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -479,6 +568,20 @@ export function useHandicap(leagueId: string | number | null) {
       setBulkEditError(
         'The selected rules already have these values. No changes are needed.',
       );
+      return;
+    }
+
+    const capError = changedRules
+      .map((rule) =>
+        getCapError(
+          nextMenValue ?? Number(rule.men_handicap),
+          nextWomenValue ?? Number(rule.women_handicap),
+          leagueHandicapCaps,
+        ),
+      )
+      .find(Boolean);
+    if (capError) {
+      setBulkEditError(capError);
       return;
     }
 
@@ -774,6 +877,7 @@ const isHeaderRow = (values: string[]): boolean => {
 export const previewHandicapImport = (
   input: string,
   existingAverages: number[],
+  caps?: HandicapCaps,
 ): HandicapImportPreview => {
   const cleanInput = input.replace(/^\uFEFF/, '');
   const sourceLines = cleanInput.split(/\r?\n/);
@@ -836,6 +940,17 @@ export const previewHandicapImport = (
       womenHandicapText && isValidNumber(womenHandicapText, 0)
         ? Number(womenHandicapText)
         : null;
+
+    if (caps?.enabled && men_handicap !== null && men_handicap > caps.men) {
+      errors.push(`Men's HDC exceeds the league maximum of ${caps.men}.`);
+    }
+    if (
+      caps?.enabled &&
+      women_handicap !== null &&
+      women_handicap > caps.women
+    ) {
+      errors.push(`Women's HDC exceeds the league maximum of ${caps.women}.`);
+    }
 
     if (average !== null) {
       if (existing.has(average))
