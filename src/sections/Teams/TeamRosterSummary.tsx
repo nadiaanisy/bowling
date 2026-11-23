@@ -1,9 +1,8 @@
 import { Team } from '../../utils/type';
 import {
-  UsersRound,
-  UserRound,
-  UserRoundCheck,
-  Users
+UsersRound,
+UserRound,
+UserRoundCheck
 } from 'lucide-react';
 
 type Props = {
@@ -21,10 +20,6 @@ export default function TeamRosterSummary({ teams }: Props) {
     (player) => (player.status ?? '').toLowerCase() === 'active',
   );
 
-  const teamsWithPlayers = activeTeams.filter((team) =>
-    team.members.some((player) => !player.archived_at),
-  );
-
   const stats = [
     {
       label: 'Teams',
@@ -39,18 +34,12 @@ export default function TeamRosterSummary({ teams }: Props) {
       icon: UserRoundCheck,
       tone: 'green',
     },
-    {
-      label: 'Teams with players',
-      value: teamsWithPlayers.length,
-      icon: Users,
-      tone: 'violet',
-    },
   ];
 
   return (
     <section
       aria-label="Team roster summary"
-      className="grid grid-cols-2 gap-3 xl:grid-cols-4"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-3"
     >
       {stats.map((stat, index) => (
         <div

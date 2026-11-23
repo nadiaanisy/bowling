@@ -1,18 +1,14 @@
-import {
-  useMemo,
-  useEffect,
-  useState
-} from 'react';
 import type React from 'react';
 import Grid from './Grid';
 import { Cards } from './Cards';
 import Header from './Header';
-import { AdvancedPlayerFiltersValue } from '../../utils/type';
 import { AddTeamsDialog } from './AddTeamsDialog';
 import { EditTeamDialog } from './EditTeamDialog';
 import ManagementCard from './ManagementCard';
-import { useCustomHook } from '../../utils/hooks';
-import { getTeamsWithMembersByLeague } from '../../utils/api/get';
+import {
+UseHook,
+useTeamsSection
+} from '../../utils/hooks';
 import TeamActivityPanel from './TeamActivityPanel';
 import TeamRosterSummary from './TeamRosterSummary';
 import ArchivedTeamsPanel from './ArchivedTeamsPanel';
@@ -23,11 +19,15 @@ import {
   handleDeleteTeams,
   hasTeamChanges,
   toggleSelectAllTeams,
+  countRegisteredTeams,
+  getConfiguredTeamLimit,
+  getTeamSetupRuleValue,
+  countNewTeamNames,
 } from '../../functions/teams';
 import { ConfirmDeleteDialog } from './ConfirmDeleteDialog';
 import ArchivedPlayersPanel from './ArchivedPlayersPanel';
-import AdvancedPlayerFilters from './AdvancedPlayerFilters';
 import { archiveTeams } from '../../utils/api/teamArchive';
+import { TEAM_SETUP_RULE_KEYS } from '../../utils/constants/teams';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,8 +40,9 @@ import {
 } from '../../components/alert-dialog';
 import { toast } from 'sonner';
 import {
-  Search,
-  X
+Search,
+X,
+UsersRound
 } from 'lucide-react';
 
 export default function Teams() {
@@ -135,193 +136,34 @@ export default function Teams() {
     setArchivedTeamsRefreshKey,
     archivedPlayersRefreshKey,
     setArchivedPlayersRefreshKey,
-  } = useCustomHook();
+    listOfLeaguesByUser,
+  } = UseHook();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [bulkArchiveConfirmOpen, setBulkArchiveConfirmOpen] = useState(false);
-  const [bulkArchivingTeams, setBulkArchivingTeams] = useState(false);
-  const pageSize = 12;
-
-  const [advancedFilters, setAdvancedFilters] =
-    useState<AdvancedPlayerFiltersValue>({
-      playerName: '',
-      teamId: '',
-      status: '',
-      playerType: '',
-    });
-
-  const filteredTeams = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    const playerQuery = advancedFilters.playerName.trim().toLowerCase();
-
-    return [...teams]
-      .sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, {
-          sensitivity: 'base',
-        }),
-      )
-      .map((team) => {
-        const teamMatches = !query || team.name.toLowerCase().includes(query);
-
-        const teamIdMatches =
-          !advancedFilters.teamId || String(team.id) === advancedFilters.teamId;
-
-        const members = team.members.filter((player) => {
-          if (player.archived_at) return false;
-
-          const matchesName =
-            !playerQuery || player.name.toLowerCase().includes(playerQuery);
-
-          const matchesExistingSearch =
-            !query ||
-            team.name.toLowerCase().includes(query) ||
-            player.name.toLowerCase().includes(query);
-
-          const matchesStatus =
-            !advancedFilters.status || player.status === advancedFilters.status;
-
-          const matchesType =
-            !advancedFilters.playerType ||
-            player.type === advancedFilters.playerType;
-
-          return (
-            matchesName &&
-            matchesExistingSearch &&
-            matchesStatus &&
-            matchesType &&
-            teamIdMatches
-          );
-        });
-
-        const hasAdvancedFilter = Boolean(
-          playerQuery ||
-          advancedFilters.teamId ||
-          advancedFilters.status ||
-          advancedFilters.playerType,
-        );
-
-        return {
-          ...team,
-          members,
-          shouldShow:
-            teamMatches || members.length > 0 || (!hasAdvancedFilter && !query),
-        };
-      })
-      .filter((team) => team.shouldShow)
-      .map(({ shouldShow: _shouldShow, ...team }) => team);
-  }, [teams, searchQuery, advancedFilters]);
-
-  const selectedTeamRecords = teams.filter((team) =>
-    selectedTeams.some((id) => String(id) === String(team.id)),
+  const selectedLeagueRecord = listOfLeaguesByUser.find(
+    (league) => String(league.id) === String(selectedLeague),
   );
-
-  const totalPages = Math.max(1, Math.ceil(filteredTeams.length / pageSize));
-  const paginatedTeams = filteredTeams.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
+  const maxTeams = getConfiguredTeamLimit(
+    selectedLeagueRecord?.number_of_teams,
   );
+  const registeredTeamsCount = countRegisteredTeams(teams);
+  const setupConfig = (selectedLeagueRecord?.setup_config ?? {}) as Record<
+    string,
+    unknown
+  >;
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, advancedFilters, selectedLeague]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) setCurrentPage(totalPages);
-  }, [currentPage, totalPages]);
-
-  // Keep page-local selections and open dialogs isolated to the selected league.
-  useEffect(() => {
-    setTeams([]);
-    setSearchQuery('');
-    setSelectedTeam(null);
-    setSelectedTeams([]);
-    setSelectedPlayers({});
-    setBulkDeleteMode({});
-    setBulkTeamDeleteMode(false);
-    setBulkPlayerTypeValue({});
-    setBulkTransferTeamId({});
-    setOpenTeamMenu(null);
-    setPendingDeleteType(null);
-    setDialogOpen(false);
-    setBulkTeamDialogOpen(false);
-    setEditingTeamId(null);
-    setEditingPlayerId(null);
-    setNewPlayerName('');
-    setMultiplePlayerNames('');
-    setMultipleTeamNames('');
-    setNewTeamName('');
-    setConfirmOpen(false);
-  }, [
-    selectedLeague,
-    setTeams,
-    setSearchQuery,
-    setSelectedTeam,
-    setSelectedTeams,
-    setSelectedPlayers,
-    setBulkDeleteMode,
-    setBulkTeamDeleteMode,
-    setBulkPlayerTypeValue,
-    setBulkTransferTeamId,
-    setOpenTeamMenu,
-    setPendingDeleteType,
-    setDialogOpen,
-    setBulkTeamDialogOpen,
-    setEditingTeamId,
-    setEditingPlayerId,
-    setNewPlayerName,
-    setMultiplePlayerNames,
-    setMultipleTeamNames,
-    setNewTeamName,
-    setConfirmOpen,
-  ]);
-
-  useEffect(() => {
-    let isCurrent = true;
-
-    const loadTeams = async () => {
-      setIsLoadingTeams(true);
-      setTeamsLoadError(null);
-
-      try {
-        const teamList = await getTeamsWithMembersByLeague(selectedLeague);
-
-        if (isCurrent) {
-          setTeams(teamList);
-        }
-      } catch (err) {
-        if (isCurrent) {
-          setTeams([]);
-
-          setTeamsLoadError(
-            err instanceof Error ? err.message : 'Unable to load teams.',
-          );
-        }
-      } finally {
-        if (isCurrent) {
-          setIsLoadingTeams(false);
-        }
-      }
-    };
-
-    void loadTeams();
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [
-    selectedLeague,
-    teamsReloadKey,
-    setTeams,
-    setIsLoadingTeams,
-    setTeamsLoadError,
-  ]);
-
-  const allVisibleTeamsSelected =
-    filteredTeams.length > 0 &&
-    filteredTeams.every((team) =>
-      selectedTeams.some((id) => String(id) === String(team.id)),
-    );
-
+  const {
+    currentPage,
+    setCurrentPage,
+    bulkArchiveConfirmOpen,
+    setBulkArchiveConfirmOpen,
+    bulkArchivingTeams,
+    setBulkArchivingTeams,
+    filteredTeams,
+    totalPages,
+    paginatedTeams,
+    selectedTeamRecords,
+    allVisibleTeamsSelected,
+  } = useTeamsSection();
   const teamCardProps: Omit<React.ComponentProps<typeof Cards>, 'team'> = {
     teams,
     searchQuery,
@@ -435,6 +277,41 @@ export default function Teams() {
         <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_364px]">
           {/* LEFT COLUMN */}
           <main className="min-w-0 space-y-4">
+            <section className="rounded-2xl border border-violet-500/50 bg-gradient-to-r from-violet-950/40 to-[#15111f] p-4 sm:p-5">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-violet-500/20 text-violet-200">
+                  <UsersRound className="h-6 w-6" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-violet-100">
+                    Teams registered
+                  </p>
+                  <p className="mt-1 text-xl font-bold text-white">
+                    {registeredTeamsCount}
+                    {maxTeams !== null ? ` of ${maxTeams} teams` : ' teams'}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Blind is added automatically for scheduling when the actual
+                    team count is odd; it does not use a registered team slot.
+                  </p>
+                </div>
+                {maxTeams !== null && (
+                  <div className="h-3 min-w-[180px] flex-1 overflow-hidden rounded-full bg-violet-950/80">
+                    <div
+                      role="progressbar"
+                      aria-label="Registered teams progress"
+                      aria-valuemin={0}
+                      aria-valuemax={maxTeams}
+                      aria-valuenow={Math.min(registeredTeamsCount, maxTeams)}
+                      className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-violet-400 transition-all"
+                      style={{
+                        width: `${Math.min(100, (registeredTeamsCount / maxTeams) * 100)}%`,
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </section>
             <TeamRosterSummary teams={teams} />
 
             <section className="rounded-xl border border-violet-900/70 bg-[#11131f] p-4 shadow-sm">
@@ -496,6 +373,12 @@ export default function Teams() {
               setNewTeamName={setNewTeamName}
               creatingTeam={creatingTeam}
               onCreateTeam={() => {
+                if (maxTeams !== null && registeredTeamsCount >= maxTeams) {
+                  toast.error(
+                    `This league allows up to ${maxTeams} registered teams.`,
+                  );
+                  return;
+                }
                 void handleCreateTeam(
                   creatingTeam,
                   setCreatingTeam,
@@ -507,16 +390,53 @@ export default function Teams() {
                 );
               }}
               onOpenBulkCreate={() => {
+                if (maxTeams !== null && registeredTeamsCount >= maxTeams) {
+                  toast.error(
+                    `This league allows up to ${maxTeams} registered teams.`,
+                  );
+                  return;
+                }
                 setMultipleTeamNames('');
                 setBulkTeamDialogOpen(true);
               }}
+              registeredTeamsCount={registeredTeamsCount}
+              maxTeams={maxTeams}
             />
 
-            <AdvancedPlayerFilters
-              teams={teams}
-              value={advancedFilters}
-              onChange={setAdvancedFilters}
-            />
+            <section className="rounded-xl border border-violet-400/20 bg-gradient-to-br from-[#17131f] to-[#100d17] p-4">
+              <h2 className="font-semibold text-white">Player roster rules</h2>
+              <p className="mb-2 mt-1 text-xs text-slate-400">
+                Values are read from League Setup and applied when players are
+                added.
+              </p>
+              <SetupRule
+                label="Maximum roster size"
+                value={getTeamSetupRuleValue(
+                  setupConfig,
+                  TEAM_SETUP_RULE_KEYS.maxRosterSize,
+                )}
+                suffix=" players"
+              />
+              <SetupRule
+                label="Minimum graded bowlers"
+                value={getTeamSetupRuleValue(
+                  setupConfig,
+                  TEAM_SETUP_RULE_KEYS.gradedBowlersMin,
+                )}
+                suffix=" players"
+              />
+              <SetupRule
+                label="Open bowlers allowed"
+                value={
+                  setupConfig[TEAM_SETUP_RULE_KEYS.openBowlersAllowed] === true
+                    ? 'Yes'
+                    : 'No'
+                }
+                positive={
+                  setupConfig[TEAM_SETUP_RULE_KEYS.openBowlersAllowed] === true
+                }
+              />
+            </section>
 
             <ArchivedTeamsPanel
               leagueId={selectedLeague}
@@ -554,6 +474,18 @@ export default function Teams() {
           existingTeams={teams}
           onSubmit={(event) => {
             event.preventDefault();
+
+            const requestedTeams = countNewTeamNames(multipleTeamNames, teams);
+            const remainingSlots =
+              maxTeams === null
+                ? Number.POSITIVE_INFINITY
+                : Math.max(0, maxTeams - registeredTeamsCount);
+            if (requestedTeams > remainingSlots) {
+              toast.error(
+                `Only ${remainingSlots} registered team slot(s) remain.`,
+              );
+              return;
+            }
 
             void handleCreateTeams(
               creatingTeams,
@@ -722,6 +654,30 @@ export default function Teams() {
           }}
         />
       </div>
+    </div>
+  );
+}
+
+function SetupRule({
+  label,
+  value,
+  suffix = '',
+  positive = false,
+}: {
+  label: string;
+  value: string;
+  suffix?: string;
+  positive?: boolean;
+}) {
+  const displayValue = value === 'Not set' ? value : `${value}${suffix}`;
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-white/[0.07] py-2 last:border-0">
+      <span className="text-sm text-slate-300">{label}</span>
+      <span
+        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${positive ? 'bg-emerald-500/15 text-emerald-200' : 'bg-violet-400/10 text-violet-100'}`}
+      >
+        {displayValue}
+      </span>
     </div>
   );
 }

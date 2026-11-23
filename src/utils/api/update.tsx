@@ -355,6 +355,46 @@ export const bulkTransferPlayersToTeam = async (
   }
 
   try {
+    const { data: leagueConfigData, error: configError } = await getHelper(
+      table.leagues,
+      'setup_config',
+    )
+      .eq('id', leagueId)
+      .maybeSingle();
+    if (configError)
+      throw new Error(
+        `Unable to load League Setup rules: ${configError.message}`,
+      );
+    const leagueConfig = leagueConfigData as unknown as {
+      setup_config: Record<string, unknown> | null;
+    } | null;
+    const rosterLimit = Number(leagueConfig?.setup_config?.max_roster_size);
+    if (Number.isSafeInteger(rosterLimit) && rosterLimit > 0) {
+      const { count, error: rosterError } = await getHelper(
+        table.players,
+        'id',
+        {
+          count: 'exact',
+          head: true,
+        },
+      )
+        .eq('team_id', toTeamId)
+        .eq('league_id', leagueId)
+        .is('archived_at', null);
+      if (rosterError)
+        throw new Error(
+          `Unable to check destination roster: ${rosterError.message}`,
+        );
+      if ((count ?? 0) + uniqueIds.length > rosterLimit) {
+        const remaining = Math.max(0, rosterLimit - (count ?? 0));
+        toast.error(
+          `Only ${remaining} roster slot(s) remain on the destination team.`,
+          errorToastStyle,
+        );
+        return [];
+      }
+    }
+
     const { data: sourceTeam, error: sourceTeamError } = await getHelper(
       table.teams,
       'id',
@@ -441,6 +481,29 @@ export const bulkUpdatePlayersType = async (
   if (uniqueIds.length === 0) return [];
 
   try {
+    if (type === 'substitute') {
+      const { data: leagueConfigData, error: configError } = await getHelper(
+        table.leagues,
+        'setup_config',
+      )
+        .eq('id', leagueId)
+        .maybeSingle();
+      if (configError)
+        throw new Error(
+          `Unable to load League Setup rules: ${configError.message}`,
+        );
+      const leagueConfig = leagueConfigData as unknown as {
+        setup_config: Record<string, unknown> | null;
+      } | null;
+      if (leagueConfig?.setup_config?.allow_substitutes !== true) {
+        toast.error(
+          'Substitute players are disabled in League Setup.',
+          errorToastStyle,
+        );
+        return [];
+      }
+    }
+
     const { data, error } = await updateHelper(table.players, {
       type,
       updated_at: new Date().toISOString(),
@@ -475,6 +538,29 @@ export const updatePlayerInTeam = async (
   },
 ): Promise<LeagueMember | null> => {
   try {
+    if (values.type === 'substitute') {
+      const { data: leagueConfigData, error: configError } = await getHelper(
+        table.leagues,
+        'setup_config',
+      )
+        .eq('id', leagueId)
+        .maybeSingle();
+      if (configError)
+        throw new Error(
+          `Unable to load League Setup rules: ${configError.message}`,
+        );
+      const leagueConfig = leagueConfigData as unknown as {
+        setup_config: Record<string, unknown> | null;
+      } | null;
+      if (leagueConfig?.setup_config?.allow_substitutes !== true) {
+        toast.error(
+          'Substitute players are disabled in League Setup.',
+          errorToastStyle,
+        );
+        return null;
+      }
+    }
+
     const { data: team, error: teamError } = await getHelper(table.teams, 'id')
       .eq('id', teamId)
       .eq('league_id', leagueId)

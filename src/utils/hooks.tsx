@@ -1,15 +1,18 @@
 import {
-ReactNode,
-useContext,
-useEffect,
-useRef,
-useState
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
 } from 'react';
+import type { FormEvent } from 'react';
 import { BlockSetupDialogFormValues } from './type';
 import {
-checkIfLeagueHasBlocks,
-getLeaguesByUser,
-loginUser
+  checkIfLeagueHasBlocks,
+  getLeaguesByUser,
+  getTeamsWithMembersByLeague,
+  loginUser,
 } from './api/get';
 import { Context } from './provider';
 import {
@@ -17,9 +20,34 @@ import {
   HandicapChangeHistory,
   HandicapSetting,
   League,
+  LeagueMember,
+  LeagueTeamWithMembers,
   User,
 } from './interfaces';
+import { TEAM_PAGE_SIZE } from './constants/teams';
 import { initialLeagueSetupValues } from './constants/league';
+import {
+  PLAYER_DEFAULT_FILTERS,
+  PLAYER_DEFAULT_STATUS,
+  PLAYER_SETUP_RULE_KEYS,
+} from './constants/players';
+import type { PlayerRosterType } from './constants/players';
+import {
+  addPlayerRecordsInBulk,
+  filterPlayerRows,
+  openAddPlayerForm,
+  openBulkAddPlayerForm,
+  openEditPlayerForm,
+  positiveSetupNumber,
+  resetPlayerForm,
+  runPlayerActions,
+  savePlayerRecord,
+  toActivePlayerRows,
+} from '../functions/players';
+import type {
+PlayerRow,
+PendingPlayerAction
+} from '../functions/players';
 import {
   emptyRanges,
   RangeFilters,
@@ -45,6 +73,395 @@ export const UseHook = () => {
     throw new Error('Hook must be used within Provider');
   }
   return context;
+};
+
+/** Page-local Teams state and league-scoped team loading/filtering. */
+export const useTeamsSection = () => {
+  const state = UseHook();
+  const {
+    selectedLeague,
+    searchQuery,
+    setSearchQuery,
+    teams,
+    setTeams,
+    teamsReloadKey,
+    setIsLoadingTeams,
+    setTeamsLoadError,
+    selectedTeams,
+    setSelectedTeams,
+    setSelectedTeam,
+    setSelectedPlayers,
+    setBulkDeleteMode,
+    setBulkTeamDeleteMode,
+    setBulkPlayerTypeValue,
+    setBulkTransferTeamId,
+    setOpenTeamMenu,
+    setPendingDeleteType,
+    setDialogOpen,
+    setBulkTeamDialogOpen,
+    setEditingTeamId,
+    setEditingPlayerId,
+    setNewPlayerName,
+    setMultiplePlayerNames,
+    setMultipleTeamNames,
+    setNewTeamName,
+    setConfirmOpen,
+  } = state;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [bulkArchiveConfirmOpen, setBulkArchiveConfirmOpen] = useState(false);
+  const [bulkArchivingTeams, setBulkArchivingTeams] = useState(false);
+  const query = searchQuery.trim().toLocaleLowerCase();
+  const filteredTeams = useMemo(
+    () =>
+      [...teams]
+        .sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }),
+        )
+        .map((team) => ({
+          ...team,
+          members: team.members.filter(
+            (player) =>
+              !player.archived_at &&
+              (!query ||
+                team.name.toLocaleLowerCase().includes(query) ||
+                player.name.toLocaleLowerCase().includes(query)),
+          ),
+          shouldShow:
+            !query ||
+            team.name.toLocaleLowerCase().includes(query) ||
+            team.members.some(
+              (player) =>
+                !player.archived_at &&
+                player.name.toLocaleLowerCase().includes(query),
+            ),
+        }))
+        .filter((team) => team.shouldShow)
+        .map(({ shouldShow: _shouldShow, ...team }) => team),
+    [teams, query],
+  );
+  const pageSize = TEAM_PAGE_SIZE;
+  const totalPages = Math.max(1, Math.ceil(filteredTeams.length / pageSize));
+  const paginatedTeams = filteredTeams.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+  const selectedTeamRecords = teams.filter((team) =>
+    selectedTeams.some((id) => String(id) === String(team.id)),
+  );
+  const allVisibleTeamsSelected =
+    filteredTeams.length > 0 &&
+    filteredTeams.every((team) =>
+      selectedTeams.some((id) => String(id) === String(team.id)),
+    );
+
+  useEffect(() => setCurrentPage(1), [searchQuery, selectedLeague]);
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [currentPage, totalPages]);
+  useEffect(() => {
+    setTeams([]);
+    setSearchQuery('');
+    setSelectedTeam(null);
+    setSelectedTeams([]);
+    setSelectedPlayers({});
+    setBulkDeleteMode({});
+    setBulkTeamDeleteMode(false);
+    setBulkPlayerTypeValue({});
+    setBulkTransferTeamId({});
+    setOpenTeamMenu(null);
+    setPendingDeleteType(null);
+    setDialogOpen(false);
+    setBulkTeamDialogOpen(false);
+    setEditingTeamId(null);
+    setEditingPlayerId(null);
+    setNewPlayerName('');
+    setMultiplePlayerNames('');
+    setMultipleTeamNames('');
+    setNewTeamName('');
+    setConfirmOpen(false);
+  }, [
+    selectedLeague,
+    setTeams,
+    setSearchQuery,
+    setSelectedTeam,
+    setSelectedTeams,
+    setSelectedPlayers,
+    setBulkDeleteMode,
+    setBulkTeamDeleteMode,
+    setBulkPlayerTypeValue,
+    setBulkTransferTeamId,
+    setOpenTeamMenu,
+    setPendingDeleteType,
+    setDialogOpen,
+    setBulkTeamDialogOpen,
+    setEditingTeamId,
+    setEditingPlayerId,
+    setNewPlayerName,
+    setMultiplePlayerNames,
+    setMultipleTeamNames,
+    setNewTeamName,
+    setConfirmOpen,
+  ]);
+  useEffect(() => {
+    let current = true;
+    const load = async () => {
+      setIsLoadingTeams(true);
+      setTeamsLoadError(null);
+      try {
+        const rows = await getTeamsWithMembersByLeague(selectedLeague);
+        if (current) setTeams(rows);
+      } catch (error) {
+        if (current) {
+          setTeams([]);
+          setTeamsLoadError(
+            error instanceof Error ? error.message : 'Unable to load teams.',
+          );
+        }
+      } finally {
+        if (current) setIsLoadingTeams(false);
+      }
+    };
+    void load();
+    return () => {
+      current = false;
+    };
+  }, [
+    selectedLeague,
+    teamsReloadKey,
+    setTeams,
+    setIsLoadingTeams,
+    setTeamsLoadError,
+  ]);
+
+  return {
+    currentPage,
+    setCurrentPage,
+    bulkArchiveConfirmOpen,
+    setBulkArchiveConfirmOpen,
+    bulkArchivingTeams,
+    setBulkArchivingTeams,
+    filteredTeams,
+    totalPages,
+    paginatedTeams,
+    selectedTeamRecords,
+    allVisibleTeamsSelected,
+  };
+};
+
+/** Player page state, league-scoped data loading, and derived roster values. */
+export const usePlayersSection = () => {
+  const { selectedLeague, listOfLeaguesByUser, teams, setTeams } = UseHook();
+  const league = listOfLeaguesByUser.find(
+    (item) => String(item.id) === String(selectedLeague),
+  );
+  const config = (league?.setup_config ?? {}) as Record<string, unknown>;
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
+  const [query, setQuery] = useState('');
+  const [teamFilter, setTeamFilter] = useState(PLAYER_DEFAULT_FILTERS.team);
+  const [typeFilter, setTypeFilter] = useState(
+    PLAYER_DEFAULT_FILTERS.rosterType,
+  );
+  const [statusFilter, setStatusFilter] = useState(
+    PLAYER_DEFAULT_FILTERS.status,
+  );
+  const [selectedIds, setSelectedIds] = useState<Array<string | number>>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<PlayerRow | null>(null);
+  const [name, setName] = useState('');
+  const [teamId, setTeamId] = useState('');
+  const [rosterType, setRosterType] = useState<PlayerRosterType>('regular');
+  const [status, setStatus] = useState<string>(PLAYER_DEFAULT_STATUS);
+  const [notes, setNotes] = useState('');
+  const [bulkNames, setBulkNames] = useState('');
+  const [bulkMode, setBulkMode] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [pendingAction, setPendingAction] = useState<PendingPlayerAction>(null);
+  const [archivedRefreshKey, setArchivedRefreshKey] = useState(0);
+  const players = useMemo(() => toActivePlayerRows(teams), [teams]);
+  const filteredPlayers = useMemo(
+    () =>
+      filterPlayerRows(players, query, teamFilter, typeFilter, statusFilter),
+    [players, query, teamFilter, typeFilter, statusFilter],
+  );
+  const activeCount = players.filter(
+    (player) => (player.status ?? 'active') === 'active',
+  ).length;
+  const regularCount = players.filter(
+    (player) => (player.type ?? 'regular') === 'regular',
+  ).length;
+  const substituteCount = players.length - regularCount;
+  const rosterMax = positiveSetupNumber(
+    config,
+    PLAYER_SETUP_RULE_KEYS.maxRosterSize,
+  );
+  const gradedMin = positiveSetupNumber(
+    config,
+    PLAYER_SETUP_RULE_KEYS.gradedBowlersMin,
+  );
+  const openMax = positiveSetupNumber(
+    config,
+    PLAYER_SETUP_RULE_KEYS.openBowlersMax,
+  );
+  const threshold = positiveSetupNumber(
+    config,
+    PLAYER_SETUP_RULE_KEYS.openAverageThreshold,
+  );
+  const minimumPlayers = positiveSetupNumber(
+    config,
+    PLAYER_SETUP_RULE_KEYS.minimumPlayersStart,
+  );
+  const playerFormSetters = {
+    setName,
+    setTeamId,
+    setRosterType,
+    setStatus,
+    setNotes,
+    setBulkNames,
+    setBulkMode,
+    setEditing,
+  };
+  const resetForm = () => resetPlayerForm(playerFormSetters);
+  const openAdd = () =>
+    openAddPlayerForm(teams, { ...playerFormSetters, setDialogOpen });
+  const openBulkAdd = () =>
+    openBulkAddPlayerForm(teams, { ...playerFormSetters, setDialogOpen });
+  const openEdit = (player: PlayerRow) =>
+    openEditPlayerForm(player, { ...playerFormSetters, setDialogOpen });
+  const reload = () => setReloadKey((value) => value + 1);
+  const savePlayer = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void savePlayerRecord({
+      saving,
+      setSaving,
+      leagueId: selectedLeague,
+      config,
+      teams,
+      rosterMax,
+      editing,
+      name,
+      teamId,
+      rosterType,
+      status,
+      notes,
+      setDialogOpen,
+      resetForm,
+      onSaved: reload,
+    });
+  };
+  const saveBulk = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    void addPlayerRecordsInBulk({
+      saving,
+      setSaving,
+      leagueId: selectedLeague,
+      config,
+      teams,
+      rosterMax,
+      teamId,
+      rosterType,
+      bulkNames,
+      setDialogOpen,
+      resetForm,
+      onSaved: reload,
+    });
+  };
+  const executePendingAction = () =>
+    runPlayerActions({
+      pendingAction,
+      leagueId: selectedLeague,
+      setTeams,
+      setArchivedRefreshKey,
+      setSelectedIds,
+      setPendingAction,
+    });
+
+  useEffect(() => {
+    let current = true;
+    const load = async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const result = await getTeamsWithMembersByLeague(selectedLeague);
+        if (current) setTeams(result);
+      } catch (error) {
+        if (current) {
+          setTeams([]);
+          setLoadError(
+            error instanceof Error ? error.message : 'Unable to load players.',
+          );
+        }
+      } finally {
+        if (current) setLoading(false);
+      }
+    };
+    void load();
+    return () => {
+      current = false;
+    };
+  }, [selectedLeague, reloadKey, setTeams]);
+
+  return {
+    selectedLeague,
+    config,
+    teams,
+    setTeams,
+    loading,
+    loadError,
+    query,
+    setQuery,
+    teamFilter,
+    setTeamFilter,
+    typeFilter,
+    setTypeFilter,
+    statusFilter,
+    setStatusFilter,
+    selectedIds,
+    setSelectedIds,
+    dialogOpen,
+    setDialogOpen,
+    editing,
+    setEditing,
+    name,
+    setName,
+    teamId,
+    setTeamId,
+    rosterType,
+    setRosterType,
+    status,
+    setStatus,
+    notes,
+    setNotes,
+    bulkNames,
+    setBulkNames,
+    bulkMode,
+    setBulkMode,
+    saving,
+    setSaving,
+    pendingAction,
+    setPendingAction,
+    archivedRefreshKey,
+    setArchivedRefreshKey,
+    reload,
+    players,
+    filteredPlayers,
+    activeCount,
+    regularCount,
+    substituteCount,
+    rosterMax,
+    gradedMin,
+    openMax,
+    threshold,
+    minimumPlayers,
+    resetForm,
+    openAdd,
+    openBulkAdd,
+    openEdit,
+    savePlayer,
+    saveBulk,
+    executePendingAction,
+  };
 };
 
 /* Defines a custom hook for managing shared context state. */
@@ -181,83 +598,83 @@ export const useCustomHook = () => {
   const [backupMenuOpen, setBackupMenuOpen] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
 
-  // //   /* Teams.tsx */
-  // //   const [newTeamName, setNewTeamName] = useState('');
-  // //   const [creatingTeam, setCreatingTeam] = useState(false);
-  // //   const [bulkTeamDialogOpen, setBulkTeamDialogOpen] = useState(false);
-  // //   const [multipleTeamNames, setMultipleTeamNames] = useState('');
-  // //   const [creatingTeams, setCreatingTeams] = useState(false);
-  // //   const [deletingTeam, setDeletingTeam] = useState(false);
-  // //   const [updatingTeam, setUpdatingTeam] = useState(false);
-  // //   const [editingTeamId, setEditingTeamId] = useState<string | number | null>(
-  // //     null,
-  // //   );
-  // //   const [editingTeamName, setEditingTeamName] = useState('');
-  // //   const [editingTeamNotes, setEditingTeamNotes] = useState('');
-  // //   const [selectedTeams, setSelectedTeams] = useState<Array<string | number>>(
-  // //     [],
-  // //   );
-  // //   const [bulkTeamDeleteMode, setBulkTeamDeleteMode] = useState(false);
-  // //   const [deletingPlayer, setDeletingPlayer] = useState(false);
-  // //   const [creatingPlayer, setCreatingPlayer] = useState(false);
-  // //   const [updatingPlayer, setUpdatingPlayer] = useState(false);
-  // //   const [editingPlayerId, setEditingPlayerId] = useState<
-  // //     string | number | null
-  // //   >(null);
-  // //   const [editingPlayerName, setEditingPlayerName] = useState('');
-  // //   const [editingPlayerStatus, setEditingPlayerStatus] = useState('');
-  // //   const [editingPlayerType, setEditingPlayerType] = useState<
-  // //     'regular' | 'substitute'
-  // //   >('regular');
-  // //   const [editingPlayerNotes, setEditingPlayerNotes] = useState('');
-  // //   const [teams, setTeams] = useState<LeagueTeamWithMembers[]>([]);
-  // //   const [isLoadingTeams, setIsLoadingTeams] = useState(false);
-  // //   const [teamsLoadError, setTeamsLoadError] = useState<string | null>(null);
-  // //   const [teamsReloadKey, setTeamsReloadKey] = useState(0);
-  // //   const [selectedTeam, setSelectedTeam] = useState<string | number | null>(
-  // //     null,
-  // //   );
-  // //   const [newPlayerName, setNewPlayerName] = useState('');
-  // //   const [multiplePlayerNames, setMultiplePlayerNames] = useState('');
-  // //   const [playerType, setPlayerType] = useState<'regular' | 'substitute'>(
-  // //     'regular',
-  // //   );
+  /* Teams.tsx */
+  const [newTeamName, setNewTeamName] = useState('');
+  const [creatingTeam, setCreatingTeam] = useState(false);
+  const [bulkTeamDialogOpen, setBulkTeamDialogOpen] = useState(false);
+  const [multipleTeamNames, setMultipleTeamNames] = useState('');
+  const [creatingTeams, setCreatingTeams] = useState(false);
+  const [deletingTeam, setDeletingTeam] = useState(false);
+  const [updatingTeam, setUpdatingTeam] = useState(false);
+  const [editingTeamId, setEditingTeamId] = useState<string | number | null>(
+    null,
+  );
+  const [editingTeamName, setEditingTeamName] = useState('');
+  const [editingTeamNotes, setEditingTeamNotes] = useState('');
+  const [selectedTeams, setSelectedTeams] = useState<Array<string | number>>(
+    [],
+  );
+  const [bulkTeamDeleteMode, setBulkTeamDeleteMode] = useState(false);
+  const [deletingPlayer, setDeletingPlayer] = useState(false);
+  const [creatingPlayer, setCreatingPlayer] = useState(false);
+  const [updatingPlayer, setUpdatingPlayer] = useState(false);
+  const [editingPlayerId, setEditingPlayerId] = useState<
+    string | number | null
+  >(null);
+  const [editingPlayerName, setEditingPlayerName] = useState('');
+  const [editingPlayerStatus, setEditingPlayerStatus] = useState('');
+  const [editingPlayerType, setEditingPlayerType] = useState<
+    'regular' | 'substitute'
+  >('regular');
+  const [editingPlayerNotes, setEditingPlayerNotes] = useState('');
+  const [teams, setTeams] = useState<LeagueTeamWithMembers[]>([]);
+  const [isLoadingTeams, setIsLoadingTeams] = useState(false);
+  const [teamsLoadError, setTeamsLoadError] = useState<string | null>(null);
+  const [teamsReloadKey, setTeamsReloadKey] = useState(0);
+  const [selectedTeam, setSelectedTeam] = useState<string | number | null>(
+    null,
+  );
+  const [newPlayerName, setNewPlayerName] = useState('');
+  const [multiplePlayerNames, setMultiplePlayerNames] = useState('');
+  const [playerType, setPlayerType] = useState<'regular' | 'substitute'>(
+    'regular',
+  );
 
-  // //   const [addMode, setAddMode] = useState<'single' | 'multiple'>('single');
-  // //   const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
-  // //     {},
-  // //   );
-  // //   const [selectedPlayers, setSelectedPlayers] = useState<
-  // //     Record<string, Array<string | number>>
-  // //   >({});
-  // //   const [bulkDeleteMode, setBulkDeleteMode] = useState<Record<string, boolean>>(
-  // //     {},
-  // //   );
-  // //   const [bulkPlayerTypeValue, setBulkPlayerTypeValue] = useState<
-  // //     Record<string, 'regular' | 'substitute'>
-  // //   >({});
-  // //   const [bulkTransferTeamId, setBulkTransferTeamId] = useState<
-  // //     Record<string, string>
-  // //   >({});
-  // //   const [bulkUpdatingPlayers, setBulkUpdatingPlayers] = useState(false);
-  // //   const [openTeamMenu, setOpenTeamMenu] = useState<string | null>(null);
-  // //   const [pendingDeleteType, setPendingDeleteType] = useState<
-  // //     'team' | 'teams' | 'player' | 'players' | null
-  // //   >(null);
-  // //   const [archivingTeamId, setArchivingTeamId] = useState<
-  // //     string | number | null
-  // //   >(null);
-  // //   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
-  // //   const [archivedTeamsRefreshKey, setArchivedTeamsRefreshKey] = useState(0);
-  // //   const [archiveError, setArchiveError] = useState<string | null>(null);
-  // //   const [playerToArchive, setPlayerToArchive] = useState<LeagueMember | null>(
-  // //     null,
-  // //   );
-  // //   const [archivingPlayerId, setArchivingPlayerId] = useState<
-  // //     string | number | null
-  // //   >(null);
-  // //   const [archivedPlayersRefreshKey, setArchivedPlayersRefreshKey] = useState(0);
-  // //   const [playersDialogOpen, setPlayersDialogOpen] = useState(false);
+  const [addMode, setAddMode] = useState<'single' | 'multiple'>('single');
+  const [expandedTeams, setExpandedTeams] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [selectedPlayers, setSelectedPlayers] = useState<
+    Record<string, Array<string | number>>
+  >({});
+  const [bulkDeleteMode, setBulkDeleteMode] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [bulkPlayerTypeValue, setBulkPlayerTypeValue] = useState<
+    Record<string, 'regular' | 'substitute'>
+  >({});
+  const [bulkTransferTeamId, setBulkTransferTeamId] = useState<
+    Record<string, string>
+  >({});
+  const [bulkUpdatingPlayers, setBulkUpdatingPlayers] = useState(false);
+  const [openTeamMenu, setOpenTeamMenu] = useState<string | null>(null);
+  const [pendingDeleteType, setPendingDeleteType] = useState<
+    'team' | 'teams' | 'player' | 'players' | null
+  >(null);
+  const [archivingTeamId, setArchivingTeamId] = useState<
+    string | number | null
+  >(null);
+  const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+  const [archivedTeamsRefreshKey, setArchivedTeamsRefreshKey] = useState(0);
+  const [archiveError, setArchiveError] = useState<string | null>(null);
+  const [playerToArchive, setPlayerToArchive] = useState<LeagueMember | null>(
+    null,
+  );
+  const [archivingPlayerId, setArchivingPlayerId] = useState<
+    string | number | null
+  >(null);
+  const [archivedPlayersRefreshKey, setArchivedPlayersRefreshKey] = useState(0);
+  const [playersDialogOpen, setPlayersDialogOpen] = useState(false);
 
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -628,96 +1045,96 @@ export const useCustomHook = () => {
     addMenuOpen,
     setAddMenuOpen,
 
-    // //     /* Teams.tsx */
-    // //     newTeamName,
-    // //     setNewTeamName,
-    // //     creatingTeam,
-    // //     setCreatingTeam,
-    // //     deletingTeam,
-    // //     setDeletingTeam,
-    // //     updatingTeam,
-    // //     setUpdatingTeam,
-    // //     editingTeamId,
-    // //     setEditingTeamId,
-    // //     editingTeamName,
-    // //     setEditingTeamName,
-    // //     editingTeamNotes,
-    // //     setEditingTeamNotes,
-    // //     selectedTeams,
-    // //     setSelectedTeams,
-    // //     bulkTeamDeleteMode,
-    // //     setBulkTeamDeleteMode,
-    // //     deletingPlayer,
-    // //     setDeletingPlayer,
-    // //     creatingPlayer,
-    // //     setCreatingPlayer,
-    // //     updatingPlayer,
-    // //     setUpdatingPlayer,
-    // //     editingPlayerId,
-    // //     setEditingPlayerId,
-    // //     editingPlayerName,
-    // //     setEditingPlayerName,
-    // //     editingPlayerStatus,
-    // //     setEditingPlayerStatus,
-    // //     editingPlayerType,
-    // //     setEditingPlayerType,
-    // //     editingPlayerNotes,
-    // //     setEditingPlayerNotes,
-    // //     teams,
-    // //     setTeams,
-    // //     isLoadingTeams,
-    // //     setIsLoadingTeams,
-    // //     teamsLoadError,
-    // //     setTeamsLoadError,
-    // //     teamsReloadKey,
-    // //     retryTeams: () => setTeamsReloadKey((key) => key + 1),
-    // //     selectedTeam,
-    // //     setSelectedTeam,
-    // //     newPlayerName,
-    // //     setNewPlayerName,
-    // //     multiplePlayerNames,
-    // //     setMultiplePlayerNames,
-    // //     playerType,
-    // //     setPlayerType,
-    // //     addMode,
-    // //     setAddMode,
-    // //     expandedTeams,
-    // //     setExpandedTeams,
-    // //     selectedPlayers,
-    // //     setSelectedPlayers,
-    // //     bulkDeleteMode,
-    // //     setBulkDeleteMode,
-    // //     bulkPlayerTypeValue,
-    // //     setBulkPlayerTypeValue,
-    // //     bulkTransferTeamId,
-    // //     setBulkTransferTeamId,
-    // //     bulkUpdatingPlayers,
-    // //     setBulkUpdatingPlayers,
-    // //     openTeamMenu,
-    // //     setOpenTeamMenu,
-    // //     pendingDeleteType,
-    // //     setPendingDeleteType,
-    // //     bulkTeamDialogOpen,
-    // //     setBulkTeamDialogOpen,
-    // //     multipleTeamNames,
-    // //     setMultipleTeamNames,
-    // //     creatingTeams,
-    // //     setCreatingTeams,
-    // //     archivingTeamId,
-    // //     setArchivingTeamId,
-    // //     archiveDialogOpen,
-    // //     setArchiveDialogOpen,
-    // //     archivedTeamsRefreshKey,
-    // //     setArchivedTeamsRefreshKey,
-    // //     archiveError,
-    // //     setArchiveError,
-    // //     playerToArchive,
-    // //     setPlayerToArchive,
-    // //     archivingPlayerId,
-    // //     setArchivingPlayerId,
-    // //     archivedPlayersRefreshKey,
-    // //     setArchivedPlayersRefreshKey,
-    // //     playersDialogOpen,
-    // //     setPlayersDialogOpen,
+    /* Teams.tsx */
+    newTeamName,
+    setNewTeamName,
+    creatingTeam,
+    setCreatingTeam,
+    deletingTeam,
+    setDeletingTeam,
+    updatingTeam,
+    setUpdatingTeam,
+    editingTeamId,
+    setEditingTeamId,
+    editingTeamName,
+    setEditingTeamName,
+    editingTeamNotes,
+    setEditingTeamNotes,
+    selectedTeams,
+    setSelectedTeams,
+    bulkTeamDeleteMode,
+    setBulkTeamDeleteMode,
+    deletingPlayer,
+    setDeletingPlayer,
+    creatingPlayer,
+    setCreatingPlayer,
+    updatingPlayer,
+    setUpdatingPlayer,
+    editingPlayerId,
+    setEditingPlayerId,
+    editingPlayerName,
+    setEditingPlayerName,
+    editingPlayerStatus,
+    setEditingPlayerStatus,
+    editingPlayerType,
+    setEditingPlayerType,
+    editingPlayerNotes,
+    setEditingPlayerNotes,
+    teams,
+    setTeams,
+    isLoadingTeams,
+    setIsLoadingTeams,
+    teamsLoadError,
+    setTeamsLoadError,
+    teamsReloadKey,
+    retryTeams: () => setTeamsReloadKey((key) => key + 1),
+    selectedTeam,
+    setSelectedTeam,
+    newPlayerName,
+    setNewPlayerName,
+    multiplePlayerNames,
+    setMultiplePlayerNames,
+    playerType,
+    setPlayerType,
+    addMode,
+    setAddMode,
+    expandedTeams,
+    setExpandedTeams,
+    selectedPlayers,
+    setSelectedPlayers,
+    bulkDeleteMode,
+    setBulkDeleteMode,
+    bulkPlayerTypeValue,
+    setBulkPlayerTypeValue,
+    bulkTransferTeamId,
+    setBulkTransferTeamId,
+    bulkUpdatingPlayers,
+    setBulkUpdatingPlayers,
+    openTeamMenu,
+    setOpenTeamMenu,
+    pendingDeleteType,
+    setPendingDeleteType,
+    bulkTeamDialogOpen,
+    setBulkTeamDialogOpen,
+    multipleTeamNames,
+    setMultipleTeamNames,
+    creatingTeams,
+    setCreatingTeams,
+    archivingTeamId,
+    setArchivingTeamId,
+    archiveDialogOpen,
+    setArchiveDialogOpen,
+    archivedTeamsRefreshKey,
+    setArchivedTeamsRefreshKey,
+    archiveError,
+    setArchiveError,
+    playerToArchive,
+    setPlayerToArchive,
+    archivingPlayerId,
+    setArchivingPlayerId,
+    archivedPlayersRefreshKey,
+    setArchivedPlayersRefreshKey,
+    playersDialogOpen,
+    setPlayersDialogOpen,
   };
 };

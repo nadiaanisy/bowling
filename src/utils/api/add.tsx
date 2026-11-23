@@ -17,6 +17,31 @@ import { toast } from 'sonner';
 
 const normalizeName = (name: string): string => name.trim().toLocaleLowerCase();
 
+const getLeagueRegistrationRules = async (leagueId: string | number) => {
+  const { data, error } = await supabase
+    .from(table.leagues)
+    .select('number_of_teams, setup_config')
+    .eq('id', leagueId)
+    .maybeSingle();
+  if (error)
+    throw new Error(`Unable to load League Setup rules: ${error.message}`);
+  return data as {
+    number_of_teams?: number | null;
+    setup_config?: Record<string, unknown> | null;
+  } | null;
+};
+
+const validatePlayerRosterRules = (
+  rules: Record<string, unknown> | null | undefined,
+  type: 'regular' | 'substitute',
+) => {
+  if (type === 'substitute' && rules?.allow_substitutes !== true) {
+    throw new Error('Substitute players are disabled in League Setup.');
+  }
+  const maximum = Number(rules?.max_roster_size);
+  return Number.isSafeInteger(maximum) && maximum > 0 ? maximum : null;
+};
+
 /* Creates a new user account and handles duplicate usernames and errors. */
 export const addUser = async (
   name: string,
@@ -300,6 +325,12 @@ export const addPlayerToTeam = async (
       return null;
     }
 
+    const leagueRules = await getLeagueRegistrationRules(leagueId);
+    const maxRosterSize = validatePlayerRosterRules(
+      leagueRules?.setup_config,
+      type,
+    );
+
     const { data: team, error: teamError } = await supabase
       .from(table.teams)
       .select('id')
@@ -317,13 +348,24 @@ export const addPlayerToTeam = async (
 
     const { data: existingPlayers, error: playersError } = await supabase
       .from(table.players)
-      .select('name')
+      .select('name, archived_at')
       .eq('team_id', teamId)
       .eq('league_id', leagueId);
 
     if (playersError) {
       toast.error(
         'Unable to check existing player names: ' + playersError.message,
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    const activePlayerCount = (existingPlayers ?? []).filter(
+      (player) => !player.archived_at,
+    ).length;
+    if (maxRosterSize !== null && activePlayerCount >= maxRosterSize) {
+      toast.error(
+        `This team has reached the maximum roster size of ${maxRosterSize}.`,
         errorToastStyle,
       );
       return null;
@@ -393,6 +435,12 @@ export const addPlayersToTeam = async (
       return [];
     }
 
+    const leagueRules = await getLeagueRegistrationRules(leagueId);
+    const maxRosterSize = validatePlayerRosterRules(
+      leagueRules?.setup_config,
+      type,
+    );
+
     const { data: team, error: teamError } = await supabase
       .from(table.teams)
       .select('id')
@@ -410,7 +458,7 @@ export const addPlayersToTeam = async (
 
     const { data: existingPlayers, error: playersError } = await supabase
       .from(table.players)
-      .select('name')
+      .select('name, archived_at')
       .eq('team_id', teamId)
       .eq('league_id', leagueId);
 
@@ -429,6 +477,21 @@ export const addPlayersToTeam = async (
     const namesToInsert = Array.from(uniqueNames.entries())
       .filter(([key]) => !existingNames.has(key))
       .map(([, name]) => name);
+
+    const activePlayerCount = (existingPlayers ?? []).filter(
+      (player) => !player.archived_at,
+    ).length;
+    if (
+      maxRosterSize !== null &&
+      activePlayerCount + namesToInsert.length > maxRosterSize
+    ) {
+      const remaining = Math.max(0, maxRosterSize - activePlayerCount);
+      toast.error(
+        `Only ${remaining} roster slot(s) remain for this team.`,
+        errorToastStyle,
+      );
+      return [];
+    }
 
     if (namesToInsert.length === 0) {
       toast.error(
@@ -479,9 +542,11 @@ export const addTeam = async (
       return null;
     }
 
+    const leagueRules = await getLeagueRegistrationRules(leagueId);
+
     const { data: existingTeams, error: teamsError } = await supabase
       .from(table.teams)
-      .select('name')
+      .select('name, archived_at')
       .eq('league_id', leagueId);
 
     if (teamsError) {
@@ -499,6 +564,22 @@ export const addTeam = async (
     ) {
       toast.error(
         'A team with this name already exists in the league.',
+        errorToastStyle,
+      );
+      return null;
+    }
+
+    const maxTeams = Number(leagueRules?.number_of_teams);
+    const activeTeamCount = (existingTeams ?? []).filter(
+      (team) => !team.archived_at && normalizeName(team.name ?? '') !== 'blind',
+    ).length;
+    if (
+      Number.isSafeInteger(maxTeams) &&
+      maxTeams > 0 &&
+      activeTeamCount >= maxTeams
+    ) {
+      toast.error(
+        `This league allows up to ${maxTeams} registered teams.`,
         errorToastStyle,
       );
       return null;
@@ -547,9 +628,11 @@ export const addTeams = async (
       return [];
     }
 
+    const leagueRules = await getLeagueRegistrationRules(leagueId);
+
     const { data: existingTeams, error: teamsError } = await supabase
       .from(table.teams)
-      .select('name')
+      .select('name, archived_at')
       .eq('league_id', leagueId);
 
     if (teamsError) {
@@ -567,6 +650,23 @@ export const addTeams = async (
     const namesToInsert = Array.from(uniqueNames.entries())
       .filter(([key]) => !existingNames.has(key))
       .map(([, name]) => name);
+
+    const maxTeams = Number(leagueRules?.number_of_teams);
+    const activeTeamCount = (existingTeams ?? []).filter(
+      (team) => !team.archived_at && normalizeName(team.name ?? '') !== 'blind',
+    ).length;
+    if (
+      Number.isSafeInteger(maxTeams) &&
+      maxTeams > 0 &&
+      activeTeamCount + namesToInsert.length > maxTeams
+    ) {
+      const remaining = Math.max(0, maxTeams - activeTeamCount);
+      toast.error(
+        `Only ${remaining} registered team slot(s) remain.`,
+        errorToastStyle,
+      );
+      return [];
+    }
 
     if (namesToInsert.length === 0) {
       toast.error(

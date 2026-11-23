@@ -1,12 +1,12 @@
 import {
-  Dispatch,
-  ReactNode,
-  SetStateAction
+Dispatch,
+ReactNode,
+SetStateAction
 } from 'react';
 import { askConfirm } from './toasts';
 import {
-  errorToastStyle,
-  successToastStyle
+errorToastStyle,
+successToastStyle
 } from './toast-styles';
 import {
   addPlayersToTeam,
@@ -30,11 +30,49 @@ import {
   updateTeamInLeague,
 } from '../utils/api/update';
 import {
-  LeagueMember,
-  LeagueTeamWithMembers
+LeagueMember,
+LeagueTeamWithMembers
 } from '../utils/interfaces';
 import { sortMembersByName } from './sortMembersByName';
+import { BLIND_TEAM_NAME } from '../utils/constants/teams';
 import { toast } from 'sonner';
+
+export const countRegisteredTeams = (teams: Array<{ name: string }>) =>
+  teams.filter(
+    (team) => team.name.trim().toLocaleLowerCase() !== BLIND_TEAM_NAME,
+  ).length;
+
+export const getConfiguredTeamLimit = (
+  numberOfTeams: unknown,
+): number | null => {
+  const value = Number(numberOfTeams);
+  return Number.isSafeInteger(value) && value > 0 ? value : null;
+};
+
+export const getTeamSetupRuleValue = (
+  setupConfig: Record<string, unknown>,
+  key: string,
+) => {
+  const value = setupConfig[key];
+  return value === undefined || value === null || value === ''
+    ? 'Not set'
+    : String(value);
+};
+
+export const countNewTeamNames = (
+  namesInput: string,
+  existingTeams: Array<{ name: string }>,
+) => {
+  const existingNames = new Set(
+    existingTeams.map((team) => team.name.trim().toLocaleLowerCase()),
+  );
+  return new Set(
+    namesInput
+      .split(/\r?\n/)
+      .map((name) => name.trim().toLocaleLowerCase())
+      .filter((name) => name && !existingNames.has(name)),
+  ).size;
+};
 
 export const setAllTeamsExpanded = (
   teams: LeagueTeamWithMembers[],
@@ -256,9 +294,9 @@ export const handleCreatePlayers = async (
       currentTeams.map((team) =>
         String(team.id) === String(teamId)
           ? {
-            ...team,
-            members: sortMembersByName([...team.members, ...players]),
-          }
+              ...team,
+              members: sortMembersByName([...team.members, ...players]),
+            }
           : team,
       ),
     );
@@ -395,13 +433,13 @@ export const handleUpdateTeam = async (
     toast.success(
       nameChanged || notesChanged
         ? `Team "${originalTeam?.name ?? updatedTeam.name}" updated ${[
-          nameChanged ? `name to "${updatedTeam.name}"` : null,
-          notesChanged
-            ? `notes to "${updatedTeam.notes?.trim() || '(empty)'}"`
-            : null,
-        ]
-          .filter(Boolean)
-          .join('; ')}.`
+            nameChanged ? `name to "${updatedTeam.name}"` : null,
+            notesChanged
+              ? `notes to "${updatedTeam.notes?.trim() || '(empty)'}"`
+              : null,
+          ]
+            .filter(Boolean)
+            .join('; ')}.`
         : `Team "${updatedTeam.name}" saved with no field changes.`,
       successToastStyle,
     );
@@ -722,13 +760,13 @@ export const handleBulkUpdatePlayerType = async (
       currentTeams.map((currentTeam) =>
         String(currentTeam.id) === String(team.id)
           ? {
-            ...currentTeam,
-            members: currentTeam.members.map((member) =>
-              updatedIdSet.has(String(member.id))
-                ? { ...member, type: newType }
-                : member,
-            ),
-          }
+              ...currentTeam,
+              members: currentTeam.members.map((member) =>
+                updatedIdSet.has(String(member.id))
+                  ? { ...member, type: newType }
+                  : member,
+              ),
+            }
           : currentTeam,
       ),
     );
@@ -803,11 +841,11 @@ export const handleDeletePlayer = (
           currentTeams.map((team) =>
             String(team.id) === String(teamId)
               ? {
-                ...team,
-                members: team.members.filter(
-                  (member) => String(member.id) !== String(playerId),
-                ),
-              }
+                  ...team,
+                  members: team.members.filter(
+                    (member) => String(member.id) !== String(playerId),
+                  ),
+                }
               : team,
           ),
         );
@@ -866,11 +904,11 @@ export const handleDeletePlayers = (
           currentTeams.map((team) =>
             String(team.id) === String(teamId)
               ? {
-                ...team,
-                members: team.members.filter(
-                  (member) => !deletedIdSet.has(String(member.id)),
-                ),
-              }
+                  ...team,
+                  members: team.members.filter(
+                    (member) => !deletedIdSet.has(String(member.id)),
+                  ),
+                }
               : team,
           ),
         );
@@ -990,15 +1028,15 @@ export const handleUpdatePlayer = async (
       currentTeams.map((team) =>
         String(team.id) === String(teamId)
           ? {
-            ...team,
-            members: sortMembersByName(
-              team.members.map((member) =>
-                String(member.id) === String(playerId)
-                  ? { ...player, status: normalizedStatus }
-                  : member,
+              ...team,
+              members: sortMembersByName(
+                team.members.map((member) =>
+                  String(member.id) === String(playerId)
+                    ? { ...player, status: normalizedStatus }
+                    : member,
+                ),
               ),
-            ),
-          }
+            }
           : team,
       ),
     );

@@ -3,7 +3,9 @@ import { Provider } from './utils/provider';
 import { Button } from './components/button';
 import { Toaster } from './components/sooner';
 import Login from './sections/Login/Login';
+import Teams from './sections/Teams/Teams';
 import { navigationGroups } from './utils/constants/menu';
+import Players from './sections/Players/Players';
 import Handicap from './sections/Handicap/Handicap';
 import Landing from './sections/Landings/MainPage';
 import Dashboard from './sections/Dashboard/MainPage';
@@ -61,6 +63,10 @@ function AppContent() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'teams':
+        return <Teams />;
+      case 'players':
+        return <Players />;
       case 'hdc':
         return <Handicap leagueId={selectedLeague} />;
       case 'dashboard':
