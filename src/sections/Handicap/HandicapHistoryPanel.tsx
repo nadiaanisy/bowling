@@ -21,6 +21,8 @@ interface HandicapHistoryPanelProps {
   error: string;
   rows: HistoryRow[];
   onRefresh: () => void;
+  onRestore: (entry: HistoryRow) => void;
+  restoringId: number | null;
 }
 
 /** Displays the history panel; data fetching and race protection stay in the parent. */
@@ -30,6 +32,8 @@ export function HandicapHistoryPanel({
   error,
   rows,
   onRefresh,
+  onRestore,
+  restoringId,
 }: HandicapHistoryPanelProps) {
   return (
     <Card className="flex min-h-0 min-w-0 flex-col border-violet-300/10 bg-[#15121c]">
@@ -93,7 +97,13 @@ export function HandicapHistoryPanel({
         ) : (
           <div className="h-[50vh] min-h-0 space-y-2 overflow-y-auto overscroll-contain pr-1">
             {rows.map((entry) => (
-              <HistoryEntry key={entry.id} entry={entry} />
+              <HistoryEntry
+                key={entry.id}
+                entry={entry}
+                onRestore={onRestore}
+                restoring={restoringId === entry.id}
+                restoreDisabled={restoringId !== null}
+              />
             ))}
             <p className="pt-1 text-xs text-muted-foreground">
               Showing the latest {rows.length} change

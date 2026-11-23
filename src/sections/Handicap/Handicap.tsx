@@ -1,7 +1,8 @@
 import {
 useEffect,
 useMemo,
-useRef
+useRef,
+useState
 } from 'react';
 import { FormDialog } from './FormDialog';
 import { MaximumHandicap } from './MaxHandicap';
@@ -30,6 +31,8 @@ import {
   SortDirection,
   SortField,
 } from '../../utils/constants/handicap';
+import { undoHandicapChange } from '../../utils/api/undoHandicapChange';
+import { toast } from 'sonner';
 
 interface HandicapProps {
   leagueId: string | number | null;
@@ -37,6 +40,7 @@ interface HandicapProps {
 
 export default function Handicap({ leagueId }: HandicapProps) {
   const {
+    setListOfLeaguesByUser,
     search,
     setSearch,
     sortField,
@@ -54,6 +58,46 @@ export default function Handicap({ leagueId }: HandicapProps) {
   } = UseHook();
 
   const handicap = useHandicap(leagueId);
+  const [restoringHistoryId, setRestoringHistoryId] = useState<number | null>(
+    null,
+  );
+
+  const handleRestoreHistory = async (
+    entry: Awaited<ReturnType<typeof getHandicapChangeHistory>>[number],
+  ) => {
+    if (leagueId === null) return;
+    setRestoringHistoryId(entry.id);
+    try {
+      const result = await undoHandicapChange(entry, leagueId);
+      if (result.setupConfig) {
+        const updatedAt = new Date().toISOString();
+        setListOfLeaguesByUser((current) =>
+          current.map((league) =>
+            String(league.id) === String(leagueId)
+              ? {
+                  ...league,
+                  setup_config: result.setupConfig,
+                  updated_at: updatedAt,
+                }
+              : league,
+          ),
+        );
+      } else {
+        await handicap.loadRules();
+      }
+      toast.success(result.message);
+      await refreshHistory();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Unable to restore this change.',
+      );
+      await refreshHistory();
+    } finally {
+      setRestoringHistoryId(null);
+    }
+  };
 
   const refreshHistory = async () => {
     if (leagueId === null) return;
@@ -105,7 +149,7 @@ export default function Handicap({ leagueId }: HandicapProps) {
     return () => {
       isCurrent = false;
     };
-  }, [leagueId]);
+  }, [leagueId, setHistoryError, setHistoryLoading, setHistoryRows]);
 
   /* Tracks whether a save operation was in progress during the previous render. */
   const wasSavingRef = useRef(false);
@@ -124,14 +168,20 @@ export default function Handicap({ leagueId }: HandicapProps) {
         });
     }
     wasSavingRef.current = isSaving;
-  }, [handicap.isSaving, handicap.isSavingConfig, leagueId]);
+  }, [
+    handicap.isSaving,
+    handicap.isSavingConfig,
+    leagueId,
+    setHistoryError,
+    setHistoryRows,
+  ]);
 
   useEffect(() => {
     setSearch('');
     setSortField('average');
     setSortDirection('asc');
     setRanges(emptyRanges);
-  }, [leagueId]);
+  }, [leagueId, setRanges, setSearch, setSortDirection, setSortField]);
 
   const invalidRange = (min: string, max: string) =>
     min !== '' && max !== '' && Number(min) > Number(max);
@@ -392,6 +442,8 @@ export default function Handicap({ leagueId }: HandicapProps) {
             error={historyError}
             rows={historyRows}
             onRefresh={() => void refreshHistory()}
+            onRestore={(entry) => void handleRestoreHistory(entry)}
+            restoringId={restoringHistoryId}
           />
         </div>
       </div>

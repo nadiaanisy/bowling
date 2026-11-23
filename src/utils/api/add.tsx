@@ -8,7 +8,10 @@ import {
 import { table } from '../constants/db';
 import { catchError } from '../../functions/toasts';
 import { supabase } from '../supabase/supabaseClient';
-import { insertHelper } from '../supabase/supabaseHelper';
+import {
+getHelper,
+insertHelper
+} from '../supabase/supabaseHelper';
 import { errorToastStyle } from '../../functions/toast-styles';
 import { toast } from 'sonner';
 
@@ -146,6 +149,22 @@ export const addHandicapSetting = async (
     throw new Error('Average must be a valid non-negative number.');
   }
 
+  const { data: duplicate, error: duplicateError } = await getHelper(
+    table.handicapSettings,
+    'id',
+  )
+    .eq('league_id', leagueId)
+    .eq('average', average)
+    .maybeSingle();
+  if (duplicateError) {
+    throw new Error(
+      `Unable to check for duplicate average: ${duplicateError.message}`,
+    );
+  }
+  if (duplicate) {
+    throw new Error(`AVG ${average} already exists in this league.`);
+  }
+
   if (!Number.isInteger(menHandicap) || menHandicap < 0) {
     throw new Error("Men's handicap must be a non-negative whole number.");
   }
@@ -208,6 +227,30 @@ export const addHandicapSettings = async (
   if (invalid) {
     throw new Error(
       'Averages must be non-negative numbers; handicaps must be non-negative whole numbers.',
+    );
+  }
+
+  const requestedAverages = settings.map((setting) => setting.average);
+  if (new Set(requestedAverages).size !== requestedAverages.length) {
+    throw new Error('The import contains duplicate averages.');
+  }
+  const { data: duplicates, error: duplicateError } = await getHelper(
+    table.handicapSettings,
+    'average',
+  )
+    .eq('league_id', leagueId)
+    .in('average', requestedAverages);
+  if (duplicateError) {
+    throw new Error(
+      `Unable to check for duplicate averages: ${duplicateError.message}`,
+    );
+  }
+  const duplicateRows = (duplicates ?? []) as unknown as Array<{
+    average: number;
+  }>;
+  if (duplicateRows.length) {
+    throw new Error(
+      `AVG ${duplicateRows.map((row) => row.average).join(', ')} already exists in this league.`,
     );
   }
 

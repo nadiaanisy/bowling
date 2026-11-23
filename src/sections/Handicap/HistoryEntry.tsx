@@ -1,21 +1,26 @@
 import { HandicapChangeHistory } from '../../utils/interfaces';
+import { Button } from '../../components/button';
 import { formatHistoryValue } from '../../functions/handicap';
 import { HISTORY_LABELS } from '../../utils/constants/handicap';
+import { RotateCcw } from 'lucide-react';
 
 export default function HistoryEntry({
   entry,
+  onRestore,
+  restoring,
+  restoreDisabled,
 }: {
   entry: HandicapChangeHistory;
+  onRestore: (entry: HandicapChangeHistory) => void;
+  restoring: boolean;
+  restoreDisabled: boolean;
 }) {
   const before = entry.before_values ?? {};
   const after = entry.after_values ?? {};
   const changedKeys = Array.from(
     new Set([...Object.keys(before), ...Object.keys(after)]),
   ).filter((key) => {
-    if (
-      entry.action === 'updated' &&
-      ['id', 'league_id', 'created_at', 'updated_at'].includes(key)
-    ) {
+    if (['id', 'league_id', 'created_at', 'updated_at'].includes(key)) {
       return false;
     }
     return formatHistoryValue(before[key]) !== formatHistoryValue(after[key]);
@@ -23,7 +28,7 @@ export default function HistoryEntry({
   const entityLabel =
     entry.entity_type === 'handicap_rule'
       ? `Handicap rule${entry.entity_id !== null ? ` #${entry.entity_id}` : ''}`
-      : `League maximums${entry.entity_id !== null ? ` #${entry.entity_id}` : ''}`;
+      : 'League Handicap settings';
   const actionLabel =
     entry.action.charAt(0).toUpperCase() + entry.action.slice(1);
 
@@ -84,10 +89,30 @@ export default function HistoryEntry({
             No field-level differences available.
           </p>
         )}
-        <p className="text-xs text-muted-foreground">
-          Changed by: {entry.actor_id ? entry.actor_id : 'Unknown user'} ·
-          History ID: {entry.id}
-        </p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-xs text-muted-foreground">
+            Changed by: {entry.actor_id ? entry.actor_id : 'Unknown user'} ·
+            History ID: {entry.id}
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={restoreDisabled || restoring}
+            onClick={() => onRestore(entry)}
+          >
+            <RotateCcw
+              className={`mr-2 h-3.5 w-3.5 ${restoring ? 'animate-spin' : ''}`}
+            />
+            {restoring
+              ? 'Restoring...'
+              : entry.action === 'created'
+                ? 'Undo add'
+                : entry.action === 'deleted'
+                  ? 'Restore rule'
+                  : 'Restore previous values'}
+          </Button>
+        </div>
       </div>
     </details>
   );

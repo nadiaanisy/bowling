@@ -9,6 +9,7 @@ import {
   TrendingUp,
   UserRound,
   UsersRound,
+  Settings2,
 } from 'lucide-react';
 
 export const navigationGroups: NavigationGroup[] = [
@@ -36,6 +37,7 @@ export const navigationGroups: NavigationGroup[] = [
       { id: 'players', label: 'Players', icon: UserRound },
       { id: 'timetable', label: 'Timetable', icon: CalendarDays },
       { id: 'scores', label: 'Scores', icon: Trophy },
+      { id: 'settings', label: 'Settings', icon: Settings2 },
     ],
   },
   {

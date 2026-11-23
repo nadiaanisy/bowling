@@ -225,6 +225,23 @@ export const updateHandicapSetting = async (
     throw new Error('Average must be a valid non-negative number.');
   }
 
+  const { data: duplicate, error: duplicateError } = await getHelper(
+    table.handicapSettings,
+    'id',
+  )
+    .eq('league_id', leagueId)
+    .eq('average', average)
+    .neq('id', id)
+    .maybeSingle();
+  if (duplicateError) {
+    throw new Error(
+      `Unable to check for duplicate average: ${duplicateError.message}`,
+    );
+  }
+  if (duplicate) {
+    throw new Error(`AVG ${average} already exists in this league.`);
+  }
+
   if (!Number.isInteger(menHandicap) || menHandicap < 0) {
     throw new Error("Men's handicap must be a non-negative whole number.");
   }
