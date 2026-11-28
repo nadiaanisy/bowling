@@ -842,3 +842,35 @@ export const updateLeagueName = async (
     return null;
   }
 };
+
+/** Updates the manually scheduled calendar date for a league match. */
+export const updateMatchSessionDate = async (
+  matchId: string | number,
+  leagueId: string | number,
+  scheduledDate: string,
+): Promise<boolean> => {
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate) ||
+    Number.isNaN(Date.parse(`${scheduledDate}T00:00:00Z`))
+  ) {
+    toast.error('Choose a valid session date.', errorToastStyle);
+    return false;
+  }
+
+  const { data, error } = await updateHelper(table.timetable, {
+    scheduled_date: scheduledDate,
+  })
+    .eq('id', matchId)
+    .eq('league_id', leagueId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    toast.error(
+      `Unable to update session date: ${error.message}`,
+      errorToastStyle,
+    );
+    return false;
+  }
+  return Boolean(data);
+};

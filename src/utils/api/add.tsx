@@ -668,6 +668,13 @@ export const addTeam = async (
       toast.error('Please enter a team name.', errorToastStyle);
       return null;
     }
+    if (normalizeName(trimmedName) === 'blind') {
+      toast.error(
+        'Blind is reserved for automatic scheduling.',
+        errorToastStyle,
+      );
+      return null;
+    }
 
     const leagueRules = await getLeagueRegistrationRules(leagueId);
 
@@ -758,6 +765,13 @@ export const addTeams = async (
       toast.error('Enter at least one team name.', errorToastStyle);
       return [];
     }
+    if (uniqueNames.has('blind')) {
+      toast.error(
+        'Blind is reserved for automatic scheduling. Remove it from the team list.',
+        errorToastStyle,
+      );
+      return [];
+    }
 
     const leagueRules = await getLeagueRegistrationRules(leagueId);
 
@@ -839,6 +853,58 @@ export const addTeams = async (
   }
 };
 
+/** Returns the reserved Blind team for an odd roster, creating/reactivating it when needed. */
+export const ensureBlindTeamForLeague = async (
+  leagueId: string | number,
+): Promise<LeagueTeam | null> => {
+  const { data: rawTeams, error } = await supabase
+    .from(table.teams)
+    .select('id, name, league_id, notes, created_at, updated_at, archived_at')
+    .eq('league_id', leagueId);
+  if (error)
+    throw new Error(`Unable to prepare the Blind team: ${error.message}`);
+
+  const teams = (rawTeams ?? []) as unknown as Array<
+    LeagueTeam & { archived_at?: string | null }
+  >;
+  const registeredCount = teams.filter(
+    (team) =>
+      team.name.trim().toLocaleLowerCase() !== 'blind' && !team.archived_at,
+  ).length;
+  if (registeredCount % 2 === 0) return null;
+
+  const existingBlind = teams.find(
+    (team) => team.name.trim().toLocaleLowerCase() === 'blind',
+  );
+  if (existingBlind && !existingBlind.archived_at) return existingBlind;
+
+  if (existingBlind) {
+    const { data, error: restoreError } = await supabase
+      .from(table.teams)
+      .update({ archived_at: null, updated_at: new Date().toISOString() })
+      .eq('id', existingBlind.id)
+      .eq('league_id', leagueId)
+      .select('id, name, league_id, notes, created_at, updated_at')
+      .single();
+    if (restoreError)
+      throw new Error(
+        `Unable to restore the Blind team: ${restoreError.message}`,
+      );
+    return data as unknown as LeagueTeam;
+  }
+
+  const { data, error: insertError } = await insertHelper(table.teams, {
+    name: 'Blind',
+    league_id: leagueId,
+    created_at: new Date().toISOString(),
+  })
+    .select('id, name, league_id, notes, created_at, updated_at')
+    .single();
+  if (insertError)
+    throw new Error(`Unable to create the Blind team: ${insertError.message}`);
+  return data as unknown as LeagueTeam;
+};
+
 /* Adds a match to the league timetable for a specific week, block, and lane. */
 export const addMatchToSchedule = async (
   leagueId: string | number,
@@ -847,8 +913,141 @@ export const addMatchToSchedule = async (
   team1Id: string | number,
   team2Id: string | number,
   lane: string | number,
+  scheduledDate: string,
+  scheduleType: 'regular' | 'pre_bowl' | 'post_bowl',
 ): Promise<boolean | null> => {
   try {
+    if (!Number.isSafeInteger(weekNumber) || weekNumber < 1) {
+      throw new Error('Week number must be a positive whole number.');
+    }
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(scheduledDate) ||
+      Number.isNaN(Date.parse(`${scheduledDate}T00:00:00Z`))
+    ) {
+      throw new Error('Choose a valid session date.');
+    }
+    const { data: leagueData, error: leagueError } = await supabase
+      .from(table.leagues)
+      .select(
+        'number_of_weeks, number_of_teams, number_of_blocks, starting_lane, total_lanes, setup_config',
+      )
+      .eq('id', leagueId)
+      .maybeSingle();
+    if (leagueError || !leagueData) {
+      throw new Error(leagueError?.message ?? 'League setup was not found.');
+    }
+
+    const league = leagueData as unknown as {
+      number_of_weeks: number | null;
+      number_of_teams: number | null;
+      number_of_blocks: number | null;
+      starting_lane: number | null;
+      total_lanes: number | null;
+      setup_config: Record<string, unknown> | null;
+    };
+    const setupConfig = league.setup_config ?? {};
+    const configuredWeeks = Number(
+      setupConfig.schedule_weeks ?? league.number_of_weeks,
+    );
+    const blockCount = Math.max(1, Number(league.number_of_blocks) || 1);
+    const plannedTeams = Number(league.number_of_teams) || 0;
+    const weekLimit =
+      Number.isSafeInteger(configuredWeeks) && configuredWeeks > 0
+        ? Math.ceil(configuredWeeks / blockCount)
+        : Math.max(0, plannedTeams + (plannedTeams % 2) - 1);
+    if (weekLimit > 0 && weekNumber > weekLimit) {
+      throw new Error(
+        `Week must be between 1 and ${weekLimit} for this block.`,
+      );
+    }
+    if (scheduleType === 'pre_bowl' && setupConfig.allow_pre_bowl !== true) {
+      throw new Error('Pre-bowling is disabled in League Setup.');
+    }
+    if (scheduleType === 'post_bowl' && setupConfig.allow_post_bowl !== true) {
+      throw new Error('Post-bowling is disabled in League Setup.');
+    }
+    if (
+      scheduleType === 'post_bowl' &&
+      setupConfig.block_post_bowl_final === true &&
+      weekLimit > 0 &&
+      weekNumber === weekLimit
+    ) {
+      throw new Error(
+        'Post-bowling is blocked in the final week by League Setup.',
+      );
+    }
+
+    const block = await getHelper(table.blocks, 'id')
+      .eq('id', blockId)
+      .eq('league_id', leagueId)
+      .maybeSingle();
+    if (block.error || !block.data) {
+      throw new Error(
+        block.error?.message ?? 'The selected block is not in this league.',
+      );
+    }
+
+    const [
+      { data: selectedTeams, error: teamsError },
+      { data: sameWeekMatches, error: matchesError },
+    ] = await Promise.all([
+      getHelper(table.teams, 'id, name')
+        .in('id', [team1Id, team2Id])
+        .eq('league_id', leagueId)
+        .is('archived_at', null),
+      getHelper(table.timetable, 'id, team1_id, team2_id, lane')
+        .eq('league_id', leagueId)
+        .eq('block_id', blockId)
+        .eq('week_number', weekNumber),
+    ]);
+    if (teamsError || (selectedTeams?.length ?? 0) !== 2) {
+      throw new Error(
+        teamsError?.message ??
+          'Both selected teams must be active teams in this league.',
+      );
+    }
+    if (matchesError)
+      throw new Error(`Unable to check this week: ${matchesError.message}`);
+
+    const startLane = Number(league.starting_lane);
+    const lastLane = Number(league.total_lanes);
+    const validLanes =
+      Number.isInteger(startLane) &&
+      Number.isInteger(lastLane) &&
+      lastLane >= startLane
+        ? Array.from(
+            { length: Math.floor((lastLane - startLane + 1) / 2) },
+            (_, index) =>
+              `${startLane + index * 2}-${startLane + index * 2 + 1}`,
+          )
+        : [];
+    if (validLanes.length && !validLanes.includes(String(lane))) {
+      throw new Error('Choose a lane pair included in this league’s setup.');
+    }
+
+    const existing = (sameWeekMatches ?? []) as unknown as Array<{
+      team1_id: string | number;
+      team2_id: string | number;
+      lane: string;
+    }>;
+    const chosenTeams = new Set([String(team1Id), String(team2Id)]);
+    if (
+      existing.some(
+        (match) =>
+          chosenTeams.has(String(match.team1_id)) ||
+          chosenTeams.has(String(match.team2_id)),
+      )
+    ) {
+      throw new Error(
+        'A selected team already has a match in this block and week.',
+      );
+    }
+    if (existing.some((match) => String(match.lane) === String(lane))) {
+      throw new Error(
+        'This lane pair is already assigned in this block and week.',
+      );
+    }
+
     const { error } = await insertHelper(table.timetable, {
       league_id: leagueId,
       block_id: blockId,
@@ -856,6 +1055,8 @@ export const addMatchToSchedule = async (
       team1_id: team1Id,
       team2_id: team2Id,
       lane: lane,
+      scheduled_date: scheduledDate,
+      schedule_type: scheduleType,
     });
 
     if (error) {

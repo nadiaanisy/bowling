@@ -330,14 +330,32 @@ export const getAllMatchesGroupedByMatchAndBlock = async (
   leagueId: string | number,
 ): Promise<MatchesByBlock> => {
   try {
-    const { data, error } = await supabase.rpc('get_full_timetable', {
-      p_league_id: leagueId,
-    });
+    const [{ data, error }, { data: rawScheduleDates, error: datesError }] =
+      await Promise.all([
+        supabase.rpc('get_full_timetable', { p_league_id: leagueId }),
+        getHelper(table.timetable, 'id, scheduled_date, schedule_type').eq(
+          'league_id',
+          leagueId,
+        ),
+      ]);
 
-    if (error || !data) {
-      console.error('Error fetching full timetable:' + error, errorToastStyle);
+    if (error)
+      throw new Error(`Error fetching full timetable: ${error.message}`);
+    if (datesError)
+      throw new Error(`Error fetching schedule dates: ${datesError.message}`);
+    if (!data) {
       return {};
     }
+
+    const scheduleDetailsById = new Map(
+      (
+        (rawScheduleDates ?? []) as unknown as Array<{
+          id: string | number;
+          scheduled_date: string | null;
+          schedule_type: 'regular' | 'pre_bowl' | 'post_bowl';
+        }>
+      ).map((row) => [String(row.id), row] as const),
+    );
 
     const blocks: Record<string, Record<number, MatchData>> = {};
 
@@ -353,6 +371,11 @@ export const getAllMatchesGroupedByMatchAndBlock = async (
           match_id: matchId,
           block_id: blockId,
           week_number: row.week_number,
+          scheduled_date:
+            scheduleDetailsById.get(String(matchId))?.scheduled_date ?? null,
+          schedule_type:
+            scheduleDetailsById.get(String(matchId))?.schedule_type ??
+            'regular',
           lane: row.lane,
           hasScore: false,
           status: 'pending',
@@ -415,8 +438,9 @@ export const getAllMatchesGroupedByMatchAndBlock = async (
       ]),
     );
   } catch (err) {
-    catchError('Unexpected error:', err);
-    return {};
+    throw err instanceof Error
+      ? err
+      : new Error('Unexpected error while fetching the timetable.');
   }
 };
 
@@ -484,7 +508,9 @@ export const getTeamsWithMembersByLeague = async (
 
     if (error) throw new Error(error.message);
 
-    return (data || []) as unknown as LeagueTeamWithMembers[];
+    return ((data || []) as unknown as LeagueTeamWithMembers[]).filter(
+      (team) => team.name.trim().toLocaleLowerCase() !== 'blind',
+    );
   } catch (err) {
     throw err instanceof Error
       ? err
@@ -530,6 +556,7 @@ export const getTeamsByLeague = async (
       'id, name, league_id, notes, created_at, updated_at',
     )
       .eq('league_id', leagueId)
+      .is('archived_at', null)
       .order('name', { ascending: true });
 
     if (error) throw new Error(error.message);

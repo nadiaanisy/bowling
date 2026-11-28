@@ -5,19 +5,21 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/card';
+import { Input } from '../../components/input';
+import { Label } from '../../components/label';
+import type { LeagueTeam } from '../../utils/interfaces';
+import { Button } from '../../components/button';
 import {
   Select,
   SelectContent,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '../../components/select';
-import { Input } from '../../components/input';
-import { Label } from '../../components/label';
-import { Button } from '../../components/button';
-import type { LeagueTeam } from '../../utils/interfaces';
-import { handleAddMatch } from '../../utils/functions/timetable';
+import { changeMatchWeek } from '../../functions/timetable';
+import { handleAddMatch } from '../../functions/timetable';
+import { resetMatchForm } from '../../functions/timetable';
+import { TIMETABLE_SCHEDULE_TYPES } from '../../utils/constants/timetable';
 
 type BlockData = {
   id: string | number;
@@ -29,8 +31,27 @@ type LaneData = {
   lane: string;
 };
 
+type ScheduleSettings = {
+  leagueDay: string;
+  commencementDate: string;
+  practiceTime: string;
+  gameStartTime: string;
+  lateCutoff: string;
+  gamesPerWeek: string | number | null;
+  playersPerGame: string | number | null;
+  openBowlersPerWeek: string | null;
+  postponementLimit: string | null;
+  postponementNoticeDay: string;
+  allowPreBowl: boolean;
+  allowPostBowl: boolean;
+  blockPostBowlFinal: boolean;
+  noHolidaySessions: boolean;
+};
+
 interface AddMatchProps {
   selectedLeague: string | null;
+  maxWeeksPerBlock: number | null;
+  scheduleSettings: ScheduleSettings;
   blocksData: BlockData[];
   blockNumber: number | null;
   setBlockNumber: (value: number | null) => void;
@@ -44,6 +65,10 @@ interface AddMatchProps {
   setTeam2: (value: string) => void;
   week: string;
   setWeek: (value: string) => void;
+  scheduledDate: string;
+  setScheduledDate: (value: string) => void;
+  scheduleType: 'regular' | 'pre_bowl' | 'post_bowl';
+  setScheduleType: (value: 'regular' | 'pre_bowl' | 'post_bowl') => void;
   selectedLane: string;
   setSelectedLane: (value: string) => void;
   creatingMatch: boolean;
@@ -53,6 +78,8 @@ interface AddMatchProps {
 
 export function AddMatch({
   selectedLeague,
+  maxWeeksPerBlock,
+  scheduleSettings,
   blocksData,
   blockNumber,
   setBlockNumber,
@@ -66,38 +93,86 @@ export function AddMatch({
   setTeam2,
   week,
   setWeek,
+  scheduledDate,
+  setScheduledDate,
+  scheduleType,
+  setScheduleType,
   selectedLane,
   setSelectedLane,
   creatingMatch,
   setCreatingMatch,
   retryTimetable,
 }: AddMatchProps) {
-  const resetForm = () => {
-    setWeek('');
-    setTeam1('');
-    setTeam2('');
-    setSelectedLane('');
-  };
-
-  const handleWeekChange = (value: string) => {
-    setWeek(value);
-
-    // Week changes invalidate
-    // all dependent selections.
-    setTeam1('');
-    setTeam2('');
-    setSelectedLane('');
-  };
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Add Match to Schedule</CardTitle>
 
-        <CardDescription>Schedule a match between two teams</CardDescription>
+        <CardDescription>
+          Manually assign weekly matchups using this league’s setup.
+        </CardDescription>
       </CardHeader>
 
       <CardContent>
+        <div className="mb-5 rounded-lg border border-violet-300/15 bg-violet-500/[0.06] p-3 text-sm">
+          <p className="font-medium text-slate-100">Schedule settings</p>
+          <div className="mt-2 grid gap-x-4 gap-y-1 text-xs text-slate-400 sm:grid-cols-2 xl:grid-cols-3">
+            <span>League day: {scheduleSettings.leagueDay || 'Not set'}</span>
+            <span>
+              First session: {scheduleSettings.commencementDate || 'Not set'}
+            </span>
+            <span>Practice: {scheduleSettings.practiceTime || 'Not set'}</span>
+            <span>
+              Game start: {scheduleSettings.gameStartTime || 'Not set'}
+            </span>
+            <span>Late cutoff: {scheduleSettings.lateCutoff || 'Not set'}</span>
+            <span>
+              Games per week: {scheduleSettings.gamesPerWeek ?? 'Not set'}
+            </span>
+            <span>
+              Players per game: {scheduleSettings.playersPerGame ?? 'Not set'}
+            </span>
+            <span>
+              Open bowlers per week:{' '}
+              {scheduleSettings.openBowlersPerWeek ?? 'Not set'}
+            </span>
+            <span>
+              Postponement limit:{' '}
+              {scheduleSettings.postponementLimit ?? 'Not set'}
+            </span>
+            <span>
+              Postponement notice day:{' '}
+              {scheduleSettings.postponementNoticeDay || 'Not set'}
+            </span>
+            <span>
+              Pre-bowl:{' '}
+              {scheduleSettings.allowPreBowl ? 'Allowed' : 'Not allowed'}
+            </span>
+            <span>
+              Post-bowl:{' '}
+              {scheduleSettings.allowPostBowl ? 'Allowed' : 'Not allowed'}
+            </span>
+            {scheduleSettings.blockPostBowlFinal && (
+              <span>Post-bowl blocked in final week</span>
+            )}
+          </div>
+          {scheduleSettings.noHolidaySessions && (
+            <p className="mt-2 text-xs text-amber-200">
+              League Setup says no sessions on public holidays. Check holidays
+              and events when entering or editing session dates.
+            </p>
+          )}
+          {timetableTeams.filter(
+            (team) => team.name.trim().toLocaleLowerCase() !== 'blind',
+          ).length %
+            2 ===
+            1 && (
+            <p className="mt-2 text-xs text-sky-200">
+              Odd number of teams: the Blind team is available automatically for
+              scheduling and does not count as a registered team.
+            </p>
+          )}
+        </div>
         <form
           onSubmit={(event) =>
             void handleAddMatch(
@@ -107,18 +182,28 @@ export function AddMatch({
               selectedLeague,
               blockNumber || null,
               week,
+              maxWeeksPerBlock,
+              scheduledDate,
+              scheduleType,
               team1,
               team2,
               selectedLane,
               () => {
-                resetForm();
+                resetMatchForm(
+                  setWeek,
+                  setScheduledDate,
+                  setScheduleType,
+                  setTeam1,
+                  setTeam2,
+                  setSelectedLane,
+                );
                 void retryTimetable();
               },
             )
           }
           className="space-y-4"
         >
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* BLOCK */}
             <div className="space-y-2">
               <Label htmlFor="block">Block</Label>
@@ -149,11 +234,71 @@ export function AddMatch({
                 id="week"
                 type="number"
                 min="1"
-                max="100"
-                placeholder="1-100"
+                max={maxWeeksPerBlock ?? undefined}
+                step="1"
+                placeholder={
+                  maxWeeksPerBlock ? `1-${maxWeeksPerBlock}` : 'Week number'
+                }
                 value={week}
-                onChange={(event) => handleWeekChange(event.target.value)}
+                onChange={(event) =>
+                  changeMatchWeek(
+                    event.target.value,
+                    setWeek,
+                    setTeam1,
+                    setTeam2,
+                    setSelectedLane,
+                  )
+                }
               />
+            </div>
+
+            {/* SESSION DATE: suggested by the league start date, editable for holidays/events */}
+            <div className="space-y-2">
+              <Label htmlFor="scheduled-date">Session Date</Label>
+              <Input
+                id="scheduled-date"
+                type="date"
+                value={scheduledDate}
+                onChange={(event) => setScheduledDate(event.target.value)}
+                required
+              />
+              <p className="text-xs text-muted-foreground">
+                Suggested from commencement date. Change it for holidays or
+                events.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="schedule-type">Bowling arrangement</Label>
+              <Select
+                value={scheduleType}
+                onValueChange={(value) =>
+                  setScheduleType(value as typeof scheduleType)
+                }
+              >
+                <SelectTrigger id="schedule-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TIMETABLE_SCHEDULE_TYPES.map((option) => (
+                    <SelectItem
+                      key={option.value}
+                      value={option.value}
+                      disabled={
+                        option.value === 'pre_bowl'
+                          ? !scheduleSettings.allowPreBowl
+                          : option.value === 'post_bowl'
+                            ? !scheduleSettings.allowPostBowl ||
+                              (scheduleSettings.blockPostBowlFinal &&
+                                Number(week) === maxWeeksPerBlock)
+                            : false
+                      }
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* TEAM 1 */}
@@ -277,7 +422,16 @@ export function AddMatch({
             <Button
               type="button"
               variant="outline"
-              onClick={resetForm}
+              onClick={() =>
+                resetMatchForm(
+                  setWeek,
+                  setScheduledDate,
+                  setScheduleType,
+                  setTeam1,
+                  setTeam2,
+                  setSelectedLane,
+                )
+              }
               disabled={
                 creatingMatch || (!week && !team1 && !team2 && !selectedLane)
               }

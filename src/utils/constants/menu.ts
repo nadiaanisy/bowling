@@ -45,7 +45,12 @@ export const navigationGroups: NavigationGroup[] = [
         icon: UserRound,
         available: true,
       },
-      { id: 'timetable', label: 'Timetable', icon: CalendarDays },
+      {
+        id: 'timetable',
+        label: 'Timetable',
+        icon: CalendarDays,
+        available: true,
+      },
       { id: 'scores', label: 'Scores', icon: Trophy },
       { id: 'settings', label: 'Settings', icon: Settings2 },
     ],

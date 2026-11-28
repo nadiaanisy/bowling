@@ -1,4 +1,3 @@
-import { Filter } from 'lucide-react';
 import {
   Card,
   CardContent,
@@ -6,6 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/card';
+import { Badge } from '../../components/badge';
+import { Label } from '../../components/label';
+import type { LeagueTeam } from '../../utils/interfaces';
+import { Button } from '../../components/button';
 import {
   Select,
   SelectContent,
@@ -13,10 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../components/select';
-import { Badge } from '../../components/badge';
-import { Label } from '../../components/label';
-import { Button } from '../../components/button';
-import type { LeagueTeam } from '../../utils/interfaces';
+import { Filter } from 'lucide-react';
 
 interface FiltersProps {
   allWeeks: number[];

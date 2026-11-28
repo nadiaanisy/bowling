@@ -23,9 +23,13 @@ import {
   DashboardData,
   HandicapChangeHistory,
   HandicapSetting,
+  Lane,
   League,
+  LeagueBlock,
   LeagueMember,
+  LeagueTeam,
   LeagueTeamWithMembers,
+  MatchesByBlock,
   User,
 } from './interfaces';
 import { TEAM_PAGE_SIZE } from './constants/teams';
@@ -56,6 +60,24 @@ import {
   SortDirection,
   SortField,
 } from './constants/handicap';
+import {
+  TIMETABLE_EMPTY_BLOCKS,
+  TIMETABLE_EMPTY_LANES,
+  TIMETABLE_EMPTY_MATCHES,
+  TIMETABLE_EMPTY_TEAMS,
+  TIMETABLE_EMPTY_USED_RESOURCES,
+  TIMETABLE_INITIAL_BLOCK_NUMBER,
+  TIMETABLE_INITIAL_CREATING_MATCH,
+  TIMETABLE_INITIAL_DELETING_MATCH,
+  TIMETABLE_INITIAL_DELETE_DIALOG_MATCH_ID,
+  TIMETABLE_INITIAL_EDITING_MATCH_ID,
+  TIMETABLE_INITIAL_FILTERS,
+  TIMETABLE_INITIAL_LOAD_ERROR,
+  TIMETABLE_INITIAL_MATCH_FORM,
+  TIMETABLE_INITIAL_SAVING_SESSION_DATE,
+  TIMETABLE_INITIAL_SESSION_DATE,
+  TIMETABLE_INITIAL_SELECTED_IDS,
+} from './constants/timetable';
 
 const BOWLING_SESSION_STORAGE_KEYS = [
   'bowling-auth',
@@ -697,6 +719,74 @@ export const useCustomHook = () => {
   const [archivedPlayersRefreshKey, setArchivedPlayersRefreshKey] = useState(0);
   const [playersDialogOpen, setPlayersDialogOpen] = useState(false);
 
+  /* Timetable.tsx */
+  const [blocksData, setBlocksData] = useState<LeagueBlock[]>(
+    TIMETABLE_EMPTY_BLOCKS,
+  );
+  const [blockNumber, setBlockNumber] = useState<number | null>(
+    TIMETABLE_INITIAL_BLOCK_NUMBER,
+  );
+  const [timetableTeams, setTimetableTeams] = useState<LeagueTeam[]>(
+    TIMETABLE_EMPTY_TEAMS,
+  );
+  const [lanes, setLanes] = useState<Lane[]>(TIMETABLE_EMPTY_LANES);
+  const [matches, setMatches] = useState<MatchesByBlock>(
+    TIMETABLE_EMPTY_MATCHES,
+  );
+  const [usedTeams, setUsedTeams] = useState<string[]>(
+    TIMETABLE_EMPTY_USED_RESOURCES,
+  );
+  const [usedLanes, setUsedLanes] = useState<string[]>(
+    TIMETABLE_EMPTY_USED_RESOURCES,
+  );
+  const [team1, setTeam1] = useState(TIMETABLE_INITIAL_MATCH_FORM.team1);
+  const [team2, setTeam2] = useState(TIMETABLE_INITIAL_MATCH_FORM.team2);
+  const [week, setWeek] = useState(TIMETABLE_INITIAL_MATCH_FORM.week);
+  const [scheduledDate, setScheduledDate] = useState(
+    TIMETABLE_INITIAL_MATCH_FORM.scheduledDate,
+  );
+  const [scheduleType, setScheduleType] = useState<
+    'regular' | 'pre_bowl' | 'post_bowl'
+  >(TIMETABLE_INITIAL_MATCH_FORM.scheduleType);
+  const [selectedLane, setSelectedLane] = useState(
+    TIMETABLE_INITIAL_MATCH_FORM.lane,
+  );
+  const [filterWeek, setFilterWeek] = useState<string>(
+    TIMETABLE_INITIAL_FILTERS.week,
+  );
+  const [filterTeam, setFilterTeam] = useState<string>(
+    TIMETABLE_INITIAL_FILTERS.team,
+  );
+  const [filterStatus, setFilterStatus] = useState<string>(
+    TIMETABLE_INITIAL_FILTERS.status,
+  );
+  const [isLoadingTimetable, setIsLoadingTimetable] = useState(false);
+  const [timetableLoadError, setTimetableLoadError] = useState<string | null>(
+    TIMETABLE_INITIAL_LOAD_ERROR,
+  );
+  const [timetableReloadKey, setTimetableReloadKey] = useState(0);
+  const [creatingMatch, setCreatingMatch] = useState(
+    TIMETABLE_INITIAL_CREATING_MATCH,
+  );
+  const [deletingMatch, setDeletingMatch] = useState(
+    TIMETABLE_INITIAL_DELETING_MATCH,
+  );
+  const [selectedMatchIds, setSelectedMatchIds] = useState<
+    Array<string | number>
+  >(TIMETABLE_INITIAL_SELECTED_IDS);
+  const [deleteDialogMatchId, setDeleteDialogMatchId] = useState<
+    string | number | null
+  >(TIMETABLE_INITIAL_DELETE_DIALOG_MATCH_ID);
+  const [editingMatchId, setEditingMatchId] = useState<string | number | null>(
+    TIMETABLE_INITIAL_EDITING_MATCH_ID,
+  );
+  const [editedSessionDate, setEditedSessionDate] = useState(
+    TIMETABLE_INITIAL_SESSION_DATE,
+  );
+  const [savingSessionDate, setSavingSessionDate] = useState(
+    TIMETABLE_INITIAL_SAVING_SESSION_DATE,
+  );
+
   /* Stores the session expiration timer reference. */
   const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1157,5 +1247,59 @@ export const useCustomHook = () => {
     setArchivedPlayersRefreshKey,
     playersDialogOpen,
     setPlayersDialogOpen,
+
+    /* Timetable.tsx */
+    blocksData,
+    setBlocksData,
+    blockNumber,
+    setBlockNumber,
+    timetableTeams,
+    setTimetableTeams,
+    lanes,
+    setLanes,
+    matches,
+    setMatches,
+    usedTeams,
+    setUsedTeams,
+    usedLanes,
+    setUsedLanes,
+    team1,
+    setTeam1,
+    team2,
+    setTeam2,
+    week,
+    setWeek,
+    scheduledDate,
+    setScheduledDate,
+    scheduleType,
+    setScheduleType,
+    selectedLane,
+    setSelectedLane,
+    filterWeek,
+    setFilterWeek,
+    filterTeam,
+    setFilterTeam,
+    filterStatus,
+    setFilterStatus,
+    isLoadingTimetable,
+    setIsLoadingTimetable,
+    timetableLoadError,
+    setTimetableLoadError,
+    timetableReloadKey,
+    retryTimetable: () => setTimetableReloadKey((key) => key + 1),
+    creatingMatch,
+    setCreatingMatch,
+    deletingMatch,
+    setDeletingMatch,
+    selectedMatchIds,
+    setSelectedMatchIds,
+    deleteDialogMatchId,
+    setDeleteDialogMatchId,
+    editingMatchId,
+    setEditingMatchId,
+    editedSessionDate,
+    setEditedSessionDate,
+    savingSessionDate,
+    setSavingSessionDate,
   };
 };

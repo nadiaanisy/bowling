@@ -1,6 +1,4 @@
 import { Row } from './Row';
-import { useMemo } from 'react';
-import type { MatchData, MatchesByBlock } from '../../utils/interfaces';
 import {
   Card,
   CardContent,
@@ -14,6 +12,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '../../components/tabs';
+import { Badge } from '../../components/badge';
 import {
   Table,
   TableBody,
@@ -21,6 +20,9 @@ import {
   TableHeader,
   TableRow,
 } from '../../components/table';
+import type * as TimetableInterfaces from '../../utils/interfaces';
+import { Button } from '../../components/button';
+import { handleBulkDeleteMatches } from '../../functions/timetable';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,9 +34,9 @@ import {
   AlertDialogTitle,
 } from '../../components/alert-dialog';
 import { Trash2 } from 'lucide-react';
-import { Badge } from '../../components/badge';
-import { Button } from '../../components/button';
-import { handleBulkDeleteMatches } from '../../utils/functions/timetable';
+
+type MatchData = TimetableInterfaces.MatchData;
+type MatchesByBlock = TimetableInterfaces.MatchesByBlock;
 
 type BlockData = {
   id: string | number;
@@ -42,6 +44,7 @@ type BlockData = {
 };
 
 interface ScheduleProps {
+  leagueId: string | null;
   blocksData: BlockData[];
   blockNumber: number | null;
   setBlockNumber: (value: number | null) => void;
@@ -63,6 +66,7 @@ interface ScheduleProps {
 }
 
 export function Schedule({
+  leagueId,
   blocksData,
   blockNumber,
   setBlockNumber,
@@ -210,6 +214,7 @@ export function Schedule({
             className="space-y-4"
           >
             <BlockSchedule
+              leagueId={leagueId}
               block={block}
               filteredMatches={getFilteredMatches(block.id)}
               totalMatches={matches?.[`block${block.id}`]?.length ?? 0}
@@ -280,6 +285,7 @@ export function Schedule({
  */
 
 interface BlockScheduleProps {
+  leagueId: string | null;
   block: BlockData;
 
   filteredMatches: MatchData[];
@@ -302,6 +308,7 @@ interface BlockScheduleProps {
 }
 
 function BlockSchedule({
+  leagueId,
   block,
 
   filteredMatches,
@@ -380,6 +387,10 @@ function BlockSchedule({
 
                 <TableHead>Week</TableHead>
 
+                <TableHead>Session Date</TableHead>
+
+                <TableHead>Arrangement</TableHead>
+
                 <TableHead>Lane</TableHead>
 
                 <TableHead>Team 1</TableHead>
@@ -395,6 +406,7 @@ function BlockSchedule({
             <TableBody>
               {filteredMatches.map((match) => (
                 <Row
+                  leagueId={leagueId}
                   key={match.match_id}
                   match={match}
                   selected={selectedMatchIds.some(

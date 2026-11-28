@@ -122,6 +122,8 @@ export interface League {
 export interface MatchData {
   block_id: string;
   week_number: number;
+  scheduled_date?: string | null;
+  schedule_type?: 'regular' | 'pre_bowl' | 'post_bowl';
   lane: string;
   hasScore: boolean;
   team1: TeamData;
@@ -131,6 +133,8 @@ export interface MatchData {
   block1?: MatchData[];
   block2?: MatchData[];
 }
+
+export type MatchesByBlock = Record<string, MatchData[]>;
 
 export interface TeamData {
   id: number;

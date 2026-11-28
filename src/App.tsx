@@ -9,6 +9,7 @@ import Players from './sections/Players/Players';
 import Handicap from './sections/Handicap/Handicap';
 import Landing from './sections/Landings/MainPage';
 import Dashboard from './sections/Dashboard/MainPage';
+import Timetable from './sections/Timetable/Timetable';
 import LeagueSelection from './sections/LeagueSelection/MainPage';
 import {
 ArrowLeft,
@@ -63,6 +64,8 @@ function AppContent() {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'timetable':
+        return <Timetable />;
       case 'teams':
         return <Teams />;
       case 'players':
